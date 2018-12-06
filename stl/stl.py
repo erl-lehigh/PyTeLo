@@ -193,7 +193,9 @@ class STLFormula(object):
         '''Computes the bound of the STL formula.'''
         if self.op == Operation.PRED:
             return 0
-        elif self.op in (Operation.AND, Operation.OR, Operation.IMPLIES):
+        elif self.op in (Operation.AND, Operation.OR):
+            return max([ch.bound() for ch in self.children])
+        elif self.op == Operation.IMPLIES:
             return max(self.left.bound(), self.right.bound())
         elif self.op == Operation.NOT:
             return self.child.bound()
