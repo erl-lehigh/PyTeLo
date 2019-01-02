@@ -120,7 +120,7 @@ class STLFormula(object):
             rright = (self.right.robustness(s, t+tau)
                                     for tau in np.arange(self.low, self.high+1))
             value = -maximumRobustness
-            for rl, rr in it.izip(rleft, rright):
+            for rl, rr in zip(rleft, rright):
                 r_acc = min(r_acc, rl)
                 r_conj = min(r_acc, rr)
                 value = max(value, r_conj)
@@ -193,7 +193,9 @@ class STLFormula(object):
         '''Computes the bound of the STL formula.'''
         if self.op == Operation.PRED:
             return 0
-        elif self.op in (Operation.AND, Operation.OR, Operation.IMPLIES):
+        elif self.op in (Operation.AND, Operation.OR):
+            return max([ch.bound() for ch in self.children])
+        elif self.op == Operation.IMPLIES:
             return max(self.left.bound(), self.right.bound())
         elif self.op == Operation.NOT:
             return self.child.bound()
@@ -310,14 +312,14 @@ class STLAbstractSyntaxTreeExtractor(stlVisitor):
 class Trace(object):
     '''Representation of a system trace.'''
 
-    def __init__(self, variables, timePoints, data, kind='previous'):
+    def __init__(self, variables, timePoints, data, kind='nearest'):
         '''Constructor'''
         # self.timePoints = list(timePoints)
         # self.data = np.array(data)
-        for variable, var_data in it.izip(variables, data):
-            print variable, var_data, timePoints
+        for variable, var_data in zip(variables, data):
+            print(variable, var_data, timePoints)
         self.data = {variable : interp1d(timePoints, var_data, kind=kind)
-                            for variable, var_data in it.izip(variables, data)}
+                            for variable, var_data in zip(variables, data)}
 
     def value(self, variable, t):
         '''Returns value of the given signal component at time t.'''
@@ -337,17 +339,17 @@ if __name__ == '__main__':
 
     parser = stlParser(tokens)
     t = parser.stlProperty()
-    print t.toStringTree()
+    print(t.toStringTree())
 
     ast = STLAbstractSyntaxTreeExtractor().visit(t)
-    print 'AST:', ast
+    print('AST:', ast)
 
     varnames = ['x', 'y', 'z']
     data = [[8, 8, 11, 11, 11], [2, 3, 1, 2, 2], [3, 9, 8, 9, 9]]
     timepoints = [0, 1, 2, 3, 4]
     s = Trace(varnames, timepoints, data)
 
-    print 'r:', ast.robustness(s, 0)
+    print('r:', ast.robustness(s, 0))
 
     pnf = ast.pnf()
-    print pnf
+    print(pnf)
