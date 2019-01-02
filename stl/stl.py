@@ -245,7 +245,7 @@ class STLFormula(object):
                                              right=self.right)
         elif self.op in (Operation.AND, Operation.OR):
             children = [str(child) for child in self.children]
-            s = ' {op} '.format(op=opname).join(children)
+            s = '(' + ' {op} '.format(op=opname).join(children) + ')'
         elif self.op == Operation.NOT:
             s = '{op} {child}'.format(op=opname, child=self.child)
         elif self.op == Operation.UNTIL:
