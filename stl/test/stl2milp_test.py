@@ -19,8 +19,9 @@ from stl import STLAbstractSyntaxTreeExtractor
 
 from stl2milp import stl2milp
 
-lexer = stlLexer(InputStream("(x > 10) && F[0, 2] y > 2 || G[1, 6] z > 8"))
+#lexer = stlLexer(InputStream("(x > 10) && F[0, 2] y > 2 || G[1, 6] z > 8"))
 #lexer = stlLexer(InputStream("G[2,4]F[1,3](x>=3)"))
+lexer = stlLexer(InputStream("(x <= 10) && F[0, 2] y > 2 && G[1, 6] (z < 8) && G[1,6] (z > 3)"))
 tokens = CommonTokenStream(lexer)
 parser = stlParser(tokens)
 t = parser.stlProperty()
@@ -28,11 +29,11 @@ print(t.toStringTree())
 ast = STLAbstractSyntaxTreeExtractor().visit(t)
 print "AST:", ast
 
-MILP=stl2milp(ast)
+MILP=stl2milp(ast,robust=True)
 
 
 z=MILP.to_milp(ast,t=0)
-MILP.model.addConstr(z==0)
+MILP.model.addConstr(z==1)
 MILP.model.optimize()
 
 #from stl import STLFormula

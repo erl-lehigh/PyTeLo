@@ -32,7 +32,7 @@ class stl2milp(object):
         self.variables = dict()
 
         if robust:
-            self.rho = model.addVar(vtype=grb.GRB.CONTINUOUS, name='rho',
+            self.rho = self.model.addVar(vtype=grb.GRB.CONTINUOUS, name='rho',
                                lb=-grb.GRB.INFINITY,ub=grb.GRB.INFINITY, obj=-1)
         else:
             self.rho = 0
@@ -89,7 +89,9 @@ class stl2milp(object):
             self.model.addConstr(v - self.M * z <= pred.threshold + self.rho)
             self.model.addConstr(v + self.M * (1 - z) >= pred.threshold + self.rho)
         elif pred.relation in (RelOperation.LE, RelOperation.LT):
-            raise NotImplementedError
+            self.model.addConstr(v + self.M * z >= pred.threshold - self.rho)
+            self.model.addConstr(v - self.M * (1 - z) <= pred.threshold - self.rho)
+#            raise NotImplementedError
         else:
             raise NotImplementedError
 
@@ -124,10 +126,10 @@ class stl2milp(object):
         '''Adds a globally to the model.'''
         assert formula.op == Operation.ALWAYS
         a, b = formula.low, formula.high
-        print "a=%d,b=%d,t=%d"%(a,b,t)
+#        print "a=%d,b=%d,t=%d"%(a,b,t)
         child = formula.child
         z_children = [self.to_milp(child, t + tau) for tau in range(int(a), int(b+1))]
-        print len(z_children)
+#        print len(z_children)
         for z_child in z_children:
             self.model.addConstr(z <= z_child)
         self.model.addConstr(z >= 1 - len(z_children) + sum(z_children))
