@@ -23,9 +23,11 @@ def powermean(vector, order):
     elif order == '-inf':
         return np.min(vector)
     if order != 0:
-        return np.sum(alpha * abs(vector)**order)**(1./order)
+        #return np.sum(alpha * abs(vector)**order)**(1./order)
+        return np.sum(alpha * (1+abs(vector))**order)**(1./order) - 1
     else:
-        # FIXME: should be: np.prod(abs(vector)) ** alpha
+        # FIXME: should be: np.prod(abs(vector)) ** alpha, 
+        # NM: this is already fixed with the new version
         return np.prod(1 + abs(vector)) ** alpha - 1
 
 def conjunction_function(r_children, pos_order, neg_order):
