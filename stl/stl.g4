@@ -22,11 +22,11 @@ stlProperty:
     ;
 expr:
       '(' child=expr ')' # parExpr
-    | '-(' child=expr ')' # negExpr
-    |   <assoc=right>   base=expr op='^' exp=expr # powExpr
+    | '-' child=expr # negExpr
+    |   <assoc=right>   base=expr op='^' exp=expr #algExpr
     |   func=VARIABLE '(' (expr ( ',' expr)* ) ')' #funcExpr
-    |   left=expr op=( '*' | '/' ) right=expr #prodExpr
-    |   left=expr op=( '+' | '-' ) right=expr #sumExpr
+    |   left=expr op=( '*' | '/' ) right=expr #algExpr
+    |   left=expr op=( '+' | '-' ) right=expr #algExpr
     |   value=RATIONAL #constExpr
     |   variable=VARIABLE #varExpr
     ;

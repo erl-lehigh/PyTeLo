@@ -58,9 +58,9 @@ class Expression(object):
     '''Abstract Syntax Tree representations of expressions involved in STL
     predicates
     '''
-    NOP, NEG, ADD, PROD, DIV, POW, FUNC, VAR, CONST = range(9)
-    opnames = [None, '-', '+', '/', '^']
-    opcodes = {'-': NEG, '+': ADD, '*' : PROD, '/': DIV, '^': POW}
+    NOP, NEG, ADD, SUB, PROD, DIV, POW, FUNC, VAR, CONST = range(10)
+    opnames = [None, '-', '+', '-', '*', '/', '^']
+    opcodes = {'-': NEG, '+': ADD, '-': SUB, '*': PROD, '/': DIV, '^': POW}
 
     @classmethod
     def getCode(cls, text):
@@ -78,14 +78,10 @@ class Expression(object):
 
         if self.op == Expression.NEG:
             self.child = kwargs['child']
-        elif self.op in (Expression.ADD, Expression.PROD):
-            self.children = kwargs['children']
-        elif self.op == Expression.DIV:
-            self.divident = kwargs['divident']
-            self.divisor = kwargs['divisor']
-        elif self.op == Expression.POW:
-            self.base = kwargs['base']
-            self.exponent = kwargs['exponent']
+        elif self.op in (Expression.ADD, Expression.SUB, Expression.PROD,
+                         Expression.DIV, Expression.POW):
+            self.left = kwargs['left']
+            self.right = kwargs['right']
         elif self.op == Expression.FUNC:
             self.function = kwargs['function']
             self.arguments = kwargs['arguments']
@@ -94,16 +90,15 @@ class Expression(object):
         elif self.op == Expression.CONST:
             self.value = kwargs['value']
 
+        self.__string = None
+
     def variables(self):
         '''Returns the set of variables involved in the expression.'''
         if self.op == Expression.NEG:
             return self.child.variables()
-        elif self.op in (Expression.ADD, Expression.PROD):
-            return set.union(*[child.variables() for child in self.children])
-        elif self.op == Expression.DIV:
-            return self.divident.variables() & self.divisor.variables()
-        elif self.op == Expression.POW:
-            return self.base.variables() & self.exponent.variables()
+        elif self.op in (Expression.ADD, Expression.SUB, Expression.PROD,
+                         Expression.DIV, Expression.POW):
+            return self.left.variables() & self.right.variables()
         elif self.op == Expression.FUNC:
             return set.union(*[arg.variables() for arg in self.arguments])
         elif self.op == Expression.VAR:
@@ -116,9 +111,11 @@ class Expression(object):
         if self.op == Expression.NEG:
             return - self.child.eval(variables)
         elif self.op == Expression.ADD:
-            return np.sum([child.eval(variables) for child in self.children])
+            return self.left.eval(variables) + self.right.eval(variables)
+        elif self.op == Expression.SUB:
+            return self.left.eval(variables) - self.right.eval(variables)
         elif self.op == Expression.PROD:
-            return np.prod([child.eval(variables) for child in self.children])
+            return self.left.eval(variables) * self.right.eval(variables)
         elif self.op == Expression.DIV:
             return self.divident.eval(variables) // self.divisor.eval(variables)
         elif self.op == Expression.POW:
@@ -138,16 +135,11 @@ class Expression(object):
 
         if self.op == Expression.NEG:
             s = '-({child})'.format(child=self.child)
-        elif self.op in (Expression.ADD, Expression.PROD):
+        elif self.op in (Expression.ADD, Expression.SUB, Expression.PROD,
+                         Expression.DIV, Expression.POW):
             opname = Expression.getString(self.op)
-            children = [str(child) for child in self.children]
-            s = '(' + ' {op} '.format(op=opname).join(children) + ')'
-        elif self.op == Expression.DIV:
-            s = '{divident} / {divisor}'.format(divident=self.divident,
-                                                divisor=self.divisor)
-        elif self.op == Expression.POW:
-            s = '{base} ^ {exponent}'.format(base=self.base,
-                                             exponent=self.exponent)
+            s = '({left} {op} {right})'.format(op=opname, left=self.left,
+                                               right=self.right)
         elif self.op == Expression.FUNC:
             arguments = [str(arg) for arg in self.arguments]
             s = '{func_name}({arguments})'.format(
@@ -408,9 +400,33 @@ class STLAbstractSyntaxTreeExtractor(stlVisitor):
         return self.visit(ctx.booleanExpr())
 
     def visitBooleanExpr(self, ctx):
+        print self.visit(ctx.left)
+        print self.visit(ctx.right)
         return STLFormula(Operation.PRED,
             relation=RelOperation.getCode(ctx.op.text),
             variable=ctx.left.getText(), threshold=float(ctx.right.getText()))
+
+    def visitVarExpr(self, ctx):
+        return Expression(Expression.VAR, variable=ctx.variable.text)
+
+    def visitConstExpr(self, ctx):
+        return Expression(Expression.CONST, value=float(ctx.value.text))
+
+    def visitNegExpr(self, ctx):
+        return Expression(Expression.NEG, child=self.visit(ctx.child))
+
+    def visitAlgExpr(self, ctx):
+        left = self.visit(ctx.left)
+        right = self.visit(ctx.right)
+        return Expression(Expression.getCode(ctx.op.text),
+                          left=left,
+                          right=right)
+
+    def visitFuncExpr(self, ctx):
+        raise NotImplementedError()
+
+    def visitParExpr(self, ctx):
+        return self.visit(ctx.child);
 
     def visitParprop(self, ctx):
         return self.visit(ctx.child)
@@ -440,7 +456,7 @@ class Trace(object):
         raise NotImplementedError
 
 if __name__ == '__main__':
-    lexer = stlLexer(InputStream("!(x < 10) && F[0, 2] y > 2 || G[1, 3] z<=8"))
+    lexer = stlLexer(InputStream("!(x < 10) && F[0, 2] y > 2 || G[1, 3] z<=8 && (-x + 2*y - z< 2) && G[0, 3] (x*x - 4*x + 4 + y*y - 6*y + 9 >= 2)"))
     # lexer = stlLexer(InputStream("!(x < 10) && y > 2 && z<=8"))
     tokens = CommonTokenStream(lexer)
 
