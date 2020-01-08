@@ -21,13 +21,14 @@ stlProperty:
     |    left=stlProperty op=UNTIL '[' low=RATIONAL ',' high=RATIONAL ']' right=stlProperty #formula
     ;
 expr:
-        ( '-(' | '(' ) expr ')'
-    |   <assoc=right>   expr '^' expr
-    |   VARIABLE '(' expr ')'
-    |   expr ( '*' | '/' ) expr
-    |   expr ( '+' | '-' ) expr
-    |   RATIONAL
-    |   VARIABLE
+      '(' child=expr ')' # parExpr
+    | '-(' child=expr ')' # negExpr
+    |   <assoc=right>   base=expr op='^' exp=expr # powExpr
+    |   func=VARIABLE '(' (expr ( ',' expr)* ) ')' #funcExpr
+    |   left=expr op=( '*' | '/' ) right=expr #prodExpr
+    |   left=expr op=( '+' | '-' ) right=expr #sumExpr
+    |   value=RATIONAL #constExpr
+    |   variable=VARIABLE #varExpr
     ;
 booleanExpr:
          left=expr op=( '<' | '<=' | '=' | '>=' | '>' ) right=expr
