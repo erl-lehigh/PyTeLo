@@ -1,12 +1,13 @@
 '''
- Copyright (C) 2018 Cristian Ioan Vasile <cvasile@mit.edu>
+ Copyright (C) 2018-2020 Cristian Ioan Vasile <cvasile@lehigh.edu>
  Hybrid and Networked Systems (HyNeSs) Group, BU Robotics Lab, Boston University
+ Explainable Robotics Lab, Lehigh University
  See license.txt file for license information.
 '''
 
 import gurobipy as grb
 
-from stl import Operation, RelOperation, STLFormula
+from stl import Operation, RelOperation, Expression, STLFormula
 
 
 class stl2milp(object):
@@ -84,7 +85,8 @@ class stl2milp(object):
     def predicate(self, pred, z, t):
         '''Adds a predicate to the model.'''
         assert pred.op == Operation.PRED
-        v = self.add_state(pred.variable, t)
+        assert pred.expression.op == Expression.VAR
+        v = self.add_state(pred.expression.variable, t)
         if pred.relation in (RelOperation.GE, RelOperation.GT):
             self.model.addConstr(v - self.M * z <= pred.threshold + self.rho)
             self.model.addConstr(v + self.M * (1 - z) >= pred.threshold + self.rho)
