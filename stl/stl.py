@@ -249,8 +249,7 @@ class STLFormula(object):
         if self.op == Operation.PRED:
             self.relation = RelOperation.negop[self.relation]
         elif self.op in (Operation.AND, Operation.OR):
-            self.left = self.left.negate()
-            self.right = self.right.negate()
+            [child.negate() for child in self.children]
         elif self.op == Operation.IMPLIES:
             self.right = self.right.negate()
         elif self.op == Operation.NOT:
