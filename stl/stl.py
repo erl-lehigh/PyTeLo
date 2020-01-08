@@ -1,6 +1,7 @@
 '''
- Copyright (C) 2015-2018 Cristian Ioan Vasile <cvasile@bu.edu>
+ Copyright (C) 2015-2020 Cristian Ioan Vasile <cvasile@lehigh.edu>
  Hybrid and Networked Systems (HyNeSs) Group, BU Robotics Lab, Boston University
+ Explainable Robotics Lab, Lehigh University
  See license.txt file for license information.
 '''
 
@@ -52,6 +53,112 @@ class RelOperation(object):
     def getString(cls, rop):
         '''Gets custom string representation for each operation.'''
         return cls.opnames[rop]
+
+class Expression(object):
+    '''Abstract Syntax Tree representations of expressions involved in STL
+    predicates
+    '''
+    NOP, NEG, ADD, PROD, DIV, POW, FUNC, VAR, CONST = range(9)
+    opnames = [None, '-', '+', '/', '^']
+    opcodes = {'-': NEG, '+': ADD, '*' : PROD, '/': DIV, '^': POW}
+
+    @classmethod
+    def getCode(cls, text):
+        ''' Gets the code corresponding to the string representation.'''
+        return cls.opcodes.get(text, cls.NOP)
+
+    @classmethod
+    def getString(cls, op):
+        '''Gets custom string representation for each operation.'''
+        return cls.opnames[op]
+
+    def __init__(self, operation, **kwargs):
+        '''Constructor'''
+        self.op = operation
+
+        if self.op == Expression.NEG:
+            self.child = kwargs['child']
+        elif self.op in (Expression.ADD, Expression.PROD):
+            self.children = kwargs['children']
+        elif self.op == Expression.DIV:
+            self.divident = kwargs['divident']
+            self.divisor = kwargs['divisor']
+        elif self.op == Expression.POW:
+            self.base = kwargs['base']
+            self.exponent = kwargs['exponent']
+        elif self.op == Expression.FUNC:
+            self.function = kwargs['function']
+            self.arguments = kwargs['arguments']
+        elif self.op == Expression.VAR:
+            self.variable = kwargs['variable']
+        elif self.op == Expression.CONST:
+            self.value = kwargs['value']
+
+    def variables(self):
+        '''Returns the set of variables involved in the expression.'''
+        if self.op == Expression.NEG:
+            return self.child.variables()
+        elif self.op in (Expression.ADD, Expression.PROD):
+            return set.union(*[child.variables() for child in self.children])
+        elif self.op == Expression.DIV:
+            return self.divident.variables() & self.divisor.variables()
+        elif self.op == Expression.POW:
+            return self.base.variables() & self.exponent.variables()
+        elif self.op == Expression.FUNC:
+            return set.union(*[arg.variables() for arg in self.arguments])
+        elif self.op == Expression.VAR:
+            return set([self.variable])
+        elif self.op == Expression.CONST:
+            return set()
+
+    def eval(self, variables):
+        '''Evaluates the expression using the variables' values.'''
+        if self.op == Expression.NEG:
+            return - self.child.eval(variables)
+        elif self.op == Expression.ADD:
+            return np.sum([child.eval(variables) for child in self.children])
+        elif self.op == Expression.PROD:
+            return np.prod([child.eval(variables) for child in self.children])
+        elif self.op == Expression.DIV:
+            return self.divident.eval(variables) // self.divisor.eval(variables)
+        elif self.op == Expression.POW:
+            return np.pow(self.base.eval(variables),
+                          self.exponent.eval(variables))
+        elif self.op == Expression.FUNC:
+            return self.function(*[arg.eval(variables)
+                                   for arg in self.arguments])
+        elif self.op == Expression.VAR:
+            return variables[self.variable]
+        elif self.op == Expression.CONST:
+            return self.value
+
+    def __str__(self):
+        if self.__string is not None:
+            return self.__string
+
+        if self.op == Expression.NEG:
+            s = '-({child})'.format(child=self.child)
+        elif self.op in (Expression.ADD, Expression.PROD):
+            opname = Expression.getString(self.op)
+            children = [str(child) for child in self.children]
+            s = '(' + ' {op} '.format(op=opname).join(children) + ')'
+        elif self.op == Expression.DIV:
+            s = '{divident} / {divisor}'.format(divident=self.divident,
+                                                divisor=self.divisor)
+        elif self.op == Expression.POW:
+            s = '{base} ^ {exponent}'.format(base=self.base,
+                                             exponent=self.exponent)
+        elif self.op == Expression.FUNC:
+            arguments = [str(arg) for arg in self.arguments]
+            s = '{func_name}({arguments})'.format(
+                funcname=self.function.__name__,
+                arguments=arguments)
+        elif self.op == Expression.VAR:
+            s = self.variable
+        elif self.op == Expression.CONST:
+            s = str(self.value)
+        self.__string = s
+        return self.__string
 
 
 class STLFormula(object):
@@ -306,7 +413,7 @@ class STLAbstractSyntaxTreeExtractor(stlVisitor):
             variable=ctx.left.getText(), threshold=float(ctx.right.getText()))
 
     def visitParprop(self, ctx):
-        return self.visit(ctx.child);
+        return self.visit(ctx.child)
 
 
 class Trace(object):
@@ -342,7 +449,7 @@ if __name__ == '__main__':
     print(t.toStringTree())
 
     ast = STLAbstractSyntaxTreeExtractor().visit(t)
-    print('AST:', ast)
+    print('AST:', str(ast))
 
     varnames = ['x', 'y', 'z']
     data = [[8, 8, 11, 11, 11], [2, 3, 1, 2, 2], [3, 9, 8, 9, 9]]
