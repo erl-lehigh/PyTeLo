@@ -35,6 +35,7 @@ class stl2milp(object):
         if robust:
             self.rho = self.model.addVar(vtype=grb.GRB.CONTINUOUS, name='rho',
                                lb=-grb.GRB.INFINITY,ub=grb.GRB.INFINITY, obj=-1)
+            self.model.addConstr(self.rho >= 0, 'rho_non_negative')
         else:
             self.rho = 0
 
@@ -46,6 +47,12 @@ class stl2milp(object):
             Operation.ALWAYS : self.globally,
             Operation.UNTIL : self.until
         }
+
+    def translate(self, formula, t=0):
+        '''Translates the STL formula to MILP model.'''
+        z_formula = self.to_milp(formula, t)
+        self.model.addConstr(z_formula == 1, 'formula_satisfaction')
+        return z_formula
 
     def to_milp(self, formula, t=0):
         '''Generates the MILP from the STL formula.'''
@@ -78,7 +85,6 @@ class stl2milp(object):
             name='{}_{}'.format(state, t)
             v = self.model.addVar(vtype=vtype, lb=low, ub=high, name=name)
             self.variables[state][t] = v
-            print 'Added state:', state, 'time:', t
             self.model.update()
         return self.variables[state][t]
 
@@ -90,10 +96,12 @@ class stl2milp(object):
         if pred.relation in (RelOperation.GE, RelOperation.GT):
             self.model.addConstr(v - self.M * z <= pred.threshold + self.rho)
             self.model.addConstr(v + self.M * (1 - z) >= pred.threshold + self.rho)
+            # TODO: are the next two lines necessary?
+            self.model.addConstr(v - self.M * z <= pred.threshold)
+            self.model.addConstr(v + self.M * (1 - z) >= pred.threshold)
         elif pred.relation in (RelOperation.LE, RelOperation.LT):
             self.model.addConstr(v + self.M * z >= pred.threshold - self.rho)
             self.model.addConstr(v - self.M * (1 - z) <= pred.threshold - self.rho)
-#            raise NotImplementedError
         else:
             raise NotImplementedError
 
@@ -116,10 +124,9 @@ class stl2milp(object):
     def eventually(self, formula, z, t):
         '''Adds an eventually to the model.'''
         assert formula.op == Operation.EVENT
-        a, b = formula.low, formula.high
+        a, b = int(formula.low), int(formula.high)
         child = formula.child
-        print "a=%d,b=%d"%(a,b)
-        z_children = [self.to_milp(child, t + tau) for tau in range(int(a), int(b+1))]
+        z_children = [self.to_milp(child, t + tau) for tau in range(a, b+1)]
         for z_child in z_children:
             self.model.addConstr(z >= z_child)
         self.model.addConstr(z <= sum(z_children))
@@ -127,11 +134,9 @@ class stl2milp(object):
     def globally(self, formula, z, t):
         '''Adds a globally to the model.'''
         assert formula.op == Operation.ALWAYS
-        a, b = formula.low, formula.high
-#        print "a=%d,b=%d,t=%d"%(a,b,t)
+        a, b = int(formula.low), int(formula.high)
         child = formula.child
-        z_children = [self.to_milp(child, t + tau) for tau in range(int(a), int(b+1))]
-#        print len(z_children)
+        z_children = [self.to_milp(child, t + tau) for tau in range(a, b+1)]
         for z_child in z_children:
             self.model.addConstr(z <= z_child)
         self.model.addConstr(z >= 1 - len(z_children) + sum(z_children))
@@ -140,9 +145,7 @@ class stl2milp(object):
         '''Adds an until to the model.'''
         assert formula.op == Operation.UNTIL
 
-        raise NotImplementedError #TODO: under construction
-
-        a, b = formula.low, formula.high
+        a, b = int(formula.low), int(formula.high)
         z_children_left = [self.to_milp(formula.left, tau)
                                                  for tau in range(t, t+b+1)]
         z_children_right = [self.to_milp(formula.right, tau)
@@ -163,16 +166,16 @@ class stl2milp(object):
             if phi_alw is not None:
                 children.append(phi_alw)
             phi = STLFormula(Operation.AND, children=children)
-            z_aux.append(self.add_formula_variable(phi, t))
+            z_aux.append(self.add_formula_variable(phi, t)[0])
 
         for k, z_right in enumerate(z_children_right):
             z_conj = z_aux[k]
             self.model.addConstr(z_conj <= z_right)
             for z_left in z_children_left[:t+a+k+1]:
                 self.model.addConstr(z_conj <= z_left)
-            m = 1 + (t + a + k)
+            m = 1 + (t + a + k + 1)
             self.model.addConstr(z_conj >= 1-m + z_right
                                  + sum(z_children_left[:t+a+k+1]))
 
-            self.model.addConstr(z >= z_conj)
+            self.model.addConstr(z <= z_conj)
         self.model.addConstr(z <= sum(z_aux))
