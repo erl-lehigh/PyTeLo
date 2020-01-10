@@ -24,8 +24,8 @@ class stl2miqp(stl2milp):
             self.model.addConstr(expr - self.M * z <= pred.threshold + self.rho)
             self.model.addConstr(expr + self.M * (1 - z) >= pred.threshold + self.rho)
             # TODO: are the next two lines necessary?
-            self.model.addConstr(v - self.M * z <= pred.threshold)
-            self.model.addConstr(v + self.M * (1 - z) >= pred.threshold)
+            self.model.addConstr(expr - self.M * z <= pred.threshold)
+            self.model.addConstr(expr + self.M * (1 - z) >= pred.threshold)
         elif pred.relation in (RelOperation.LE, RelOperation.LT):
             self.model.addConstr(expr + self.M * z >= pred.threshold - self.rho)
             self.model.addConstr(expr - self.M * (1 - z) <= pred.threshold - self.rho)
