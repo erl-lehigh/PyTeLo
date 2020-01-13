@@ -15,7 +15,7 @@ from stlParser import stlParser
 from stl import Operation, RelOperation, STLAbstractSyntaxTreeExtractor, Trace
 
 
-def powermean(vector, order,plus=0):
+def powermean(vector, order, plus=0):
     '''Computes the power mean of a vector.'''
     alpha = 1. / len(vector)
     if order == 'inf':
@@ -32,32 +32,31 @@ def powermean(vector, order,plus=0):
             return np.prod(1 + abs(vector)) ** alpha - 1
         else:
             return np.prod(abs(vector)) ** alpha
-            
 
-def conjunction_function(r_children, pos_order, neg_order,plus=0):
+def conjunction_function(r_children, pos_order, neg_order, plus=0):
     '''Computes the conjuction robustness value from children values.'''
     r_non_pos = r_children <= 0
     if np.any(r_non_pos):
-        eta = -powermean(-r_children * r_non_pos, order=neg_order,plus=plus) #please double-check but i believe this should be correct
+        eta = -powermean(-r_children * r_non_pos, order=neg_order, plus=plus)
     else:
-        eta = powermean(r_children, order=pos_order,plus=plus)
+        eta = powermean(r_children, order=pos_order, plus=plus)
     return eta
 
-def disjunction_function(r_children, pos_order, neg_order,plus=0):
+def disjunction_function(r_children, pos_order, neg_order, plus=0):
     '''Computes the disjuction robustness value from children values.
 
     Note: Returns the same value as:
-        -conjunction_function(-r_children, pos_order, neg_order,plus)
+        -conjunction_function(-r_children, pos_order, neg_order, plus)
     '''
     r_pos = r_children > 0
     if np.any(r_pos):
-        eta = powermean(r_children * r_pos, order=neg_order,plus=plus)
+        eta = powermean(r_children * r_pos, order=neg_order, plus=plus)
     else:
-        eta = -powermean(-r_children, order=pos_order,plus=plus) #please double-check 
+        eta = -powermean(-r_children, order=pos_order, plus=plus)
     return eta
 
 def powermean_robustness(formula, trace, time, pos_order=0, neg_order=1,
-                         maximum_robustness=1,plus=0):
+                         maximum_robustness=1, plus=0):
     '''Computes the powermean robustness of the STL formula.'''
     if formula.op == Operation.BOOL:
         if formula.value:
@@ -74,7 +73,7 @@ def powermean_robustness(formula, trace, time, pos_order=0, neg_order=1,
             eta = -abs(value - formula.threshold)
         elif formula.relation == RelOperation.NQ:
             eta = abs(value - formula.threshold)
-        return eta / trace.range(formula.variable)
+        return eta / trace.range(formula.variable) # normalization
 
     if formula.op in (Operation.AND, Operation.OR):
         r_children = np.array([powermean_robustness(child, trace, time)
@@ -86,14 +85,14 @@ def powermean_robustness(formula, trace, time, pos_order=0, neg_order=1,
              for tau in np.arange(formula.low, formula.high + 1)],
             dtype=np.float)
     if formula.op in (Operation.AND, Operation.ALWAYS):
-        eta = conjunction_function(r_children, pos_order, neg_order,plus=plus)
+        eta = conjunction_function(r_children, pos_order, neg_order, plus=plus)
         return eta
     elif formula.op in (Operation.OR, Operation.EVENT):
-        eta = disjunction_function(r_children, pos_order, neg_order,plus=plus)
+        eta = disjunction_function(r_children, pos_order, neg_order, plus=plus)
         return eta
 
     if formula.op == Operation.NOT:
-        return -powermean_robustness(formula.child, trace, time,plus=plus)
+        return -powermean_robustness(formula.child, trace, time, plus=plus)
     elif formula.op in (Operation.IMPLIES, Operation.UNTIL):
         raise NotImplementedError
     else:
@@ -135,7 +134,7 @@ if __name__ == '__main__':
     data_bounds = {'x': (0, 20), 'y': (0, 10), 'z': (0, 10)}
     s = BoundedTrace(var_names, time_points, var_values, data_bounds)
 
-    print('r:', powermean_robustness(ast, s, 0,plus=1))
+    print('r:', powermean_robustness(ast, s, 0, plus=1))
 
     pnf = ast.pnf()
     print(pnf)
