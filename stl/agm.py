@@ -38,7 +38,7 @@ def conjunction_function(r_children, pos_order, neg_order,plus=0):
     '''Computes the conjuction robustness value from children values.'''
     r_non_pos = r_children <= 0
     if np.any(r_non_pos):
-        eta = -powermean(r_children * r_non_pos, order=neg_order,plus=plus)
+        eta = -powermean(-r_children * r_non_pos, order=neg_order,plus=plus) #please double-check but i believe this should be correct
     else:
         eta = powermean(r_children, order=pos_order,plus=plus)
     return eta
@@ -53,7 +53,7 @@ def disjunction_function(r_children, pos_order, neg_order,plus=0):
     if np.any(r_pos):
         eta = powermean(r_children * r_pos, order=neg_order,plus=plus)
     else:
-        eta = -powermean(r_children, order=pos_order,plus=plus)
+        eta = -powermean(-r_children, order=pos_order,plus=plus) #please double-check 
     return eta
 
 def powermean_robustness(formula, trace, time, pos_order=0, neg_order=1,
