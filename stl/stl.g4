@@ -2,8 +2,9 @@ grammar stl;
 
 @header {
 '''
- Copyright (C) 2015-2018 Cristian Ioan Vasile <cvasile@mit.edu>
+ Copyright (C) 2015-2020 Cristian Ioan Vasile <cvasile@lehigh.edu>
  Hybrid and Networked Systems (HyNeSs) Group, BU Robotics Lab, Boston University
+ Explainable Robotics Lab, Lehigh University
  See license.txt file for license information.
 '''
 }
@@ -21,13 +22,14 @@ stlProperty:
     |    left=stlProperty op=UNTIL '[' low=RATIONAL ',' high=RATIONAL ']' right=stlProperty #formula
     ;
 expr:
-        ( '-(' | '(' ) expr ')'
-    |   <assoc=right>   expr '^' expr
-    |   VARIABLE '(' expr ')'
-    |   expr ( '*' | '/' ) expr
-    |   expr ( '+' | '-' ) expr
-    |   RATIONAL
-    |   VARIABLE
+      '(' child=expr ')' # parExpr
+    | '-' child=expr # negExpr
+    |   <assoc=right>   base=expr op='^' exp=expr #algExpr
+    |   func=VARIABLE '(' (expr ( ',' expr)* ) ')' #funcExpr
+    |   left=expr op=( '*' | '/' ) right=expr #algExpr
+    |   left=expr op=( '+' | '-' ) right=expr #algExpr
+    |   value=RATIONAL #constExpr
+    |   variable=VARIABLE #varExpr
     ;
 booleanExpr:
          left=expr op=( '<' | '<=' | '=' | '>=' | '>' ) right=expr

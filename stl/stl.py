@@ -1,6 +1,7 @@
 '''
- Copyright (C) 2015-2018 Cristian Ioan Vasile <cvasile@bu.edu>
+ Copyright (C) 2015-2020 Cristian Ioan Vasile <cvasile@lehigh.edu>
  Hybrid and Networked Systems (HyNeSs) Group, BU Robotics Lab, Boston University
+ Explainable Robotics Lab, Lehigh University
  See license.txt file for license information.
 '''
 
@@ -53,6 +54,110 @@ class RelOperation(object):
         '''Gets custom string representation for each operation.'''
         return cls.opnames[rop]
 
+class Expression(object):
+    '''Abstract Syntax Tree representations of expressions involved in STL
+    predicates
+    '''
+    NOP, NEG, ADD, SUB, PROD, DIV, POW, FUNC, VAR, CONST = range(10)
+    opnames = [None, '-', '+', '-', '*', '/', '^']
+    opcodes = {'-': NEG, '+': ADD, '-': SUB, '*': PROD, '/': DIV, '^': POW}
+
+    @classmethod
+    def getCode(cls, text):
+        ''' Gets the code corresponding to the string representation.'''
+        return cls.opcodes.get(text, cls.NOP)
+
+    @classmethod
+    def getString(cls, op):
+        '''Gets custom string representation for each operation.'''
+        return cls.opnames[op]
+
+    def __init__(self, operation, **kwargs):
+        '''Constructor'''
+        self.op = operation
+
+        if self.op == Expression.NEG:
+            self.child = kwargs['child']
+        elif self.op in (Expression.ADD, Expression.SUB, Expression.PROD,
+                         Expression.DIV, Expression.POW):
+            self.left = kwargs['left']
+            self.right = kwargs['right']
+        elif self.op == Expression.FUNC:
+            self.function = kwargs['function']
+            self.arguments = kwargs['arguments']
+        elif self.op == Expression.VAR:
+            self.variable = kwargs['variable']
+        elif self.op == Expression.CONST:
+            self.value = kwargs['value']
+
+        self.__string = None
+        self.__variables = None
+
+    def variables(self):
+        '''Returns the set of variables involved in the expression.'''
+        if self.__variables is not None:
+            return self.__variables
+
+        if self.op == Expression.NEG:
+            vars = self.child.variables()
+        elif self.op in (Expression.ADD, Expression.SUB, Expression.PROD,
+                         Expression.DIV, Expression.POW):
+            vars = self.left.variables() | self.right.variables()
+        elif self.op == Expression.FUNC:
+            vars = set.union(*[arg.variables() for arg in self.arguments])
+        elif self.op == Expression.VAR:
+            vars = set([self.variable])
+        elif self.op == Expression.CONST:
+            vars = set()
+        self.__variables = vars
+        return self.__variables
+
+    def eval(self, variables):
+        '''Evaluates the expression using the variables' values.'''
+        if self.op == Expression.NEG:
+            return - self.child.eval(variables)
+        elif self.op == Expression.ADD:
+            return self.left.eval(variables) + self.right.eval(variables)
+        elif self.op == Expression.SUB:
+            return self.left.eval(variables) - self.right.eval(variables)
+        elif self.op == Expression.PROD:
+            return self.left.eval(variables) * self.right.eval(variables)
+        elif self.op == Expression.DIV:
+            return self.divident.eval(variables) // self.divisor.eval(variables)
+        elif self.op == Expression.POW:
+            return np.pow(self.base.eval(variables),
+                          self.exponent.eval(variables))
+        elif self.op == Expression.FUNC:
+            return self.function(*[arg.eval(variables)
+                                   for arg in self.arguments])
+        elif self.op == Expression.VAR:
+            return variables[self.variable]
+        elif self.op == Expression.CONST:
+            return self.value
+
+    def __str__(self):
+        if self.__string is not None:
+            return self.__string
+
+        if self.op == Expression.NEG:
+            s = '-({child})'.format(child=self.child)
+        elif self.op in (Expression.ADD, Expression.SUB, Expression.PROD,
+                         Expression.DIV, Expression.POW):
+            opname = Expression.getString(self.op)
+            s = '({left} {op} {right})'.format(op=opname, left=self.left,
+                                               right=self.right)
+        elif self.op == Expression.FUNC:
+            arguments = [str(arg) for arg in self.arguments]
+            s = '{func_name}({arguments})'.format(
+                funcname=self.function.__name__,
+                arguments=arguments)
+        elif self.op == Expression.VAR:
+            s = self.variable
+        elif self.op == Expression.CONST:
+            s = str(self.value)
+        self.__string = s
+        return self.__string
+
 
 class STLFormula(object):
     '''Abstract Syntax Tree representation of an STL formula'''
@@ -65,7 +170,7 @@ class STLFormula(object):
             self.value = kwargs['value']
         elif self.op == Operation.PRED:
             self.relation = kwargs['relation']
-            self.variable = kwargs['variable']
+            self.expression = kwargs['expression']
             self.threshold = kwargs['threshold']
         elif self.op in (Operation.AND, Operation.OR):
             self.children = kwargs['children']
@@ -95,7 +200,12 @@ class STLFormula(object):
             else:
                 return -maximumRobustness
         elif self.op == Operation.PRED:
-            value = s.value(self.variable, t)
+            if self.expression.op == Expression.VAR:
+                value = s.value(self.expression.variable, t)
+            else:
+                variables = {variable: s.value(variable, t)
+                             for variable in self.expression.variables()}
+                value = self.expression.eval(variables)
             if self.relation in (RelOperation.GE, RelOperation.GT):
                 return  value - self.threshold
             elif self.relation in (RelOperation.LE, RelOperation.LT):
@@ -139,8 +249,7 @@ class STLFormula(object):
         if self.op == Operation.PRED:
             self.relation = RelOperation.negop[self.relation]
         elif self.op in (Operation.AND, Operation.OR):
-            self.left = self.left.negate()
-            self.right = self.right.negate()
+            [child.negate() for child in self.children]
         elif self.op == Operation.IMPLIES:
             self.right = self.right.negate()
         elif self.op == Operation.NOT:
@@ -152,28 +261,52 @@ class STLFormula(object):
         self.op = Operation.negop[self.op]
         return self
 
+    def isSimpleLinear(self):
+        '''Checks if the predicates of the STL formula are linear monomials,
+        i.e., just a variable with coefficient 1.'''
+        if self.op == Operation.PRED:
+            return self.expression.op == Expression.VAR
+        elif self.op in (Operation.AND, Operation.OR):
+            return all([ch.isSimpleLinear() for ch in self.children])
+        elif self.op in (Operation.IMPLIES, Operation.UNTIL):
+            return self.left.isSimpleLinear() and self.right.isSimpleLinear()
+        elif self.op in (Operation.NOT, Operation.ALWAYS, Operation.EVENT):
+            return self.child.isSimpleLinear()
+
     def pnf(self):
         '''Computes the Positive Normal Form of the STL formula, potentially
         adding new variables.
 
         Note: The tree structure is modified in-place.
+        Note: Only works for STL formulae with simple linear predicates.
         '''
         if self.op == Operation.PRED:
+            assert self.expression.op == Expression.VAR
+            neg_var = Expression(Expression.VAR,
+                                 variable='{variable}_neg'.format(
+                                     variable=self.expression.variable))
+
             if self.relation in (RelOperation.LE, RelOperation.LT):
-                self.variable = '{variable}_neg'.format(variable=self.variable)
+                self.expression.variable = neg_var
             elif self.relation == RelOperation.EQ:
-                children = [STLFormula(Operation.PRED, relation=RelOperation.GE,
-                              variable=self.variable, threshold=self.threshold),
-                            STLFormula(Operation.PRED, relation=RelOperation.GE,
-                              variable='{variable}_neg'.format(self.variable),
-                              threshold=-self.threshold)]
+                children = [STLFormula(Operation.PRED,
+                                       relation=RelOperation.GE,
+                                       expression=self.expression,
+                                       threshold=self.threshold),
+                            STLFormula(Operation.PRED,
+                                       relation=RelOperation.GE,
+                                       expression=neg_var,
+                                       threshold=-self.threshold)]
                 return STLFormula(Operation.AND, children=children)
             elif self.relation == RelOperation.NQ:
-                children = [STLFormula(Operation.PRED, relation=RelOperation.GT,
-                              variable=self.variable, threshold=self.threshold),
-                            STLFormula(Operation.PRED, relation=RelOperation.GT,
-                              variable='{variable}_neg'.format(self.variable),
-                              threshold=-self.threshold)]
+                children = [STLFormula(Operation.PRED,
+                                       relation=RelOperation.GT,
+                                       expression=self.expression,
+                                       threshold=self.threshold),
+                            STLFormula(Operation.PRED,
+                                       relation=RelOperation.GT,
+                                       expression=neg_var,
+                                       threshold=-self.threshold)]
                 return STLFormula(Operation.OR, children=children)
         elif self.op in (Operation.AND, Operation.OR):
             self.children = [child.pnf() for child in self.children]
@@ -207,7 +340,7 @@ class STLFormula(object):
     def variables(self):
         '''Computes the set of variables involved in the STL formula.'''
         if self.op == Operation.PRED:
-            return {self.variable}
+            return self.expression.variables()
         elif self.op in (Operation.AND, Operation.OR):
             return set.union(*[child.variables() for child in self.children])
         elif self.op in (Operation.IMPLIES, Operation.UNTIL):
@@ -240,7 +373,7 @@ class STLFormula(object):
 
         opname = Operation.getString(self.op)
         if self.op == Operation.PRED:
-            s = '({v} {rel} {th})'.format(v=self.variable, th=self.threshold,
+            s = '({e} {rel} {th})'.format(e=self.expression, th=self.threshold,
                                     rel=RelOperation.getString(self.relation))
         elif self.op == Operation.IMPLIES:
             s = '{left} {op} {right}'.format(left=self.left, op=opname,
@@ -301,12 +434,37 @@ class STLAbstractSyntaxTreeExtractor(stlVisitor):
         return self.visit(ctx.booleanExpr())
 
     def visitBooleanExpr(self, ctx):
+        threshold = self.visit(ctx.right)
+        assert threshold.op == Expression.CONST
         return STLFormula(Operation.PRED,
-            relation=RelOperation.getCode(ctx.op.text),
-            variable=ctx.left.getText(), threshold=float(ctx.right.getText()))
+                          relation=RelOperation.getCode(ctx.op.text),
+                          expression=self.visit(ctx.left),
+                          threshold=threshold.value)
+
+    def visitVarExpr(self, ctx):
+        return Expression(Expression.VAR, variable=ctx.variable.text)
+
+    def visitConstExpr(self, ctx):
+        return Expression(Expression.CONST, value=float(ctx.value.text))
+
+    def visitNegExpr(self, ctx):
+        return Expression(Expression.NEG, child=self.visit(ctx.child))
+
+    def visitAlgExpr(self, ctx):
+        left = self.visit(ctx.left)
+        right = self.visit(ctx.right)
+        return Expression(Expression.getCode(ctx.op.text),
+                          left=left,
+                          right=right)
+
+    def visitFuncExpr(self, ctx):
+        raise NotImplementedError()
+
+    def visitParExpr(self, ctx):
+        return self.visit(ctx.child);
 
     def visitParprop(self, ctx):
-        return self.visit(ctx.child);
+        return self.visit(ctx.child)
 
 
 class Trace(object):
@@ -333,7 +491,8 @@ class Trace(object):
         raise NotImplementedError
 
 if __name__ == '__main__':
-    lexer = stlLexer(InputStream("!(x < 10) && F[0, 2] y > 2 || G[1, 3] z<=8"))
+    lexer = stlLexer(InputStream("!(x < 10) && F[0, 2] y > 2 || G[1, 3] z<=8 && (-x + 2*y - z< 2) && G[0, 3] (x*x - 4*x + 4 + y*y - 6*y + 9 >= 2)"))
+    # lexer = stlLexer(InputStream("!(x < 10) && F[0, 2] y > 2 || G[1, 3] z<=8"))
     # lexer = stlLexer(InputStream("!(x < 10) && y > 2 && z<=8"))
     tokens = CommonTokenStream(lexer)
 
@@ -342,7 +501,7 @@ if __name__ == '__main__':
     print(t.toStringTree())
 
     ast = STLAbstractSyntaxTreeExtractor().visit(t)
-    print('AST:', ast)
+    print('AST:', str(ast))
 
     varnames = ['x', 'y', 'z']
     data = [[8, 8, 11, 11, 11], [2, 3, 1, 2, 2], [3, 9, 8, 9, 9]]
@@ -351,5 +510,6 @@ if __name__ == '__main__':
 
     print('r:', ast.robustness(s, 0))
 
-    pnf = ast.pnf()
-    print(pnf)
+    if ast.isSimpleLinear():
+        pnf = ast.pnf()
+        print(pnf)
