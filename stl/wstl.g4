@@ -20,7 +20,11 @@ wstlProperty:
     |    left=wstlProperty op=IMPLIES right=wstlProperty #formula
     |    left=wstlProperty op=AND ('^' weight=VARIABLE)?
          right=wstlProperty #formula
+    |    op=AND ('^' weight=VARIABLE)?
+         '(' wstlProperty (',' wstlProperty)+ ')' #formula
     |    left=wstlProperty op=OR ('^' weight=VARIABLE)?
+    |    op=OR ('^' weight=VARIABLE)?
+         '(' wstlProperty (',' wstlProperty)+ ')' #formula
          right=wstlProperty #formula
     |    left=wstlProperty op=UNTIL '[' low=RATIONAL ',' high=RATIONAL ']'
          ('^' weight=VARIABLE)? right=wstlProperty #formula
