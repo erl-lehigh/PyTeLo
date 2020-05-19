@@ -23,9 +23,9 @@ wstlProperty:
     |    op=AND ('^' weight=VARIABLE)?
          '(' wstlProperty (',' wstlProperty)+ ')' #formula
     |    left=wstlProperty op=OR ('^' weight=VARIABLE)?
+         right=wstlProperty #formula
     |    op=OR ('^' weight=VARIABLE)?
          '(' wstlProperty (',' wstlProperty)+ ')' #formula
-         right=wstlProperty #formula
     |    left=wstlProperty op=UNTIL '[' low=RATIONAL ',' high=RATIONAL ']'
          ('^' weight=VARIABLE)? right=wstlProperty #formula
     |    left=wstlProperty op=RELEASE '[' low=RATIONAL ',' high=RATIONAL ']'
