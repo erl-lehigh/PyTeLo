@@ -33,7 +33,7 @@ class stl2milp(object):
 
         if robust:
             rho_min, rho_max = self.ranges['rho']
-            self.rho = self.model.addVar(vtype=self.vtype['rho'], name='rho',
+            self.rho = self.model.addVar(vtype=self.vtypes['rho'], name='rho',
                                          lb=rho_min, ub=rho_max, obj=-1)
         else:
             self.rho = 0
