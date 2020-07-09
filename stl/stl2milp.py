@@ -46,6 +46,13 @@ class stl2milp(object):
             Operation.UNTIL : self.until
         }
 
+    def translate(self, satisfaction=True):
+        '''Translates the STL formula to MILP from time 0.'''
+        z = self.to_milp(self.formula)
+        if satisfaction:
+            self.model.addConstr(z == 1, 'formula_satisfaction')
+        return z
+
     def to_milp(self, formula, t=0):
         '''Generates the MILP from the STL formula.'''
         z, added = self.add_formula_variable(formula, t)
