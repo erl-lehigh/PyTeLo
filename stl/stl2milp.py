@@ -13,13 +13,14 @@ from stl import Operation, RelOperation, STLFormula
 class stl2milp(object):
     '''Translate an STL formula to an MILP.'''
 
-    def __init__(self, formula, ranges=None, vtypes=None, model=None,
-                 robust=False):
+    def __init__(self, formula, ranges, vtypes=None, model=None, robust=False):
         self.formula = formula
 
+        self.M = 1000
         self.ranges = ranges
-        if ranges is None:
-            self.ranges = {v: (0, 10) for v in self.formula.variables()}
+        assert set(self.formula.variables()) <= set(self.ranges)
+        if robust and 'rho' not in self.ranges:
+            self.ranges['rho'] = (-grb.GRB.INFINITY, self.M - 1)
 
         self.vtypes = vtypes
         if vtypes is None:
@@ -29,12 +30,12 @@ class stl2milp(object):
         if model is None:
             self.model = grb.Model('STL formula: {}'.format(formula))
 
-        self.M = 1000
         self.variables = dict()
 
         if robust:
-            self.rho = self.model.addVar(vtype=grb.GRB.CONTINUOUS, name='rho',
-                               lb=-grb.GRB.INFINITY,ub=grb.GRB.INFINITY, obj=-1)
+            rho_min, rho_max = self.ranges['rho']
+            self.rho = self.model.addVar(vtype=self.vtypes['rho'], name='rho',
+                                         lb=rho_min, ub=rho_max, obj=-1)
         else:
             self.rho = 0
 
@@ -46,6 +47,13 @@ class stl2milp(object):
             Operation.ALWAYS : self.globally,
             Operation.UNTIL : self.until
         }
+
+    def translate(self, satisfaction=True):
+        '''Translates the STL formula to MILP from time 0.'''
+        z = self.to_milp(self.formula)
+        if satisfaction:
+            self.model.addConstr(z == 1, 'formula_satisfaction')
+        return z
 
     def to_milp(self, formula, t=0):
         '''Generates the MILP from the STL formula.'''
