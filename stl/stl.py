@@ -88,13 +88,13 @@ class STLFormula(object):
         self.__string = None
         self.__hash = None
 
-    def robustness(self, s, t, maximumRobustness=1):
+    def robustness(self, s, t, max_robustness=1):
         '''Computes the robustness of the STL formula.'''
         if self.op == Operation.BOOL:
             if self.value:
-                return maximumRobustness
+                return max_robustness
             else:
-                return -maximumRobustness
+                return -max_robustness
         elif self.op == Operation.PRED:
             value = s.value(self.variable, t)
             if self.relation in (RelOperation.GE, RelOperation.GT):
@@ -106,31 +106,34 @@ class STLFormula(object):
             elif self.relation == RelOperation.NQ:
                 return abs(value - self.threshold)
         elif self.op == Operation.AND:
-            return min(child.robustness(s, t) for child in self.children)
+            return min(child.robustness(s, t, max_robustness)
+                                        for child in self.children)
         elif self.op == Operation.OR:
-            return max(child.robustness(s, t) for child in self.children)
+            return max(child.robustness(s, t, max_robustness)
+                                        for child in self.children)
         elif self.op == Operation.IMPLIES:
-            return max(-self.left.robustness(s, t), self.right.robustness(s, t))
+            return max(-self.left.robustness(s, t, max_robustness),
+                       self.right.robustness(s, t, max_robustness))
         elif self.op == Operation.NOT:
-            return -self.child.robustness(s, t)
+            return -self.child.robustness(s, t, max_robustness)
         elif self.op == Operation.UNTIL:
-            r_acc = min(self.left.robustness(s, t+tau)
+            r_acc = min(self.left.robustness(s, t+tau, max_robustness)
                                                for tau in np.arange(self.low+1))
-            rleft = (self.left.robustness(s, t+tau)
+            rleft = (self.left.robustness(s, t+tau, max_robustness)
                                     for tau in np.arange(self.low, self.high+1))
-            rright = (self.right.robustness(s, t+tau)
+            rright = (self.right.robustness(s, t+tau, max_robustness)
                                     for tau in np.arange(self.low, self.high+1))
-            value = -maximumRobustness
+            value = -max_robustness
             for rl, rr in zip(rleft, rright):
                 r_acc = min(r_acc, rl)
                 r_conj = min(r_acc, rr)
                 value = max(value, r_conj)
             return value
         elif self.op == Operation.ALWAYS:
-            return min( (self.child.robustness(s, t+tau)
+            return min( (self.child.robustness(s, t+tau, max_robustness)
                                 for tau in np.arange(self.low, self.high+1)))
         elif self.op == Operation.EVENT:
-            return max( (self.child.robustness(s, t+tau)
+            return max( (self.child.robustness(s, t+tau, max_robustness)
                                 for tau in np.arange(self.low, self.high+1)))
 
     def negate(self):
@@ -349,7 +352,7 @@ if __name__ == '__main__':
     timepoints = [0, 1, 2, 3, 4]
     s = Trace(varnames, timepoints, data)
 
-    print('r:', ast.robustness(s, 0))
+    print('r:', ast.robustness(s, 0, 20))
 
     pnf = ast.pnf()
     print(pnf)
