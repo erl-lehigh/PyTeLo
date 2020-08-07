@@ -144,11 +144,6 @@ class stl2milp(object):
         '''Adds an until to the model.'''
         assert formula.op == Operation.UNTIL
 
-<<<<<<< HEAD
-=======
-        raise NotImplementedError #TODO: under construction
-
->>>>>>> master
         a, b = int(formula.low), int(formula.high)
         z_children_left = [self.to_milp(formula.left, tau)
                                                  for tau in range(t, t+b+1)]
