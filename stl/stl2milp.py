@@ -144,8 +144,6 @@ class stl2milp(object):
         '''Adds an until to the model.'''
         assert formula.op == Operation.UNTIL
 
-        raise NotImplementedError #TODO: under construction
-
         a, b = int(formula.low), int(formula.high)
         z_children_left = [self.to_milp(formula.left, tau)
                                                  for tau in range(t, t+b+1)]
@@ -167,16 +165,16 @@ class stl2milp(object):
             if phi_alw is not None:
                 children.append(phi_alw)
             phi = STLFormula(Operation.AND, children=children)
-            z_aux.append(self.add_formula_variable(phi, t))
+            z_aux.append(self.add_formula_variable(phi, t)[0])
 
         for k, z_right in enumerate(z_children_right):
             z_conj = z_aux[k]
             self.model.addConstr(z_conj <= z_right)
             for z_left in z_children_left[:t+a+k+1]:
                 self.model.addConstr(z_conj <= z_left)
-            m = 1 + (t + a + k)
+            m = 1 + (t + a + k + 1)
             self.model.addConstr(z_conj >= 1-m + z_right
                                  + sum(z_children_left[:t+a+k+1]))
 
-            self.model.addConstr(z >= z_conj)
+            self.model.addConstr(z <= z_conj)
         self.model.addConstr(z <= sum(z_aux))
