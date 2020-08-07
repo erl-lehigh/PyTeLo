@@ -1,6 +1,7 @@
 '''
- Copyright (C) 2018 Cristian Ioan Vasile <cvasile@mit.edu>
+ Copyright (C) 2018-2020 Cristian Ioan Vasile <cvasile@lehigh.edu>
  Hybrid and Networked Systems (HyNeSs) Group, BU Robotics Lab, Boston University
+ Explainable Robotics Lab, Lehigh University
  See license.txt file for license information.
 '''
 
@@ -122,10 +123,9 @@ class stl2milp(object):
     def eventually(self, formula, z, t):
         '''Adds an eventually to the model.'''
         assert formula.op == Operation.EVENT
-        a, b = formula.low, formula.high
+        a, b = int(formula.low), int(formula.high)
         child = formula.child
-        print "a=%d,b=%d"%(a,b)
-        z_children = [self.to_milp(child, t + tau) for tau in range(int(a), int(b+1))]
+        z_children = [self.to_milp(child, t + tau) for tau in range(a, b+1)]
         for z_child in z_children:
             self.model.addConstr(z >= z_child)
         self.model.addConstr(z <= sum(z_children))
@@ -133,11 +133,9 @@ class stl2milp(object):
     def globally(self, formula, z, t):
         '''Adds a globally to the model.'''
         assert formula.op == Operation.ALWAYS
-        a, b = formula.low, formula.high
-#        print "a=%d,b=%d,t=%d"%(a,b,t)
+        a, b = int(formula.low), int(formula.high)
         child = formula.child
-        z_children = [self.to_milp(child, t + tau) for tau in range(int(a), int(b+1))]
-#        print len(z_children)
+        z_children = [self.to_milp(child, t + tau) for tau in range(a, b+1)]
         for z_child in z_children:
             self.model.addConstr(z <= z_child)
         self.model.addConstr(z >= 1 - len(z_children) + sum(z_children))
@@ -146,6 +144,11 @@ class stl2milp(object):
         '''Adds an until to the model.'''
         assert formula.op == Operation.UNTIL
 
+<<<<<<< HEAD
+=======
+        raise NotImplementedError #TODO: under construction
+
+>>>>>>> master
         a, b = int(formula.low), int(formula.high)
         z_children_left = [self.to_milp(formula.left, tau)
                                                  for tau in range(t, t+b+1)]

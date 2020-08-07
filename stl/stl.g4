@@ -2,8 +2,9 @@ grammar stl;
 
 @header {
 '''
- Copyright (C) 2015-2018 Cristian Ioan Vasile <cvasile@mit.edu>
+ Copyright (C) 2015-2020 Cristian Ioan Vasile <cvasile@lehigh.edu>
  Hybrid and Networked Systems (HyNeSs) Group, BU Robotics Lab, Boston University
+ Explainable Robotics Lab, Lehigh University
  See license.txt file for license information.
 '''
 }
