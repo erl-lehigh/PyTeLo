@@ -140,7 +140,9 @@ class STLFormula(object):
         '''Computes the negation of the STL formula by propagating the negation
         towards predicates.
         '''
-        if self.op == Operation.PRED:
+        if self.op == Operation.BOOL:
+            self.value = not self.value
+        elif self.op == Operation.PRED:
             self.relation = RelOperation.negop[self.relation]
         elif self.op in (Operation.AND, Operation.OR):
             [child.negate() for child in self.children]
@@ -194,7 +196,7 @@ class STLFormula(object):
 
     def bound(self):
         '''Computes the bound of the STL formula.'''
-        if self.op == Operation.PRED:
+        if self.op in (Operation.BOOL, Operation.PRED):
             return 0
         elif self.op in (Operation.AND, Operation.OR):
             return max([ch.bound() for ch in self.children])
@@ -209,7 +211,9 @@ class STLFormula(object):
 
     def variables(self):
         '''Computes the set of variables involved in the STL formula.'''
-        if self.op == Operation.PRED:
+        if self.op == Operation.BOOL:
+            return set()
+        elif self.op == Operation.PRED:
             return {self.variable}
         elif self.op in (Operation.AND, Operation.OR):
             return set.union(*[child.variables() for child in self.children])
@@ -242,7 +246,9 @@ class STLFormula(object):
             return self.__string
 
         opname = Operation.getString(self.op)
-        if self.op == Operation.PRED:
+        if self.op == Operation.BOOL:
+            s = '{value}'.format(value=self.value)
+        elif self.op == Operation.PRED:
             s = '({v} {rel} {th})'.format(v=self.variable, th=self.threshold,
                                     rel=RelOperation.getString(self.relation))
         elif self.op == Operation.IMPLIES:
@@ -304,6 +310,9 @@ class STLAbstractSyntaxTreeExtractor(stlVisitor):
         return self.visit(ctx.booleanExpr())
 
     def visitBooleanExpr(self, ctx):
+        if ctx.op.text.lower() in ('true', 'false'):
+            value = ctx.op.text.lower() == 'true'
+            return STLFormula(Operation.BOOL, value=value)
         return STLFormula(Operation.PRED,
             relation=RelOperation.getCode(ctx.op.text),
             variable=ctx.left.getText(), threshold=float(ctx.right.getText()))
