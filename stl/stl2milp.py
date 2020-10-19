@@ -1,6 +1,7 @@
 '''
- Copyright (C) 2018 Cristian Ioan Vasile <cvasile@mit.edu>
+ Copyright (C) 2018-2020 Cristian Ioan Vasile <cvasile@lehigh.edu>
  Hybrid and Networked Systems (HyNeSs) Group, BU Robotics Lab, Boston University
+ Explainable Robotics Lab, Lehigh University
  See license.txt file for license information.
 '''
 
@@ -12,13 +13,14 @@ from stl import Operation, RelOperation, STLFormula
 class stl2milp(object):
     '''Translate an STL formula to an MILP.'''
 
-    def __init__(self, formula, ranges=None, vtypes=None, model=None,
-                 robust=False):
+    def __init__(self, formula, ranges, vtypes=None, model=None, robust=False):
         self.formula = formula
 
+        self.M = 1000
         self.ranges = ranges
-        if ranges is None:
-            self.ranges = {v: (0, 10) for v in self.formula.variables()}
+        assert set(self.formula.variables()) <= set(self.ranges)
+        if robust and 'rho' not in self.ranges:
+            self.ranges['rho'] = (-grb.GRB.INFINITY, self.M - 1)
 
         self.vtypes = vtypes
         if vtypes is None:
@@ -28,12 +30,12 @@ class stl2milp(object):
         if model is None:
             self.model = grb.Model('STL formula: {}'.format(formula))
 
-        self.M = 1000
         self.variables = dict()
 
         if robust:
-            self.rho = self.model.addVar(vtype=grb.GRB.CONTINUOUS, name='rho',
-                               lb=-grb.GRB.INFINITY,ub=grb.GRB.INFINITY, obj=-1)
+            rho_min, rho_max = self.ranges['rho']
+            self.rho = self.model.addVar(vtype=self.vtypes['rho'], name='rho',
+                                         lb=rho_min, ub=rho_max, obj=-1)
         else:
             self.rho = 0
 
@@ -45,6 +47,13 @@ class stl2milp(object):
             Operation.ALWAYS : self.globally,
             Operation.UNTIL : self.until
         }
+
+    def translate(self, satisfaction=True):
+        '''Translates the STL formula to MILP from time 0.'''
+        z = self.to_milp(self.formula)
+        if satisfaction:
+            self.model.addConstr(z == 1, 'formula_satisfaction')
+        return z
 
     def to_milp(self, formula, t=0):
         '''Generates the MILP from the STL formula.'''
@@ -114,10 +123,9 @@ class stl2milp(object):
     def eventually(self, formula, z, t):
         '''Adds an eventually to the model.'''
         assert formula.op == Operation.EVENT
-        a, b = formula.low, formula.high
+        a, b = int(formula.low), int(formula.high)
         child = formula.child
-        print "a=%d,b=%d"%(a,b)
-        z_children = [self.to_milp(child, t + tau) for tau in range(int(a), int(b+1))]
+        z_children = [self.to_milp(child, t + tau) for tau in range(a, b+1)]
         for z_child in z_children:
             self.model.addConstr(z >= z_child)
         self.model.addConstr(z <= sum(z_children))
@@ -125,11 +133,9 @@ class stl2milp(object):
     def globally(self, formula, z, t):
         '''Adds a globally to the model.'''
         assert formula.op == Operation.ALWAYS
-        a, b = formula.low, formula.high
-#        print "a=%d,b=%d,t=%d"%(a,b,t)
+        a, b = int(formula.low), int(formula.high)
         child = formula.child
-        z_children = [self.to_milp(child, t + tau) for tau in range(int(a), int(b+1))]
-#        print len(z_children)
+        z_children = [self.to_milp(child, t + tau) for tau in range(a, b+1)]
         for z_child in z_children:
             self.model.addConstr(z <= z_child)
         self.model.addConstr(z >= 1 - len(z_children) + sum(z_children))
@@ -138,9 +144,7 @@ class stl2milp(object):
         '''Adds an until to the model.'''
         assert formula.op == Operation.UNTIL
 
-        raise NotImplementedError #TODO: under construction
-
-        a, b = formula.low, formula.high
+        a, b = int(formula.low), int(formula.high)
         z_children_left = [self.to_milp(formula.left, tau)
                                                  for tau in range(t, t+b+1)]
         z_children_right = [self.to_milp(formula.right, tau)
@@ -161,16 +165,16 @@ class stl2milp(object):
             if phi_alw is not None:
                 children.append(phi_alw)
             phi = STLFormula(Operation.AND, children=children)
-            z_aux.append(self.add_formula_variable(phi, t))
+            z_aux.append(self.add_formula_variable(phi, t)[0])
 
         for k, z_right in enumerate(z_children_right):
             z_conj = z_aux[k]
             self.model.addConstr(z_conj <= z_right)
             for z_left in z_children_left[:t+a+k+1]:
                 self.model.addConstr(z_conj <= z_left)
-            m = 1 + (t + a + k)
+            m = 1 + (t + a + k + 1)
             self.model.addConstr(z_conj >= 1-m + z_right
                                  + sum(z_children_left[:t+a+k+1]))
 
-            self.model.addConstr(z >= z_conj)
+            self.model.addConstr(z <= z_conj)
         self.model.addConstr(z <= sum(z_aux))

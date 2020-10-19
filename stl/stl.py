@@ -1,6 +1,7 @@
 '''
- Copyright (C) 2015-2018 Cristian Ioan Vasile <cvasile@bu.edu>
+ Copyright (C) 2015-2020 Cristian Ioan Vasile <cvasile@lehigh.edu>
  Hybrid and Networked Systems (HyNeSs) Group, BU Robotics Lab, Boston University
+ Explainable Robotics Lab, Lehigh University
  See license.txt file for license information.
 '''
 
@@ -87,13 +88,13 @@ class STLFormula(object):
         self.__string = None
         self.__hash = None
 
-    def robustness(self, s, t, maximumRobustness=1):
+    def robustness(self, s, t, max_robustness=1):
         '''Computes the robustness of the STL formula.'''
         if self.op == Operation.BOOL:
             if self.value:
-                return maximumRobustness
+                return max_robustness
             else:
-                return -maximumRobustness
+                return -max_robustness
         elif self.op == Operation.PRED:
             value = s.value(self.variable, t)
             if self.relation in (RelOperation.GE, RelOperation.GT):
@@ -105,42 +106,46 @@ class STLFormula(object):
             elif self.relation == RelOperation.NQ:
                 return abs(value - self.threshold)
         elif self.op == Operation.AND:
-            return min(child.robustness(s, t) for child in self.children)
+            return min(child.robustness(s, t, max_robustness)
+                                        for child in self.children)
         elif self.op == Operation.OR:
-            return max(child.robustness(s, t) for child in self.children)
+            return max(child.robustness(s, t, max_robustness)
+                                        for child in self.children)
         elif self.op == Operation.IMPLIES:
-            return max(-self.left.robustness(s, t), self.right.robustness(s, t))
+            return max(-self.left.robustness(s, t, max_robustness),
+                       self.right.robustness(s, t, max_robustness))
         elif self.op == Operation.NOT:
-            return -self.child.robustness(s, t)
+            return -self.child.robustness(s, t, max_robustness)
         elif self.op == Operation.UNTIL:
-            r_acc = min(self.left.robustness(s, t+tau)
+            r_acc = min(self.left.robustness(s, t+tau, max_robustness)
                                                for tau in np.arange(self.low+1))
-            rleft = (self.left.robustness(s, t+tau)
+            rleft = (self.left.robustness(s, t+tau, max_robustness)
                                     for tau in np.arange(self.low, self.high+1))
-            rright = (self.right.robustness(s, t+tau)
+            rright = (self.right.robustness(s, t+tau, max_robustness)
                                     for tau in np.arange(self.low, self.high+1))
-            value = -maximumRobustness
+            value = -max_robustness
             for rl, rr in zip(rleft, rright):
                 r_acc = min(r_acc, rl)
                 r_conj = min(r_acc, rr)
                 value = max(value, r_conj)
             return value
         elif self.op == Operation.ALWAYS:
-            return min( (self.child.robustness(s, t+tau)
+            return min( (self.child.robustness(s, t+tau, max_robustness)
                                 for tau in np.arange(self.low, self.high+1)))
         elif self.op == Operation.EVENT:
-            return max( (self.child.robustness(s, t+tau)
+            return max( (self.child.robustness(s, t+tau, max_robustness)
                                 for tau in np.arange(self.low, self.high+1)))
 
     def negate(self):
         '''Computes the negation of the STL formula by propagating the negation
         towards predicates.
         '''
-        if self.op == Operation.PRED:
+        if self.op == Operation.BOOL:
+            self.value = not self.value
+        elif self.op == Operation.PRED:
             self.relation = RelOperation.negop[self.relation]
         elif self.op in (Operation.AND, Operation.OR):
-            self.left = self.left.negate()
-            self.right = self.right.negate()
+            [child.negate() for child in self.children]
         elif self.op == Operation.IMPLIES:
             self.right = self.right.negate()
         elif self.op == Operation.NOT:
@@ -191,7 +196,7 @@ class STLFormula(object):
 
     def bound(self):
         '''Computes the bound of the STL formula.'''
-        if self.op == Operation.PRED:
+        if self.op in (Operation.BOOL, Operation.PRED):
             return 0
         elif self.op in (Operation.AND, Operation.OR):
             return max([ch.bound() for ch in self.children])
@@ -206,7 +211,9 @@ class STLFormula(object):
 
     def variables(self):
         '''Computes the set of variables involved in the STL formula.'''
-        if self.op == Operation.PRED:
+        if self.op == Operation.BOOL:
+            return set()
+        elif self.op == Operation.PRED:
             return {self.variable}
         elif self.op in (Operation.AND, Operation.OR):
             return set.union(*[child.variables() for child in self.children])
@@ -239,7 +246,9 @@ class STLFormula(object):
             return self.__string
 
         opname = Operation.getString(self.op)
-        if self.op == Operation.PRED:
+        if self.op == Operation.BOOL:
+            s = '{value}'.format(value=self.value)
+        elif self.op == Operation.PRED:
             s = '({v} {rel} {th})'.format(v=self.variable, th=self.threshold,
                                     rel=RelOperation.getString(self.relation))
         elif self.op == Operation.IMPLIES:
@@ -301,6 +310,9 @@ class STLAbstractSyntaxTreeExtractor(stlVisitor):
         return self.visit(ctx.booleanExpr())
 
     def visitBooleanExpr(self, ctx):
+        if ctx.op.text.lower() in ('true', 'false'):
+            value = ctx.op.text.lower() == 'true'
+            return STLFormula(Operation.BOOL, value=value)
         return STLFormula(Operation.PRED,
             relation=RelOperation.getCode(ctx.op.text),
             variable=ctx.left.getText(), threshold=float(ctx.right.getText()))
@@ -349,7 +361,7 @@ if __name__ == '__main__':
     timepoints = [0, 1, 2, 3, 4]
     s = Trace(varnames, timepoints, data)
 
-    print('r:', ast.robustness(s, 0))
+    print('r:', ast.robustness(s, 0, 20))
 
     pnf = ast.pnf()
     print(pnf)
