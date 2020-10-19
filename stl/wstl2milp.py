@@ -41,6 +41,13 @@ class wstl2milp(object):
             # Operation.RELEASE : self.release #TODO:
         }
 
+    def translate(self, satisfaction=True):
+        '''Translates the STL formula to MILP from time 0.'''
+        z, rho = self.to_milp(self.formula)
+        if satisfaction:
+            self.model.addConstr(z == 1, 'formula_satisfaction')
+        return z, rho
+
     def to_milp(self, formula, t=0):
         '''Generates the MILP from the STL formula.'''
         (z, rho), added = self.add_formula_variables(formula, t)
@@ -69,24 +76,28 @@ class wstl2milp(object):
             return self.variables[formula][t], True
         return self.variables[formula][t], False
 
-    def add_hat(self, formula, t):
+    def add_hat_variable(self, formula, parent, t):
         '''Adds a hat variable for the `formula` at time `t`
         TODO:
 
         NOTE: Is caching correct, or does every disjunction, eventually,
         and until need their own version?
         '''
-        if formula not in self.hat_variables:
-            self.hat_variables[formula] = dict()
-        if t not in self.hat_variables[formula]:
+        if parent not in self.hat_variables:
+            self.hat_variables[parent] = dict()
+        if formula not in self.hat_variables[parent]:
+            self.hat_variables[parent][formula] = dict()
+        if t not in self.hat_variables[parent][formula]:
             opname = Operation.getString(formula.op)
             identifier = formula.identifier()
-            z_name = 'zhat_{}_{}_{}'.format(opname, identifier, t)
-            self.hat_variables[formula][t] = self.model.addVar(
+            parent_identifier = parent.identifier()
+            z_name = 'zhat_{}_{}_{}_{}'.format(opname, identifier,
+                                               parent_identifier, t)
+            self.hat_variables[parent][formula][t] = self.model.addVar(
                             vtype=grb.GRB.CONTINUOUS, name=z_name, lb=0, ub=1)
             self.model.update()
-            return self.hat_variables[formula][t], True
-        return self.hat_variables[formula][t], False
+            return self.hat_variables[parent][formula][t], True
+        return self.hat_variables[parent][formula][t], False
 
     def add_state(self, state, t):
         '''Adds the `state` at time `t` as a variable.'''
@@ -133,7 +144,8 @@ class wstl2milp(object):
         assert formula.op == Operation.OR
         z_children, rho_children = zip(*[self.to_milp(f, t)
                                          for f in formula.children])
-        z_hat_children = [self.add_hat_variable(f, t) for f in formula.children]
+        z_hat_children,_ = zip(*[self.add_hat_variable(f, formula, t)
+                                 for f in formula.children])
         vars_children = zip(z_children, z_hat_children, rho_children)
         for k, (z_child, z_hat_child, rho_child) in enumerate(vars_children):
             weight = formula.weight(k)
@@ -151,8 +163,8 @@ class wstl2milp(object):
         child = formula.child
         z_children, rho_children = zip(*[self.to_milp(child, t + tau)
                                          for tau in range(a, b+1)])
-        z_hat_children = [self.add_hat_variable(f, t + tau)
-                          for tau in range(a, b+1)]
+        z_hat_children, _ = zip(*[self.add_hat_variable(child, formula, t + tau)
+                                  for tau in range(a, b+1)])
         vars_children = zip(range(a, b+1), z_children, z_hat_children,
                             rho_children)
         for tau, z_child, z_hat_child, rho_child in vars_children:
