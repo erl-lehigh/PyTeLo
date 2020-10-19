@@ -37,7 +37,8 @@ class wstl2milp(object):
             Operation.OR : self.disjunction,
             Operation.EVENT : self.eventually,
             Operation.ALWAYS : self.globally,
-            Operation.UNTIL : self.until
+            Operation.UNTIL : self.until,
+            # Operation.RELEASE : self.release #TODO:
         }
 
     def to_milp(self, formula, t=0):
@@ -107,8 +108,11 @@ class wstl2milp(object):
         v = self.add_state(pred.variable, t)
         if pred.relation in (RelOperation.GE, RelOperation.GT):
             self.model.addConstr(rho == v - pred.threshold)
+            self.model.addConstr(rho >= self.M * (1 - z))
+            self.model.addConstr(rho <= self.M * z)
         elif pred.relation in (RelOperation.LE, RelOperation.LT):
-            self.model.addConstr(rho == pred.threshold - v)
+            raise NotImplementedError
+            # self.model.addConstr(rho == pred.threshold - v)
         else:
             raise NotImplementedError
 
@@ -119,9 +123,10 @@ class wstl2milp(object):
         z_sum = 0
         for k, (z_child, rho_child) in enumerate(vars_children):
             self.model.addConstr(z <= z_child)
-            z_sum += z_child
-            self.model.addConstr(rho <= formula.weight(k) * rho_child)
-        self.model.addConstr(z >= 1 - len(z_children) + z_sum)
+            self.model.addConstr(rho <= (1 - formula.weight(k)) * rho_child
+                                        + self.M * (1 - z))
+            self.model.addConstr(rho <= formula.weight(k) * rho_child
+                                        + self.M * z)
 
     def disjunction(self, formula, z, rho, t):
         '''Adds a disjunction to the model.'''
@@ -131,14 +136,13 @@ class wstl2milp(object):
         z_hat_children = [self.add_hat_variable(f, t) for f in formula.children]
         vars_children = zip(z_children, z_hat_children, rho_children)
         for k, (z_child, z_hat_child, rho_child) in enumerate(vars_children):
-            self.model.addConstr(z >= z_child)
-            self.model.addConstr(z_hat_child <= z_child)
-
             weight = formula.weight(k)
-            self.model.addConstr(
-                rho <= weight * rho_child + self.M * (1 - z_hat_child))
+            self.model.addConstr(rho <= weight * rho_child
+                                        + self.M * (2 - z_hat_child - z))
+            self.model.addConstr(rho <= (1 - weight) * rho_child
+                                        + self.M * (1 - z_hat_child + z))
         self.model.addConstr(z <= sum(z_children))
-        self.model.addConstr(sum(z_hat_children) <= 1)
+        self.model.addConstr(sum(z_hat_children) >= 1)
 
     def eventually(self, formula, z, rho, t):
         '''Adds an eventually to the model.'''
@@ -152,14 +156,13 @@ class wstl2milp(object):
         vars_children = zip(range(a, b+1), z_children, z_hat_children,
                             rho_children)
         for tau, z_child, z_hat_child, rho_child in vars_children:
-            self.model.addConstr(z >= z_child)
-            self.model.addConstr(z_hat_child <= z_child)
-
             weight = formula.weight(tau)
-            self.model.addConstr(
-                rho <= weight * rho_child + self.M * (1 - z_hat_child))
+            self.model.addConstr(rho <= weight * rho_child
+                                        + self.M * (2 - z_hat_child - z))
+            self.model.addConstr(rho <= (1 - weight) * rho_child
+                                        + self.M * (1 - z_hat_child + z))
         self.model.addConstr(z <= sum(z_children))
-        self.model.addConstr(sum(z_hat_children) <= 1)
+        self.model.addConstr(sum(z_hat_children) >= 1)
 
     def globally(self, formula, z, rho, t):
         '''Adds a globally to the model.'''
@@ -169,12 +172,55 @@ class wstl2milp(object):
         vars_children = [self.to_milp(child, t + tau) for tau in range(a, b+1)]
         for tau, (z_child, rho_child) in zip(range(a, b+1), vars_children):
             self.model.addConstr(z <= z_child)
-            self.model.addConstr(rho <= formula.weight(tau) * rho_child)
-        self.model.addConstr(z >= 1 - len(z_children) + sum(z_children))
+            self.model.addConstr(rho <= formula.weight(tau) * rho_child
+                                        + self.M * (1 - z))
+            self.model.addConstr(rho <= formula.weight(tau) * rho_child
+                                        + self.M * z)
 
     def until(self, formula, z, rho, t):
         '''Adds an until to the model.'''
         assert formula.op == Operation.UNTIL
+
+        raise NotImplementedError #TODO: under construction
+
+        a, b = formula.low, formula.high
+        z_children_left = [self.to_milp(formula.left, tau)
+                                                 for tau in range(t, t+b+1)]
+        z_children_right = [self.to_milp(formula.right, tau)
+                                               for tau in range(t+a, t+b+1)]
+
+        z_aux = []
+        phi_alw = None
+        if a > 0:
+            phi_alw = STLFormula(Operation.ALWAYS, child=formula.left,
+                                 low=t, high=t+a-1)
+        for tau in range(t+a, t+b+1):
+            if tau > t+a:
+                phi_alw_u = STLFormula(Operation.ALWAYS, child=formula.left,
+                                       low=t+a, high=tau)
+            else:
+                phi_alw_u = formula.left
+            children = [formula.right, phi_alw_u]
+            if phi_alw is not None:
+                children.append(phi_alw)
+            phi = STLFormula(Operation.AND, children=children)
+            z_aux.append(self.add_formula_variables(phi, t))
+
+        for k, z_right in enumerate(z_children_right):
+            z_conj = z_aux[k]
+            self.model.addConstr(z_conj <= z_right)
+            for z_left in z_children_left[:t+a+k+1]:
+                self.model.addConstr(z_conj <= z_left)
+            m = 1 + (t + a + k)
+            self.model.addConstr(z_conj >= 1-m + z_right
+                                 + sum(z_children_left[:t+a+k+1]))
+
+            self.model.addConstr(z >= z_conj)
+        self.model.addConstr(z <= sum(z_aux))
+
+    def release(self, formula, z, rho, t):
+        '''Adds a release to the model.'''
+        assert formula.op == Operation.RELEASE
 
         raise NotImplementedError #TODO: under construction
 
