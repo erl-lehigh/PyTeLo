@@ -120,7 +120,7 @@ class WSTLFormula(STLFormula):
             if self.weight is None:
                 op_weight = ''
             else:
-                op_weight = '^{weight}'.format(weight=self.weigh.__name__)
+                op_weight = '^{weight}'.format(weight=self.weight.__name__)
 
             if self.op in (Operation.AND, Operation.OR):
                 children = [str(child) for child in self.children]
