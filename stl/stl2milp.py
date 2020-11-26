@@ -67,7 +67,7 @@ class stl2milp(object):
         if formula not in self.variables:
             self.variables[formula] = dict()
         if t not in self.variables[formula]:
-            opname = Operation.getString(formula.op)
+            opname = Operation.getName(formula.op)
             identifier = formula.identifier()
             name = '{}_{}_{}'.format(opname, identifier, t)
             self.variables[formula][t] = self.model.addVar(vtype=vtype,
