@@ -22,6 +22,8 @@ class Operation(object):
     opnames = [None, '!', '||', '&&', '=>', 'U', 'F', 'G', 'predicate', 'bool']
     opcodes = {'!': NOT, '&&': AND, '||' : OR, '=>': IMPLIES,
                'U': UNTIL, 'F': EVENT, 'G': ALWAYS}
+    opstrnames = [None, 'not', 'or', 'and', 'imply', 'until', 'event', 'always',
+                  'predicate', 'bool']
     # negation closure of operations
     negop = (NOP, NOP, AND, OR, AND, NOP, ALWAYS, EVENT, PRED, BOOL)
 
@@ -34,6 +36,11 @@ class Operation(object):
     def getString(cls, op):
         '''Gets custom string representation for each operation.'''
         return cls.opnames[op]
+
+    @classmethod
+    def getName(cls, op):
+        '''Gets custom long string name for each operation.'''
+        return cls.opstrnames[op]
 
 
 class RelOperation(object):
