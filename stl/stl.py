@@ -352,8 +352,8 @@ class Trace(object):
         raise NotImplementedError
 
 if __name__ == '__main__':
-    lexer = stlLexer(InputStream("!(x < 10) && F[0, 2] y > 2 || G[1, 3] z<=8"))
-    # lexer = stlLexer(InputStream("!(x < 10) && y > 2 && z<=8"))
+    # lexer = stlLexer(InputStream("!(x < 10) && F[0, 2] y > 2 || G[1, 3] z<=8"))
+    lexer = stlLexer(InputStream("!(x < 10) && y > 2 && z<=8"))
     tokens = CommonTokenStream(lexer)
 
     parser = stlParser(tokens)
