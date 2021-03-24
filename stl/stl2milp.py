@@ -176,5 +176,5 @@ class stl2milp(object):
             self.model.addConstr(z_conj >= 1-m + z_right
                                  + sum(z_children_left[:t+a+k+1]))
 
-            self.model.addConstr(z <= z_conj)
+            self.model.addConstr(z >= z_conj)
         self.model.addConstr(z <= sum(z_aux))
