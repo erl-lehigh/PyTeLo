@@ -32,7 +32,8 @@ from stl2milp import stl2milp
 
 # Define the formula that you want to apply 
 # formula = 'G[0,10] x >= 3 && G[2,4] F[20,24] (y > 2) && G[21, 26] (z < 8) && G[21,26] (z > 3)'
-formula = 'G[0,2] x >= 3 && F[0,6] (y >= 4) && G[0, 2] (z >= 1)'
+# formula = 'G[0,2] x >= 3 && F[0,6] (y >= 4) && G[0, 2] (z >= 1)'
+formula = 'G[0,10] x >= 3 && G[12,15] x <= 1 && G[17, 24] x>= 4'
 
 # Define the matrixes that used for linear system 
 # M = [[1, 2, 3], [4, 5, 6],[7, 8, 9]] 
@@ -51,7 +52,7 @@ ast = STLAbstractSyntaxTreeExtractor().visit(t)
 
 print('AST:', str(ast))
 
-def stl_milp_solver(x_init, y_init, z_init, current_step):
+def stl_milp_solver(x_init, y_init, z_init, current_step, period):
 # x_init, y_init, z_init = 2, 2, -3
     # Define the general range for x y z 
     stl_milp = stl2milp(ast, ranges={'x': [-4, 5], 'y': [-4, 5], 'z': [-4, 5]}, robust=True)
@@ -62,7 +63,7 @@ def stl_milp_solver(x_init, y_init, z_init, current_step):
     # B = [[7, 8, 9], [4, 5, 6],[1, 2, 3]] 
 
     # system variables and the time period 
-    period = 8
+    # period = 26
     x = dict()
     y = dict()
     z = dict()
@@ -160,8 +161,10 @@ def stl_milp_solver(x_init, y_init, z_init, current_step):
 #print(stl_milp_solver(2, 2, -3))
 
 def main():
+    # Based on the formula, you need to define the period and the steps for it. 
+    # Normally, period should bigger than the formula range and steps should be bigger than period 
     steps = 30
-    period = 8 
+    period = 25 
     x_init, y_init, z_init = 3, 4, 2
     x = [0 if i != 0 else x_init for i in range(steps + period)]
     y = [0 if i != 0 else y_init for i in range(steps + period)]
@@ -169,7 +172,7 @@ def main():
     t = [i for i in range(steps + period)]
 
     for i in range(0, steps):
-        stl_milp_solver(x, y, z, i)
+        stl_milp_solver(x, y, z, i, period )
 
     fig, axs = plt.subplots(3)
     fig.suptitle('subplots')
