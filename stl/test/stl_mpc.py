@@ -51,7 +51,7 @@ ast = STLAbstractSyntaxTreeExtractor().visit(t)
 
 print('AST:', str(ast))
 
-def stl_milp_solver(x_init, y_init, z_init):
+def stl_milp_solver(x_init, y_init, z_init, current_step):
 # x_init, y_init, z_init = 2, 2, -3
     # Define the general range for x y z 
     stl_milp = stl2milp(ast, ranges={'x': [-4, 5], 'y': [-4, 5], 'z': [-4, 5]}, robust=True)
@@ -70,7 +70,12 @@ def stl_milp_solver(x_init, y_init, z_init):
     v = dict()
     w = dict()
 
-    for k in range(period):
+    if current_step < period - 1: 
+        backward_steps = current_step
+    else:
+        backward_steps = period - 1
+
+    for k in range(period + backward_steps):
         name = "x_{}".format(k) 
         x[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-4, ub=5, name=name)
         name = "y_{}".format(k)
@@ -93,12 +98,13 @@ def stl_milp_solver(x_init, y_init, z_init):
     stl_milp.variables['w'] = w
 
     # define the inital states for each mpc step 
-    stl_milp.model.addConstr(x[0] == x_init)
-    stl_milp.model.addConstr(y[0] == y_init)
-    stl_milp.model.addConstr(z[0] == z_init)
+    for i in range(backward_steps + 1):
+        stl_milp.model.addConstr(x[i] == x_init[current_step - backward_steps + i])
+        stl_milp.model.addConstr(y[i] == y_init[current_step - backward_steps + i])
+        stl_milp.model.addConstr(z[i] == z_init[current_step - backward_steps + i])
 
     # system constraints
-    for k in range(period-1):
+    for k in range(backward_steps, period + backward_steps - 1):
         stl_milp.model.addConstr(x[k+1] == M[0][0] * x[k] + M[0][1] * y[k] + M[0][2] * z[k] + \
             B[0][0] * u[k] + B[0][1] * v[k] + B[0][2] * w[k])
         stl_milp.model.addConstr(y[k+1] == M[1][0] * x[k] + M[1][1] * y[k] + M[1][2] * z[k] + \
@@ -145,20 +151,25 @@ def stl_milp_solver(x_init, y_init, z_init):
     # fig.tight_layout()
     # plt.show()
 
-    return x_vals[1], y_vals[1], z_vals[1]
+    # return x_vals[1], y_vals[1], z_vals[1]
+    x_init[current_step + 1] = x_vals[backward_steps + 1]
+    y_init[current_step + 1] = y_vals[backward_steps + 1] 
+    z_init[current_step + 1] = z_vals[backward_steps + 1]
+    # print( x_init[current_step + 1],  x_init[current_step + 1],  x_init[current_step + 1])
 
 #print(stl_milp_solver(2, 2, -3))
 
 def main():
     steps = 30
-    x_init, y_init, z_init = 3, 4, 1
-    x = [0 if i != 0 else x_init for i in range(steps)]
-    y = [0 if i != 0 else y_init for i in range(steps)]
-    z = [0 if i != 0 else z_init for i in range(steps)]
-    t = [i for i in range(steps)]
+    period = 8 
+    x_init, y_init, z_init = 3, 4, 2
+    x = [0 if i != 0 else x_init for i in range(steps + period)]
+    y = [0 if i != 0 else y_init for i in range(steps + period)]
+    z = [0 if i != 0 else z_init for i in range(steps + period)]
+    t = [i for i in range(steps + period)]
 
-    for i in range(1, steps):
-        x[i], y[i], z[i] = stl_milp_solver(x[i - 1], y[i - 1], z[i - 1])
+    for i in range(0, steps):
+        stl_milp_solver(x, y, z, i)
 
     fig, axs = plt.subplots(3)
     fig.suptitle('subplots')
