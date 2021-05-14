@@ -358,17 +358,17 @@ if __name__ == '__main__':
 
     parser = stlParser(tokens)
     t = parser.stlProperty()
-    print(t.toStringTree())
+    # print(t.toStringTree())
 
     ast = STLAbstractSyntaxTreeExtractor().visit(t)
-    print('AST:', ast)
+    # print('AST:', ast)
 
     varnames = ['x', 'y', 'z']
     data = [[8, 8, 11, 11, 11], [2, 3, 1, 2, 2], [3, 9, 8, 9, 9]]
     timepoints = [0, 1, 2, 3, 4]
     s = Trace(varnames, timepoints, data)
-
+    
     print('r:', ast.robustness(s, 0, 20))
 
     pnf = ast.pnf()
-    print(pnf)
+    # print(pnf)
