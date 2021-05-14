@@ -32,8 +32,8 @@ from stl2milp import stl2milp
 
 # Define the formula that you want to apply 
 # formula = 'G[0,10] x >= 3 && G[2,4] F[20,24] (y > 2) && G[21, 26] (z < 8) && G[21,26] (z > 3)'
-# formula = 'G[0,2] x >= 3 && F[0,6] (y >= 4) && G[0, 2] (z >= 1)'
-formula = 'G[0,10] x >= 3 && G[12,15] x <= 1 && G[17, 24] x>= 4'
+formula = 'G[0,2] x >= 3 && F[0,6] (y >= 5) && G[0, 2] (z >= 1)'
+# formula = 'G[0,10] x >= 3 && G[12,15] x <= 1 && G[17, 24] x>= 4'
 
 # Define the matrixes that used for linear system 
 # M = [[1, 2, 3], [4, 5, 6],[7, 8, 9]] 
@@ -52,7 +52,7 @@ ast = STLAbstractSyntaxTreeExtractor().visit(t)
 
 print('AST:', str(ast))
 
-def stl_milp_solver(x_init, y_init, z_init, current_step, period):
+def stl_milp_solver(x_init, y_init, z_init, current_step, period, event):
 # x_init, y_init, z_init = 2, 2, -3
     # Define the general range for x y z 
     stl_milp = stl2milp(ast, ranges={'x': [-4, 5], 'y': [-4, 5], 'z': [-4, 5]}, robust=True)
@@ -112,9 +112,18 @@ def stl_milp_solver(x_init, y_init, z_init, current_step, period):
             B[1][0] * u[k] + B[1][1] * v[k] + B[1][2] * w[k])
         stl_milp.model.addConstr(z[k+1] == M[2][0] * x[k] + M[2][1] * y[k] + M[2][2] * z[k] + \
             B[2][0] * u[k] + B[2][1] * v[k] + B[2][2] * w[k])
+    
 
     # add the specification (STL) constraints
     stl_milp.translate(satisfaction=True)
+
+    # Add event constraints
+
+    if current_step == event - 1:
+
+        stl_milp.model.addConstr(x[backward_steps + 1] >= 1)
+        stl_milp.model.addConstr(y[backward_steps + 1] >= 1)
+        stl_milp.model.addConstr(z[backward_steps + 1] >= 1)
 
     # Solve the problem with gurobi 
     stl_milp.model.optimize()
@@ -163,8 +172,9 @@ def stl_milp_solver(x_init, y_init, z_init, current_step, period):
 def main():
     # Based on the formula, you need to define the period and the steps for it. 
     # Normally, period should bigger than the formula range and steps should be bigger than period 
-    steps = 30
-    period = 25 
+    steps = 12
+    period = 8 
+    event = 10
     x_init, y_init, z_init = 3, 4, 2
     x = [0 if i != 0 else x_init for i in range(steps + period)]
     y = [0 if i != 0 else y_init for i in range(steps + period)]
@@ -172,7 +182,7 @@ def main():
     t = [i for i in range(steps + period)]
 
     for i in range(0, steps):
-        stl_milp_solver(x, y, z, i, period )
+        stl_milp_solver(x, y, z, i, period, event)
 
     fig, axs = plt.subplots(3)
     fig.suptitle('subplots')

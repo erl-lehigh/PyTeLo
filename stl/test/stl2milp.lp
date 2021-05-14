@@ -1,4 +1,4 @@
-\ Model STL formula: ((G[0.0, 10.0] (x >= 3.0)) && (G[2.0, 4.0] (F[20.0, 24.0] (y >= 2.0))) && (G[21.0, 26.0] (z <= 4.0)) && (G[21.0, 26.0] (z >= 3.0)))
+\ Model STL formula: ((G[0.0, 2.0] (x >= 3.0)) && (F[0.0, 6.0] (y >= 5.0)) && (G[0.0, 2.0] (z >= 1.0)))
 \ LP format - for model browsing. Use MPS format to capture full model detail.
 Minimize
   - rho + 0 u_29 + 0 v_29 + 0 w_29
@@ -96,157 +96,59 @@ Subject To
  R90: - rho + x_1 - 20 predicate_2dx22dd95ed78b4d217_1 >= -17
  R91: - rho + x_2 - 20 predicate_2dx22dd95ed78b4d217_2 <= 3
  R92: - rho + x_2 - 20 predicate_2dx22dd95ed78b4d217_2 >= -17
- R93: - rho + x_3 - 20 predicate_2dx22dd95ed78b4d217_3 <= 3
- R94: - rho + x_3 - 20 predicate_2dx22dd95ed78b4d217_3 >= -17
- R95: - rho + x_4 - 20 predicate_2dx22dd95ed78b4d217_4 <= 3
- R96: - rho + x_4 - 20 predicate_2dx22dd95ed78b4d217_4 >= -17
- R97: - rho + x_5 - 20 predicate_2dx22dd95ed78b4d217_5 <= 3
- R98: - rho + x_5 - 20 predicate_2dx22dd95ed78b4d217_5 >= -17
- R99: - rho + x_6 - 20 predicate_2dx22dd95ed78b4d217_6 <= 3
- R100: - rho + x_6 - 20 predicate_2dx22dd95ed78b4d217_6 >= -17
- R101: - rho + x_7 - 20 predicate_2dx22dd95ed78b4d217_7 <= 3
- R102: - rho + x_7 - 20 predicate_2dx22dd95ed78b4d217_7 >= -17
- R103: - rho + x_8 - 20 predicate_2dx22dd95ed78b4d217_8 <= 3
- R104: - rho + x_8 - 20 predicate_2dx22dd95ed78b4d217_8 >= -17
- R105: - rho + x_9 - 20 predicate_2dx22dd95ed78b4d217_9 <= 3
- R106: - rho + x_9 - 20 predicate_2dx22dd95ed78b4d217_9 >= -17
- R107: - rho + x_10 - 20 predicate_2dx22dd95ed78b4d217_10 <= 3
- R108: - rho + x_10 - 20 predicate_2dx22dd95ed78b4d217_10 >= -17
- R109: always_2dx778710aa24bf45ad_0 - predicate_2dx22dd95ed78b4d217_0 <= 0
- R110: always_2dx778710aa24bf45ad_0 - predicate_2dx22dd95ed78b4d217_1 <= 0
- R111: always_2dx778710aa24bf45ad_0 - predicate_2dx22dd95ed78b4d217_2 <= 0
- R112: always_2dx778710aa24bf45ad_0 - predicate_2dx22dd95ed78b4d217_3 <= 0
- R113: always_2dx778710aa24bf45ad_0 - predicate_2dx22dd95ed78b4d217_4 <= 0
- R114: always_2dx778710aa24bf45ad_0 - predicate_2dx22dd95ed78b4d217_5 <= 0
- R115: always_2dx778710aa24bf45ad_0 - predicate_2dx22dd95ed78b4d217_6 <= 0
- R116: always_2dx778710aa24bf45ad_0 - predicate_2dx22dd95ed78b4d217_7 <= 0
- R117: always_2dx778710aa24bf45ad_0 - predicate_2dx22dd95ed78b4d217_8 <= 0
- R118: always_2dx778710aa24bf45ad_0 - predicate_2dx22dd95ed78b4d217_9 <= 0
- R119: always_2dx778710aa24bf45ad_0 - predicate_2dx22dd95ed78b4d217_10
-   <= 0
- R120: always_2dx778710aa24bf45ad_0 - predicate_2dx22dd95ed78b4d217_0
+ R93: always_2dx69bcdd71a3ff42e3_0 - predicate_2dx22dd95ed78b4d217_0 <= 0
+ R94: always_2dx69bcdd71a3ff42e3_0 - predicate_2dx22dd95ed78b4d217_1 <= 0
+ R95: always_2dx69bcdd71a3ff42e3_0 - predicate_2dx22dd95ed78b4d217_2 <= 0
+ R96: always_2dx69bcdd71a3ff42e3_0 - predicate_2dx22dd95ed78b4d217_0
    - predicate_2dx22dd95ed78b4d217_1 - predicate_2dx22dd95ed78b4d217_2
-   - predicate_2dx22dd95ed78b4d217_3 - predicate_2dx22dd95ed78b4d217_4
-   - predicate_2dx22dd95ed78b4d217_5 - predicate_2dx22dd95ed78b4d217_6
-   - predicate_2dx22dd95ed78b4d217_7 - predicate_2dx22dd95ed78b4d217_8
-   - predicate_2dx22dd95ed78b4d217_9 - predicate_2dx22dd95ed78b4d217_10
-   >= -10
- R121: - rho + y_22 - 20 predicate_2dx48c103ba2c928dd_22 <= 2
- R122: - rho + y_22 - 20 predicate_2dx48c103ba2c928dd_22 >= -18
- R123: - rho + y_23 - 20 predicate_2dx48c103ba2c928dd_23 <= 2
- R124: - rho + y_23 - 20 predicate_2dx48c103ba2c928dd_23 >= -18
- R125: - rho + y_24 - 20 predicate_2dx48c103ba2c928dd_24 <= 2
- R126: - rho + y_24 - 20 predicate_2dx48c103ba2c928dd_24 >= -18
- R127: - rho + y_25 - 20 predicate_2dx48c103ba2c928dd_25 <= 2
- R128: - rho + y_25 - 20 predicate_2dx48c103ba2c928dd_25 >= -18
- R129: - rho + y_26 - 20 predicate_2dx48c103ba2c928dd_26 <= 2
- R130: - rho + y_26 - 20 predicate_2dx48c103ba2c928dd_26 >= -18
- R131: event_2bx7784b52277146866_2 - predicate_2dx48c103ba2c928dd_22 >= 0
- R132: event_2bx7784b52277146866_2 - predicate_2dx48c103ba2c928dd_23 >= 0
- R133: event_2bx7784b52277146866_2 - predicate_2dx48c103ba2c928dd_24 >= 0
- R134: event_2bx7784b52277146866_2 - predicate_2dx48c103ba2c928dd_25 >= 0
- R135: event_2bx7784b52277146866_2 - predicate_2dx48c103ba2c928dd_26 >= 0
- R136: event_2bx7784b52277146866_2 - predicate_2dx48c103ba2c928dd_22
-   - predicate_2dx48c103ba2c928dd_23 - predicate_2dx48c103ba2c928dd_24
-   - predicate_2dx48c103ba2c928dd_25 - predicate_2dx48c103ba2c928dd_26
+   >= -2
+ R97: - rho + y_0 - 20 predicate_2bx2516753055d0b842_0 <= 5
+ R98: - rho + y_0 - 20 predicate_2bx2516753055d0b842_0 >= -15
+ R99: - rho + y_1 - 20 predicate_2bx2516753055d0b842_1 <= 5
+ R100: - rho + y_1 - 20 predicate_2bx2516753055d0b842_1 >= -15
+ R101: - rho + y_2 - 20 predicate_2bx2516753055d0b842_2 <= 5
+ R102: - rho + y_2 - 20 predicate_2bx2516753055d0b842_2 >= -15
+ R103: - rho + y_3 - 20 predicate_2bx2516753055d0b842_3 <= 5
+ R104: - rho + y_3 - 20 predicate_2bx2516753055d0b842_3 >= -15
+ R105: - rho + y_4 - 20 predicate_2bx2516753055d0b842_4 <= 5
+ R106: - rho + y_4 - 20 predicate_2bx2516753055d0b842_4 >= -15
+ R107: - rho + y_5 - 20 predicate_2bx2516753055d0b842_5 <= 5
+ R108: - rho + y_5 - 20 predicate_2bx2516753055d0b842_5 >= -15
+ R109: - rho + y_6 - 20 predicate_2bx2516753055d0b842_6 <= 5
+ R110: - rho + y_6 - 20 predicate_2bx2516753055d0b842_6 >= -15
+ R111: event_2dx53fa3e0ebe26c54b_0 - predicate_2bx2516753055d0b842_0 >= 0
+ R112: event_2dx53fa3e0ebe26c54b_0 - predicate_2bx2516753055d0b842_1 >= 0
+ R113: event_2dx53fa3e0ebe26c54b_0 - predicate_2bx2516753055d0b842_2 >= 0
+ R114: event_2dx53fa3e0ebe26c54b_0 - predicate_2bx2516753055d0b842_3 >= 0
+ R115: event_2dx53fa3e0ebe26c54b_0 - predicate_2bx2516753055d0b842_4 >= 0
+ R116: event_2dx53fa3e0ebe26c54b_0 - predicate_2bx2516753055d0b842_5 >= 0
+ R117: event_2dx53fa3e0ebe26c54b_0 - predicate_2bx2516753055d0b842_6 >= 0
+ R118: event_2dx53fa3e0ebe26c54b_0 - predicate_2bx2516753055d0b842_0
+   - predicate_2bx2516753055d0b842_1 - predicate_2bx2516753055d0b842_2
+   - predicate_2bx2516753055d0b842_3 - predicate_2bx2516753055d0b842_4
+   - predicate_2bx2516753055d0b842_5 - predicate_2bx2516753055d0b842_6
    <= 0
- R137: - rho + y_27 - 20 predicate_2dx48c103ba2c928dd_27 <= 2
- R138: - rho + y_27 - 20 predicate_2dx48c103ba2c928dd_27 >= -18
- R139: - predicate_2dx48c103ba2c928dd_23 + event_2bx7784b52277146866_3
-   >= 0
- R140: - predicate_2dx48c103ba2c928dd_24 + event_2bx7784b52277146866_3
-   >= 0
- R141: - predicate_2dx48c103ba2c928dd_25 + event_2bx7784b52277146866_3
-   >= 0
- R142: - predicate_2dx48c103ba2c928dd_26 + event_2bx7784b52277146866_3
-   >= 0
- R143: event_2bx7784b52277146866_3 - predicate_2dx48c103ba2c928dd_27 >= 0
- R144: - predicate_2dx48c103ba2c928dd_23 - predicate_2dx48c103ba2c928dd_24
-   - predicate_2dx48c103ba2c928dd_25 - predicate_2dx48c103ba2c928dd_26
-   + event_2bx7784b52277146866_3 - predicate_2dx48c103ba2c928dd_27 <= 0
- R145: - rho + y_28 - 20 predicate_2dx48c103ba2c928dd_28 <= 2
- R146: - rho + y_28 - 20 predicate_2dx48c103ba2c928dd_28 >= -18
- R147: - predicate_2dx48c103ba2c928dd_24 + event_2bx7784b52277146866_4
-   >= 0
- R148: - predicate_2dx48c103ba2c928dd_25 + event_2bx7784b52277146866_4
-   >= 0
- R149: - predicate_2dx48c103ba2c928dd_26 + event_2bx7784b52277146866_4
-   >= 0
- R150: - predicate_2dx48c103ba2c928dd_27 + event_2bx7784b52277146866_4
-   >= 0
- R151: event_2bx7784b52277146866_4 - predicate_2dx48c103ba2c928dd_28 >= 0
- R152: - predicate_2dx48c103ba2c928dd_24 - predicate_2dx48c103ba2c928dd_25
-   - predicate_2dx48c103ba2c928dd_26 - predicate_2dx48c103ba2c928dd_27
-   + event_2bx7784b52277146866_4 - predicate_2dx48c103ba2c928dd_28 <= 0
- R153: always_2bx29c2cf03abdaadd0_0 - event_2bx7784b52277146866_2 <= 0
- R154: always_2bx29c2cf03abdaadd0_0 - event_2bx7784b52277146866_3 <= 0
- R155: always_2bx29c2cf03abdaadd0_0 - event_2bx7784b52277146866_4 <= 0
- R156: always_2bx29c2cf03abdaadd0_0 - event_2bx7784b52277146866_2
-   - event_2bx7784b52277146866_3 - event_2bx7784b52277146866_4 >= -2
- R157: rho + z_21 + 20 predicate_2bx150bb59745841544_21 >= 4
- R158: rho + z_21 + 20 predicate_2bx150bb59745841544_21 <= 24
- R159: rho + z_22 + 20 predicate_2bx150bb59745841544_22 >= 4
- R160: rho + z_22 + 20 predicate_2bx150bb59745841544_22 <= 24
- R161: rho + z_23 + 20 predicate_2bx150bb59745841544_23 >= 4
- R162: rho + z_23 + 20 predicate_2bx150bb59745841544_23 <= 24
- R163: rho + z_24 + 20 predicate_2bx150bb59745841544_24 >= 4
- R164: rho + z_24 + 20 predicate_2bx150bb59745841544_24 <= 24
- R165: rho + z_25 + 20 predicate_2bx150bb59745841544_25 >= 4
- R166: rho + z_25 + 20 predicate_2bx150bb59745841544_25 <= 24
- R167: rho + z_26 + 20 predicate_2bx150bb59745841544_26 >= 4
- R168: rho + z_26 + 20 predicate_2bx150bb59745841544_26 <= 24
- R169: always_2dx7e9697b6ff524b6d_0 - predicate_2bx150bb59745841544_21
-   <= 0
- R170: always_2dx7e9697b6ff524b6d_0 - predicate_2bx150bb59745841544_22
-   <= 0
- R171: always_2dx7e9697b6ff524b6d_0 - predicate_2bx150bb59745841544_23
-   <= 0
- R172: always_2dx7e9697b6ff524b6d_0 - predicate_2bx150bb59745841544_24
-   <= 0
- R173: always_2dx7e9697b6ff524b6d_0 - predicate_2bx150bb59745841544_25
-   <= 0
- R174: always_2dx7e9697b6ff524b6d_0 - predicate_2bx150bb59745841544_26
-   <= 0
- R175: always_2dx7e9697b6ff524b6d_0 - predicate_2bx150bb59745841544_21
-   - predicate_2bx150bb59745841544_22 - predicate_2bx150bb59745841544_23
-   - predicate_2bx150bb59745841544_24 - predicate_2bx150bb59745841544_25
-   - predicate_2bx150bb59745841544_26 >= -5
- R176: - rho + z_21 - 20 predicate_2dx17f01b49409b1295_21 <= 3
- R177: - rho + z_21 - 20 predicate_2dx17f01b49409b1295_21 >= -17
- R178: - rho + z_22 - 20 predicate_2dx17f01b49409b1295_22 <= 3
- R179: - rho + z_22 - 20 predicate_2dx17f01b49409b1295_22 >= -17
- R180: - rho + z_23 - 20 predicate_2dx17f01b49409b1295_23 <= 3
- R181: - rho + z_23 - 20 predicate_2dx17f01b49409b1295_23 >= -17
- R182: - rho + z_24 - 20 predicate_2dx17f01b49409b1295_24 <= 3
- R183: - rho + z_24 - 20 predicate_2dx17f01b49409b1295_24 >= -17
- R184: - rho + z_25 - 20 predicate_2dx17f01b49409b1295_25 <= 3
- R185: - rho + z_25 - 20 predicate_2dx17f01b49409b1295_25 >= -17
- R186: - rho + z_26 - 20 predicate_2dx17f01b49409b1295_26 <= 3
- R187: - rho + z_26 - 20 predicate_2dx17f01b49409b1295_26 >= -17
- R188: always_2dx798ea4c82d31ac76_0 - predicate_2dx17f01b49409b1295_21
-   <= 0
- R189: always_2dx798ea4c82d31ac76_0 - predicate_2dx17f01b49409b1295_22
-   <= 0
- R190: always_2dx798ea4c82d31ac76_0 - predicate_2dx17f01b49409b1295_23
-   <= 0
- R191: always_2dx798ea4c82d31ac76_0 - predicate_2dx17f01b49409b1295_24
-   <= 0
- R192: always_2dx798ea4c82d31ac76_0 - predicate_2dx17f01b49409b1295_25
-   <= 0
- R193: always_2dx798ea4c82d31ac76_0 - predicate_2dx17f01b49409b1295_26
-   <= 0
- R194: always_2dx798ea4c82d31ac76_0 - predicate_2dx17f01b49409b1295_21
-   - predicate_2dx17f01b49409b1295_22 - predicate_2dx17f01b49409b1295_23
-   - predicate_2dx17f01b49409b1295_24 - predicate_2dx17f01b49409b1295_25
-   - predicate_2dx17f01b49409b1295_26 >= -5
- R195: and_2bx43a2c068eac23333_0 - always_2dx778710aa24bf45ad_0 <= 0
- R196: and_2bx43a2c068eac23333_0 - always_2bx29c2cf03abdaadd0_0 <= 0
- R197: and_2bx43a2c068eac23333_0 - always_2dx7e9697b6ff524b6d_0 <= 0
- R198: and_2bx43a2c068eac23333_0 - always_2dx798ea4c82d31ac76_0 <= 0
- R199: and_2bx43a2c068eac23333_0 - always_2dx778710aa24bf45ad_0
-   - always_2bx29c2cf03abdaadd0_0 - always_2dx7e9697b6ff524b6d_0
-   - always_2dx798ea4c82d31ac76_0 >= -3
- formula_satisfaction: and_2bx43a2c068eac23333_0 = 1
+ R119: - rho + z_0 - 20 predicate_2dx33b18e258c171243_0 <= 1
+ R120: - rho + z_0 - 20 predicate_2dx33b18e258c171243_0 >= -19
+ R121: - rho + z_1 - 20 predicate_2dx33b18e258c171243_1 <= 1
+ R122: - rho + z_1 - 20 predicate_2dx33b18e258c171243_1 >= -19
+ R123: - rho + z_2 - 20 predicate_2dx33b18e258c171243_2 <= 1
+ R124: - rho + z_2 - 20 predicate_2dx33b18e258c171243_2 >= -19
+ R125: always_2dx7c33fe6ba9ff9e2b_0 - predicate_2dx33b18e258c171243_0 <= 0
+ R126: always_2dx7c33fe6ba9ff9e2b_0 - predicate_2dx33b18e258c171243_1 <= 0
+ R127: always_2dx7c33fe6ba9ff9e2b_0 - predicate_2dx33b18e258c171243_2 <= 0
+ R128: always_2dx7c33fe6ba9ff9e2b_0 - predicate_2dx33b18e258c171243_0
+   - predicate_2dx33b18e258c171243_1 - predicate_2dx33b18e258c171243_2
+   >= -2
+ R129: and_2dx5295e3d99f627fa8_0 - always_2dx69bcdd71a3ff42e3_0 <= 0
+ R130: and_2dx5295e3d99f627fa8_0 - event_2dx53fa3e0ebe26c54b_0 <= 0
+ R131: and_2dx5295e3d99f627fa8_0 - always_2dx7c33fe6ba9ff9e2b_0 <= 0
+ R132: and_2dx5295e3d99f627fa8_0 - always_2dx69bcdd71a3ff42e3_0
+   - event_2dx53fa3e0ebe26c54b_0 - always_2dx7c33fe6ba9ff9e2b_0 >= -2
+ formula_satisfaction: and_2dx5295e3d99f627fa8_0 = 1
+ R134: x_0 = 3
+ R135: y_0 = 4
+ R136: z_0 = 2
 Bounds
  -infinity <= rho <= 999
  -4 <= x_0 <= 5
@@ -430,23 +332,13 @@ Bounds
  -2 <= v_29 <= 3
  -3 <= w_29 <= 3
 Binaries
- and_2bx43a2c068eac23333_0 always_2dx778710aa24bf45ad_0
+ and_2dx5295e3d99f627fa8_0 always_2dx69bcdd71a3ff42e3_0
  predicate_2dx22dd95ed78b4d217_0 predicate_2dx22dd95ed78b4d217_1
- predicate_2dx22dd95ed78b4d217_2 predicate_2dx22dd95ed78b4d217_3
- predicate_2dx22dd95ed78b4d217_4 predicate_2dx22dd95ed78b4d217_5
- predicate_2dx22dd95ed78b4d217_6 predicate_2dx22dd95ed78b4d217_7
- predicate_2dx22dd95ed78b4d217_8 predicate_2dx22dd95ed78b4d217_9
- predicate_2dx22dd95ed78b4d217_10 always_2bx29c2cf03abdaadd0_0
- event_2bx7784b52277146866_2 predicate_2dx48c103ba2c928dd_22
- predicate_2dx48c103ba2c928dd_23 predicate_2dx48c103ba2c928dd_24
- predicate_2dx48c103ba2c928dd_25 predicate_2dx48c103ba2c928dd_26
- event_2bx7784b52277146866_3 predicate_2dx48c103ba2c928dd_27
- event_2bx7784b52277146866_4 predicate_2dx48c103ba2c928dd_28
- always_2dx7e9697b6ff524b6d_0 predicate_2bx150bb59745841544_21
- predicate_2bx150bb59745841544_22 predicate_2bx150bb59745841544_23
- predicate_2bx150bb59745841544_24 predicate_2bx150bb59745841544_25
- predicate_2bx150bb59745841544_26 always_2dx798ea4c82d31ac76_0
- predicate_2dx17f01b49409b1295_21 predicate_2dx17f01b49409b1295_22
- predicate_2dx17f01b49409b1295_23 predicate_2dx17f01b49409b1295_24
- predicate_2dx17f01b49409b1295_25 predicate_2dx17f01b49409b1295_26
+ predicate_2dx22dd95ed78b4d217_2 event_2dx53fa3e0ebe26c54b_0
+ predicate_2bx2516753055d0b842_0 predicate_2bx2516753055d0b842_1
+ predicate_2bx2516753055d0b842_2 predicate_2bx2516753055d0b842_3
+ predicate_2bx2516753055d0b842_4 predicate_2bx2516753055d0b842_5
+ predicate_2bx2516753055d0b842_6 always_2dx7c33fe6ba9ff9e2b_0
+ predicate_2dx33b18e258c171243_0 predicate_2dx33b18e258c171243_1
+ predicate_2dx33b18e258c171243_2
 End

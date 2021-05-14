@@ -31,8 +31,9 @@ from stl2milp import stl2milp
 # formula = "(x <= 10) && F[0, 2] y > 2 && G[1, 6] (z < 8) && G[1,6] (z > 3)"
 
 # Define the formula that you want to apply 
-formula = 'G[0,10] x >= 3 && G[2,4] F[20,24] (y >= 2) && G[21, 26] (z <= 4) && G[21,26] (z >= 3)'
+# formula = 'G[0,10] x >= 3 && G[2,4] F[20,24] (y >= 2) && G[21, 26] (z <= 4) && G[21,26] (z >= 3)'
 # formula = 'G[0,6] x >= 3 && G[0,6] (y >= 2) && G[0, 6] (z >= 1)'
+formula = 'G[0,2] x >= 3 && F[0,6] (y >= 5) && G[0, 2] (z >= 1)'
 
 
 # Stl2milp Initialization
@@ -101,6 +102,15 @@ stl_milp.translate(satisfaction=True)
 # x = stl_milp.variables['x']
 # n = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=1, ub=2, name="n") 
 # stl_milp.model.addConstr(x[1] == x[0] + n)
+stl_milp.variables['x'] = x
+stl_milp.variables['y'] = y
+stl_milp.variables['z'] = z
+
+
+
+stl_milp.model.addConstr(x[0] == 3)
+stl_milp.model.addConstr(y[0] == 4)
+stl_milp.model.addConstr(z[0] == 2)
 
 # Solve the problem with gurobi 
 stl_milp.model.optimize()
