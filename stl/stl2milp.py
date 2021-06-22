@@ -18,7 +18,7 @@ class stl2milp_pulp(object):
        This class uses the PuLP modeling language instead of Gurobi directly.
     '''
 
-    def __init__(self, formula, ranges, vtypes=None, model=None, robust=False):
+    def __init__(self, formula, ranges, vtypes=None, model=None, solver=None, robust=False):
         self.formula = formula
 
         self.M = 1000
@@ -36,6 +36,19 @@ class stl2milp_pulp(object):
         if model is None:
             # self.model = grb.Model('STL formula: {}'.format(formula))
             self.model = pl.LpProblem('STL formula: {}'.format(formula))
+
+        if solver is None:
+            # Set default solver. Currently SCIP.
+            self.solver = pl.SCIP()
+        elif solver.upper() == "SCIP" or solver.upper() == "SCIP_CMD":
+            self.solver = pl.SCIP()
+        elif solver.upper() == "GUROBI":
+            self.solver = pl.GUROBI()
+        elif solver.upper() == "GUROBI_CMD":
+            self.solver = pl.GUROBI_CMD()
+        else:
+            print("\nError: Unsupported solver.\n")
+            self.solver = None
 
         self.variables = dict()
 
