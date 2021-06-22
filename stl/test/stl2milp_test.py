@@ -20,7 +20,7 @@ from stlVisitor import stlVisitor
 
 from stl import STLAbstractSyntaxTreeExtractor
 
-from stl2milp import stl2milp
+from stl2milp import stl2milp_pulp
 
 # formula = "(x > 10) && F[0, 2] y > 2 || G[1, 6] z > 8"
 # formula = "G[2,4] F[1,3](x>=3)"
@@ -36,7 +36,7 @@ ast = STLAbstractSyntaxTreeExtractor().visit(t)
 
 print('AST:', str(ast))
 
-stl_milp = stl2milp(ast, ranges={'x': [-4, 5]}, robust=True)
+stl_milp = stl2milp_pulp(ast, ranges={'x': [-4, 5]}, robust=True)
 stl_milp.translate(satisfaction=True)
 stl_milp.model.optimize()
 
