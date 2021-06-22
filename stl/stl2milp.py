@@ -5,7 +5,7 @@
  See license.txt file for license information.
 '''
 
-import pulp
+import pulp as pl
 from numpy  import Inf
 
 from stl import Operation, RelOperation, STLFormula
