@@ -8,7 +8,7 @@
 import pulp as pl
 from numpy  import Inf
 
-from stl import Operation, RelOperation, STLFormula
+from .stl import Operation, RelOperation, STLFormula
 
 
 
