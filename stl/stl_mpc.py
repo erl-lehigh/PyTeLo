@@ -32,8 +32,8 @@ from stl2milp import stl2milp
 # Define the formula that you want to apply 
 # formula = 'G[0,10] x >= 3 && G[2,4] F[20,24] (y > 2) && G[21, 26] (z < 8) && G[21,26] (z > 3)'
 # formula = 'G[0,2] x >= 3 && F[0,6] (y >= 4) && G[0, 2] (z >= 1)'
-formula = 'G[2,4] (x <= 1) && G[0,10] (y >= 4) && G[10, 20] (x <= 2) && G[10, 18] (x >= 4)'
-
+# formula = 'G[2,4] (x <= 1) && G[0,10] (y >= 4) && G[10, 20] (x <= 2) && G[10, 18] (x >= 4)'
+formula = "G[5,30] ((x>=2) && (y>=2))"
 # Define the matrixes that used for linear system 
 # M = [[1, 2, 3], [4, 5, 6],[7, 8, 9]] 
 # B = [[7, 8, 9], [4, 5, 6],[1, 2, 3]] 
@@ -83,11 +83,11 @@ def stl_milp_solver(x_init, y_init, z_init, current_step, period):
         name = "z_{}".format(k) 
         z[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-4, ub=5, name=name)
         name = "u_{}".format(k)
-        u[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-3, ub=2, name=name)
+        u[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-1, ub=1, name=name)
         name = "v_{}".format(k)
-        v[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-2, ub=3, name=name)
+        v[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-1, ub=1, name=name)
         name = "w_{}".format(k)
-        w[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-3, ub=3, name=name)
+        w[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-1, ub=1, name=name)
 
     # use system variables in STL spec encoding
     stl_milp.variables['x'] = x
@@ -164,7 +164,7 @@ def main():
     # Normally, period should bigger than the formula range and steps should be bigger than period 
     steps = 30
     period = 25 
-    x_init, y_init, z_init = 3, 4, 2
+    x_init, y_init, z_init = 0, 0, 0
     x = [0 if i != 0 else x_init for i in range(steps + period)]
     y = [0 if i != 0 else y_init for i in range(steps + period)]
     z = [0 if i != 0 else z_init for i in range(steps + period)]
@@ -173,14 +173,14 @@ def main():
     for i in range(0, steps):
         stl_milp_solver(x, y, z, i, period )
 
-    fig, axs = plt.subplots(3)
+    fig, axs = plt.subplots(2)
     fig.suptitle('subplots')
     axs[0].plot(t, x)
     axs[0].set_title('x vs t')
     axs[1].plot(t, y)
     axs[1].set_title('y vs t')
-    axs[2].plot(t, z)
-    axs[2].set_title('z vs t')
+    # axs[2].plot(t, z)
+    # axs[2].set_title('z vs t')
     fig.tight_layout()
     plt.show()
 

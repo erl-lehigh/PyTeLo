@@ -42,7 +42,7 @@ def stl_milp_solver(x_init, y_init, formula):
     M = [[1, 0], [0, 1]] 
     B = [[1, 0], [0, 1]]
     # system variables and the time period 
-    period = 30
+    period = 25
     x = dict()
     y = dict()
     # z = dict()
@@ -58,9 +58,9 @@ def stl_milp_solver(x_init, y_init, formula):
         # name = "z_{}".format(k) 
         # z[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-4, ub=5, name=name)
         name = "u_{}".format(k)
-        u[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-3, ub=2, name=name)
+        u[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-1, ub=1, name=name)
         name = "v_{}".format(k)
-        v[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-2, ub=3, name=name)
+        v[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-1, ub=1, name=name)
         # name = "w_{}".format(k)
         # w[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-3, ub=3, name=name)
 
@@ -108,13 +108,13 @@ def stl_milp_solver(x_init, y_init, formula):
 #print(stl_milp_solver(2, 2, -3))
 
 def main():
-    formula = "G[0,6](x <= 4) && G[0, 6] (y <= 4) && G[0,6](x >= 1) && G[0, 6] (y >= 1) && G[8,20](x >= 2) && G[8, 20] (y >= 1) && G[8,20](x <= 3) && G[8, 20] (y <= 2)"
-
+    # formula = "G[0,6](x <= 4) && G[0, 6] (y <= 4) && G[0,6](x >= 1) && G[0, 6] (y >= 1) && G[8,20](x >= 2) && G[8, 20] (y >= 1) && G[8,20](x <= 3) && G[8, 20] (y <= 2)"
+    # formula = "G[5,30] ((x>=2) && (y>=2))"
     # formula = "G[2,6](x <= 3) && G[2,6](x >= 1) && G[2,6](y <= 3) && G[2,6](y >= 1) "
     # formula = "G[0,6](x > 3) && F[0, 2] (y >= 4)"
     # formula = "G[2,4] F[1,3](x>=3)"
     # formula = "(x <= 10) && F[0, 2] y > 2 && G[1, 6] (z < 8) && G[1,6] (z > 3)"
-
+    formula = "G[2,4] (x>=4)"
     # Define the formula that you want to apply 
     # formula = 'G[0,10] x >= 3 && G[2,4] F[20,24] (y > 2) && G[21, 26] (z < 8) && G[21,26] (z > 3)'
     #formula = 'G[0,2] x >= 3 && F[0,6] (y >= 4) && G[0, 2] (z >= 1)'
@@ -137,7 +137,7 @@ def main():
     print('AST:', str(ast))
     
     steps = 30
-    x_init, y_init = 3, 4
+    x_init, y_init = 0, 0
     x = [0 if i != 0 else x_init for i in range(steps)]
     y = [0 if i != 0 else y_init for i in range(steps)]
     # z = [0 if i != 0 else z_init for i in range(steps)]
@@ -152,8 +152,6 @@ def main():
     axs[0].set_title('x vs t')
     axs[1].plot(t, y)
     axs[1].set_title('y vs t')
-    # axs[2].plot(t, z)
-    # axs[2].set_title('z vs t')
     fig.tight_layout()
     plt.show()
     
