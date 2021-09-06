@@ -81,13 +81,13 @@ def pstl_mpc(x_init, y_init, x_init2, y_init2, x_init3, y_init3,
         name = "y2_{}".format(k)
         y2[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-4, ub=5, name=name)
         name = "u_{}".format(k)
-        u[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-3, ub=3, name=name)
+        u[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-1, ub=1, name=name)
         name = "v_{}".format(k)
-        v[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-3, ub=3, name=name)
+        v[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-1, ub=1, name=name)
         name = "u2_{}".format(k)
-        u2[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-3, ub=3, name=name)
+        u2[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-1, ub=1, name=name)
         name = "v2_{}".format(k)
-        v2[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-3, ub=3, name=name)
+        v2[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-1, ub=1, name=name)
         name = "x3_{}".format(k)
         x3[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-4, ub=5, name=name)
         name = "x4_{}".format(k)
@@ -97,13 +97,13 @@ def pstl_mpc(x_init, y_init, x_init2, y_init2, x_init3, y_init3,
         name = "y4_{}".format(k)
         y4[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-4, ub=5, name=name)
         name = "u3_{}".format(k)
-        u3[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-3, ub=3, name=name)
+        u3[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-1, ub=1, name=name)
         name = "v3_{}".format(k)
-        v3[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-3, ub=3, name=name)
+        v3[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-1, ub=1, name=name)
         name = "u4_{}".format(k)
-        u4[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-3, ub=3, name=name)
+        u4[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-1, ub=1, name=name)
         name = "v4_{}".format(k)
-        v4[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-3, ub=3, name=name)
+        v4[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-1, ub=1, name=name)
         name = "x5_{}".format(k)
         x5[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-4, ub=5, name=name)
         name = "x6_{}".format(k)
@@ -113,13 +113,13 @@ def pstl_mpc(x_init, y_init, x_init2, y_init2, x_init3, y_init3,
         name = "y6_{}".format(k)
         y6[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-4, ub=5, name=name)
         name = "u5_{}".format(k)
-        u5[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-3, ub=3, name=name)
+        u5[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-1, ub=1, name=name)
         name = "v5_{}".format(k)
-        v5[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-3, ub=3, name=name)
+        v5[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-1, ub=1, name=name)
         name = "u6_{}".format(k)
-        u6[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-3, ub=3, name=name)
+        u6[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-1, ub=1, name=name)
         name = "v6_{}".format(k)
-        v6[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-3, ub=3, name=name)
+        v6[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=-1, ub=1, name=name)
 
     # use system variables in STL spec encoding
     stl_milp.variables['x'] = x
@@ -190,7 +190,8 @@ def pstl_mpc(x_init, y_init, x_init2, y_init2, x_init3, y_init3,
     stl_milp.model.optimize()
     stl_milp.model.write('model_test.lp')
 
-    pstlrobust = [stl_milp.pstl2lp(ast, t) for t in range(1)]
+    pstlrobust = [stl_milp.pstl2lp(ast, t) for t in range(30)]
+    # print("HERE PRINTING:", pstlrobust)
     print('Objective')
     obj = stl_milp.model.getObjective()
     print(str(obj), ':', obj.getValue(), "MILP")
@@ -228,7 +229,8 @@ def main():
 
     # formula = 'G[2,4] (x <= 1) && G[0,10] (y >= 4) && G[10, 18] (x <= 2) || G[10, 18] (x >= 10) '
     # formula = "G[2,8] (x>=3) && G[2,10] (y>=2)| G[4, 8] (x>=1)"
-    formula = "G[2,10] (x>=2) && G[2,10] (y>=2) && G[2, 6] (y2<=1) && G[2,10] (x2>=2)"
+    # formula = "G[5,30] ((x>=2) && (y>=2))"
+    formula = "(G[25,30] (x>=3)) && (G[25,30](x<=2))"
     ranges = {'x': [-4, 5], 'y': [-4, 5], 'x2': [-4, 5], 'y2': [-4, 5]}
 
     # Stl2milp Initialization
@@ -249,7 +251,7 @@ def main():
     # Normally, period should bigger than the formula range and steps should be bigger than period
     steps = 30
     period = 30
-    x_init, y_init, x_init2, y_init2, x_init3, y_init3 = 2, 4, 1, 3, 1, 0
+    x_init, y_init, x_init2, y_init2, x_init3, y_init3 = 1, 1, 1, 3, 1, 0
     x_init4, y_init4, x_init5, y_init5, x_init6, y_init6 = 2, 4, 1, 3, 1, 0
 
     x = [0 if i != 0 else x_init for i in range(steps + period)]
@@ -286,10 +288,10 @@ def main():
 
     fig, axs = plt.subplots(3)
     fig.suptitle('subplots')
-    axs[0].plot(x[0:period], y[0:period])
+    axs[0].plot(x_v[0:period], y_v[0:period])
     axs[0].grid()
     axs[0].set_title('x vs t')
-    axs[1].plot(x2[0:period], y2[0:period])
+    axs[1].plot(t[0:period], y_v[0:period])
     axs[1].grid()
     axs[1].set_title('y vs t')
     axs[2].plot(t[0:period], x_v[0:period])

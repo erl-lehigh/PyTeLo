@@ -157,16 +157,14 @@ class pstl2milp(object):
         for phi in formulae:
             self.lpvariable[phi[0]] = dict()
             name = '{}_{}'.format(phi[0], phi[1])
-            var = lp.addVar(vtype=grb.GRB.CONTINUOUS, lb=0, ub=1, name=name)
+            var = lp.addVar(vtype=grb.GRB.CONTINUOUS, lb=0, ub=5, name=name)
             self.lpvariable[phi[0]][phi[1]] = var
 
             if phi[0].relation in (RelOperation.GE, RelOperation.GT):
-                lp.addConstr(var - self.M  <= phi[0].threshold + self.rho)
-                lp.addConstr(var + self.M  >= phi[0].threshold + self.rho)
+                lp.addConstr(var >= phi[0].threshold + self.rho)
 
             if phi[0].relation in (RelOperation.LE, RelOperation.LT):
-                lp.addConstr(var - self.M  <= phi[0].threshold + self.rho)
-                lp.addConstr(var + self.M  >= phi[0].threshold + self.rho)    
+                lp.addConstr(var <= phi[0].threshold - self.rho)    
                 
         lp.update()
         lp.optimize()
@@ -179,26 +177,27 @@ class pstl2milp(object):
         '''It receives formula and time step and returns a set of the subformulae
              that needs to be satisfied at the specific time. Note that Disjunction
              and eventually are special cases'''
-        
+        ret = set()
+
         if formula.op == Operation.PRED:
             ret = {(formula, t)}
 
         elif formula.op == Operation.AND:
             for f in formula.children:
-                ret = set.union(self.predicate_pairs(f, t))
+                ret = ret.union(self.predicate_pairs(f, t))
             # ret = [set.union(self.predicate_pairs(f, t)) for f in formula.children]
 
         elif formula.op == Operation.OR:
             for f in formula.children:
                 if self.variables[f][t].x == 1:
-                    ret = set.union(self.predicate_pairs(f, t))
+                    ret = ret.union(self.predicate_pairs(f, t))
                     break
 
         elif formula.op == Operation.ALWAYS:
             f = formula.child
             interval = range(int(formula.low), int(formula.high+1))
             for t in interval:
-                ret = set.union(self.predicate_pairs(f, t))
+                ret = ret.union(self.predicate_pairs(f, t))
             # ret = [set.union(self.predicate_pairs(f, t)) for t in interval]
 
         elif formula.op == Operation.EVENT:
@@ -206,7 +205,7 @@ class pstl2milp(object):
             interval = range (int(formula.low), int(formula.high+1))
             for t in interval:
                 if self.variables[f][t].x == 1:
-                    ret = set.union(self.predicate_pairs(f, t))
+                    ret = ret.union(self.predicate_pairs(f, t))
                     break
 
         return ret
