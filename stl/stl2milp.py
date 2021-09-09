@@ -18,8 +18,11 @@ class stl2milp_pulp(object):
        This class uses the PuLP modeling language instead of Gurobi directly.
     '''
 
-    def __init__(self, formula, ranges, vtypes=None, model=None, solver=None, robust=False):
+    def __init__(self, formula, ranges, vtypes=None, model=None, solver=None, robust=False, verbose=True):
         self.formula = formula
+
+        # To suppress output
+        self._verbose = verbose
 
         self.M = 1000
         self.ranges = ranges
@@ -110,7 +113,8 @@ class stl2milp_pulp(object):
             # v = self.model.addVar(vtype=vtype, lb=low, ub=high, name=name)
             v = pl.LpVariable(name, cat=vtype, lowBound=low, upBound=high)
             self.variables[state][t] = v
-            print('Added state:', state, 'time:', t)
+            if self._verbose:
+                print('Added state:', state, 'time:', t)
         return self.variables[state][t]
 
     def predicate(self, pred, z, t):
