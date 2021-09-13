@@ -114,7 +114,7 @@ def main():
     # formula = "G[0,6](x > 3) && F[0, 2] (y >= 4)"
     # formula = "G[2,4] F[1,3](x>=3)"
     # formula = "(x <= 10) && F[0, 2] y > 2 && G[1, 6] (z < 8) && G[1,6] (z > 3)"
-    formula = "G[2,4] (x>=4)"
+    formula = "G[5,8] (x>=4)"
     # Define the formula that you want to apply 
     # formula = 'G[0,10] x >= 3 && G[2,4] F[20,24] (y > 2) && G[21, 26] (z < 8) && G[21,26] (z > 3)'
     #formula = 'G[0,2] x >= 3 && F[0,6] (y >= 4) && G[0, 2] (z >= 1)'

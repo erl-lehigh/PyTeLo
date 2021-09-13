@@ -19,26 +19,34 @@ def test():
     
 
 if __name__ =='__main__':
-    # test()
-    num_rob = 2
-    x = []
-    y = []
-    u = []
-    v = []
-    h = dict()
-    h[1] = 2
-    for i in range(num_rob):
+    cars = dict()
+    for x in range(3):	
+	    car[x] = dict()
+        for y in range(5):	
+		    car[x][y]= x-y
+        
 
-        x.append([])
-        y.append([])
-        u.append([])
-        v.append([])
 
-        x[i] = dict()
-        y[i] = dict()
-        u[i] = dict()
-        v[i] = dict()
+    # # test()
+    # num_rob = 2
+    # x = []
+    # y = []
+    # u = []
+    # v = []
+    # h = dict()
+    # h[1] = 2
+    # for i in range(num_rob):
 
-    x[0][1] = 1    
-    print(x[0][1], type(h), h[1])
+    #     x.append([])
+    #     y.append([])
+    #     u.append([])
+    #     v.append([])
+
+    #     x[i] = dict()
+    #     y[i] = dict()
+    #     u[i] = dict()
+    #     v[i] = dict()
+
+    # x[0][1] = 1    
+    # print(x[0][1], type(h), h[1])
    

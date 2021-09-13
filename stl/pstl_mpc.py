@@ -183,18 +183,23 @@ def pstl_mpc(x_init, y_init, x_init2, y_init2, x_init3, y_init3,
 
     # add the specification (STL) constraints
     z = stl_milp.translate()
+    # stl_milp.method_1()
+    stl_milp.method_2()
+    # stl_milp.method_3(z)
 
-    # Solve the problem with gurobi
-    stl_milp.model.setObjective(z, GRB.MAXIMIZE)
-    stl_milp.model.update()
-    stl_milp.model.optimize()
-    stl_milp.model.write('model_test.lp')
 
-    pstlrobust = [stl_milp.pstl2lp(ast, t) for t in range(30)]
-    # print("HERE PRINTING:", pstlrobust)
+    pstlrobust = stl_milp.pstl2lp(ast)
+    x_rhovals = [rvar.x for rvar in pstlrobust.getVars()]
+    print("HERE CHECk HERE:", len(x_rhovals))
+
+
+    
+    # print("HERE PRINTING:", str(pstlrobust))
     print('Objective')
     obj = stl_milp.model.getObjective()
-    print(str(obj), ':', obj.getValue(), "MILP")
+    print(str(obj), obj.getValue(), "MILP")
+    # obj = [stl_milp.model.getObjective(objectives) for objectives in range(3)]
+    # print(str(obj), ':', [obj[i].getValue() for i in range(3)], "MILP")
 
     x_vals = [var.x for var in stl_milp.variables['x'].values()]
     y_vals = [var.x for var in stl_milp.variables['y'].values()]
@@ -222,15 +227,20 @@ def pstl_mpc(x_init, y_init, x_init2, y_init2, x_init3, y_init3,
     x_init6[current_step + 1] = x_vals6[backward_steps + 1]
     y_init6[current_step + 1] = y_vals6[backward_steps + 1]
     
-    return x_vals, y_vals, x_vals2, y_vals2, x_vals3, y_vals3, x_vals4, y_vals4, x_vals5, y_vals5, x_vals6, y_vals6
+    return x_vals, y_vals, x_vals2, y_vals2, x_vals3, y_vals3, x_vals4, y_vals4, x_vals5, y_vals5, x_vals6, y_vals6, x_rhovals
 
 
 def main():
 
-    # formula = 'G[2,4] (x <= 1) && G[0,10] (y >= 4) && G[10, 18] (x <= 2) || G[10, 18] (x >= 10) '
-    # formula = "G[2,8] (x>=3) && G[2,10] (y>=2)| G[4, 8] (x>=1)"
+    # formula = '(G[2,4] (x <= 1)) && (G[8,10] (x >= 1)) && (G[14, 18] (x <= 2)) && (G[23, 28] (x >= 2)) '
+    # formula = "G[2,8] (x>=3) && G[15,24] (x<=2)"
     # formula = "G[5,30] ((x>=2) && (y>=2))"
-    formula = "(G[25,30] (x>=3)) && (G[25,30](x<=2))"
+    # formula = "(G[10,20] (x>=2)) && (G[24,28](x<=-1)) && (G[5,8](x>=4))"
+    # formula = "(G[10,25] (x>=3)) && (G[15,20](x<=-1))"
+    # formula = "(G[10,15] (x>=4)) && (G[5,20](x<=2))"
+    # formula = "(G[10,12](x>=1))"
+    formula = "(G[10,24] (x>=3)) && (G[13,15](x<=2))"
+    # formula = "(G[8,12] (x>=2.1)) && (G[8,12](x<=2))"
     ranges = {'x': [-4, 5], 'y': [-4, 5], 'x2': [-4, 5], 'y2': [-4, 5]}
 
     # Stl2milp Initialization
@@ -283,22 +293,23 @@ def main():
     y_v6 = []
 
     for i in range(0, steps):
-        x_v, y_v, x_v2, y_v2, x_v3, y_v3, x_v4, y_v4, x_v5, y_v5, x_v6, y_v6 = pstl_mpc(
+        x_v, y_v, x_v2, y_v2, x_v3, y_v3, x_v4, y_v4, x_v5, y_v5, x_v6, y_v6, x_rho = pstl_mpc(
                                 x, y, x2, y2, x3, y3, x4, y4, x5, y5, x6, y6, i, period, ast, ranges)
 
+    # print(type(x_rho), len(x_rho), "rho: ", str(x_rho))
     fig, axs = plt.subplots(3)
     fig.suptitle('subplots')
-    axs[0].plot(x_v[0:period], y_v[0:period])
+    axs[0].plot(t[0:period], x_v[0:period])
     axs[0].grid()
     axs[0].set_title('x vs t')
-    axs[1].plot(t[0:period], y_v[0:period])
+    axs[1].plot(t[0:period], x_v[0:period])
     axs[1].grid()
-    axs[1].set_title('y vs t')
+    axs[1].set_title('x vs t')
     axs[2].plot(t[0:period], x_v[0:period])
     axs[2].grid()
-    axs[2].set_title('x2 vs t')
+    axs[2].set_title('x vs t')
     fig.tight_layout()
-
+    plt.plot(t[10:26], x_rho)
     plt.show()
 if __name__ == '__main__':
     main()
