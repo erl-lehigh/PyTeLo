@@ -184,8 +184,6 @@ class stl2milp_pulp(object):
         '''Adds an until to the model.'''
         assert formula.op == Operation.UNTIL
 
-        raise NotImplementedError #TODO: under construction
-
         a, b = int(formula.low), int(formula.high)
         z_children_left = [self.to_milp(formula.left, tau)
                                                  for tau in range(t, t+b+1)]
@@ -207,21 +205,18 @@ class stl2milp_pulp(object):
             if phi_alw is not None:
                 children.append(phi_alw)
             phi = STLFormula(Operation.AND, children=children)
-            z_aux.append(self.add_formula_variable(phi, t))
+            z_aux.append(self.add_formula_variable(phi, t)[0])
 
         for k, z_right in enumerate(z_children_right):
             z_conj = z_aux[k]
-            # self.model.addConstr(z_conj <= z_right)
             self.model += z_conj <= z_right, None
             for z_left in z_children_left[:t+a+k+1]:
-                # self.model.addConstr(z_conj <= z_left)
                 self.model += z_conj <= z_left, None
-            m = 1 + (t + a + k)
-            # self.model.addConstr(z_conj >= 1-m + z_right + sum(z_children_left[:t+a+k+1]))
-            self.model += z_conj >= 1-m + z_right + sum(z_children_left[:t+a+k+1]), None
+            m = 1 + (t + a + k + 1)
+            self.model += z_conj >= 1-m + z_right + \
+                                 sum(z_children_left[:t+a+k+1]), \
+                                 None
 
-            # self.model.addConstr(z >= z_conj)
-            self.model += z >= z_conj, None
+            self.model += z >= z_conj
 
-        # self.model.addConstr(z <= sum(z_aux))
         self.model += z <= sum(z_aux)
