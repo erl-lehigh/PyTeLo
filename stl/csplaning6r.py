@@ -22,7 +22,7 @@ import gurobipy as grb
 from gurobipy import GRB
 from gurobipy import Model as GRBModel
 from antlr4 import InputStream, CommonTokenStream
-from environment import environment
+from environment6 import environment6
 import sys
 import numpy as np
 import time 
@@ -34,7 +34,7 @@ sys.path.append('..')
 
 def pstl_mpc(x_init, y_init, x_init2, y_init2, x_init3, y_init3,
              x_init4, y_init4, x_init5, y_init5, x_init6, y_init6,
-            current_step, period, ast, ranges):
+            current_step, period, ast, ranges, method):
 # def pstl_mpc(x_init, y_init, current_step, period, ast, ranges):
     # Define the general range for x y z
 
@@ -191,7 +191,7 @@ def pstl_mpc(x_init, y_init, x_init2, y_init2, x_init3, y_init3,
 
     # add the specification (STL) constraints
     z = stl_milp.translate()
-    method = 3
+    # method = 2
 
     if method == 1:
         d = stl_milp.method_1()
@@ -298,24 +298,33 @@ def main():
                 ret = " (F[{},{}]( ({}>= 3) || ({}<=-3) || ({}>=3) || ({}<=-3))) ".format(l,u,a,a,b,b)
             else:
                 raise NotImplementedError
+        
+        elif ap == "E":
+            if T == "G": 
+                ret = " (G[{},{}]( ({}<= 1) && ({}>=-1) && ({}<=1) && ({}>=-1))) ".format(l,u,a,a,b,b)
+            elif T == "F":
+                ret = " (F[{},{}]( ({}>= 3) || ({}<=-3) || ({}>=3) || ({}<=-3))) ".format(l,u,a,a,b,b)
+            else:
+                raise NotImplementedError
+        
 
         else:
             raise NotImplementedError
         return ret
 
-    obstacle = "&&" + zone("O", "G", 0, 59, "x", "y")
+    obstacle = "&&" + zone("O", "G", 0, 59, "x6", "y6")
     obstacle2 = "&&" + zone("O", "G", 0, 59, "x2", "y2")  
     obstacle3 = "&&" + zone("O", "G", 0, 59, "x3", "y3")  
     obstacle4 = "&&" + zone("O", "G", 0, 59, "x4", "y4")  
     obstacle5 = "&&" + zone("O", "G", 0, 59, "x5", "y5")  
-    obstacle6 = "&&" + zone("O", "G", 0, 59, "x6", "y6") 
-    obstacle += obstacle2 + obstacle3 + obstacle4 + obstacle5 +obstacle6
+    # obstacle6 = "&&" + zone("O", "G", 0, 59, "x6", "y6") 
+    obstacle += obstacle2 + obstacle3 + obstacle4 + obstacle5# +obstacle6
     # TODO: symmetric formula
     # formula = "(" + zone("C", "G", 25, 28, "x", "y") + "&&" + zone("B", "G", 10, 20, "x", "y") + "&&" + zone("D", "G", 10, 20, "x", "y") + ")"  
 
-    # formula = "(" + zone("C", "G", 10, 20, "x", "y") + "&&" + zone("B", "G", 30, 33, "x", "y") + "&&" + zone("D", "G", 45, 50, "x", "y") + ")" + obstacle
-
-    formula = "(" + zone("B", "G", 13, 14, "x2", "y2") + "&&" + zone("C", "G", 26, 28, "x2", "y2") + "&&" + zone("D", "G", 35, 40, "x2", "y2") + ")" + "&&" + "(" + zone("D", "G", 45, 50, "x", "y") + ")"  + "&&" + "(" + zone("C", "G", 15, 20, "x", "y") + ")" + obstacle
+    formula = "(" + zone("C", "G", 15, 30, "x", "y") + "&&" + zone("D", "G", 15, 30, "x2", "y2") + "&&" + zone("C", "G", 15, 30, "x3", "y3") + "&&" + zone("B", "G", 15, 30, "x4", "y4")+ "&&" + zone("C", "G", 15, 30, "x5", "y5")+ "&&" + zone("C", "G", 15, 25, "x6", "y6") +")" + obstacle
+    formula2 = "(" + zone("E", "G", 8, 30, "x", "y") + "&&" + zone("D", "G", 15, 30, "x2", "y2") + "&&" + zone("C", "G", 15, 30, "x3", "y3") + "&&" + zone("B", "G", 15, 30, "x4", "y4")+ "&&" + zone("C", "G", 15, 30, "x5", "y5")+ "&&" + zone("C", "G", 15, 25, "x6", "y6") +")" + obstacle
+    # formula2 = "(" + zone("B", "G", 13, 14, "x2", "y2") + "&&" + zone("C", "G", 26, 28, "x2", "y2") + "&&" + zone("D", "G", 35, 40, "x2", "y2") + ")" + "&&" + "(" + zone("D", "G", 45, 50, "x", "y") + ")"  + "&&" + "(" + zone("C", "G", 15, 20, "x", "y") + ")" + obstacle
     # formula3 = "(" + zone("D", "G", 10, 20, "x3", "y3") + "&&" + zone("A", "F", 30, 33, "x3", "y3") + "&&" + zone("D", "G", 45, 50, "x3", "y3") + ")" + obstacle
     # formula4 = "(" + zone("D", "F", 10, 20, "x4", "y4") + "&&" + zone("C", "G", 30, 33, "x4", "y4") + "&&" + zone("D", "F", 45, 50, "x4", "y4") + ")" + obstacle
     # formula5 = "(" + zone("B", "G", 10, 20, "x5", "y5") + "&&" + zone("A", "G", 30, 33, "x5", "y5") + "&&" + zone("D", "F", 45, 50, "x5", "y5") + ")" + obstacle
@@ -335,21 +344,28 @@ def main():
     tokens = CommonTokenStream(lexer)
     parser = stlParser(tokens)
     t = parser.stlProperty()
-    print(t.toStringTree())
+    # print(t.toStringTree())
     ast = STLAbstractSyntaxTreeExtractor().visit(t)
 
-    print(set(ast.variables()))
-    print(set(ranges))
-    print('AST:', str(ast))
-    number_robots = len(ast.variables())
-    print('number of robots:', number_robots)
+    lexer2 = stlLexer(InputStream(formula2))
+    tokens2 = CommonTokenStream(lexer2)
+    parser2 = stlParser(tokens2)
+    t2 = parser2.stlProperty()
+    # print(t2.toStringTree())
+    ast2 = STLAbstractSyntaxTreeExtractor().visit(t2)
+
+    # print(set(ast.variables()))
+    # print(set(ranges))
+    # print('AST:', str(ast))
+    # number_robots = len(ast.variables())
+    # print('number of robots:', number_robots)
 
     # Based on the formula, you need to define the period and the steps for it.
     # Normally, period should bigger than the formula range and steps should be bigger than period
     steps = 60
     period = 60
-    x_init, y_init, x_init2, y_init2, x_init3, y_init3 = -8, -8, 8, 8, 7, 6
-    x_init4, y_init4, x_init5, y_init5, x_init6, y_init6 = -4, -4,-6, 5, 9, -6
+    x_init, y_init, x_init2, y_init2, x_init3, y_init3 = -8, -8, 8, -8, 7, 6
+    x_init4, y_init4, x_init5, y_init5, x_init6, y_init6 = -4, 4,-6, -5, -9, 6
 
     x = [0 if i != 0 else x_init for i in range(steps + period)]
     y = [0 if i != 0 else y_init for i in range(steps + period)]
@@ -378,13 +394,40 @@ def main():
     y_v5 = []
     x_v6 = []
     y_v6 = []
-    start = time.time()
+    x_vp = []
+    y_vp = []
+    x_v2p = []
+    y_v2p = []
+    x_v3p = []
+    y_v3p = []
+    x_v4p = []
+    y_v4p = []
+    x_v5p = []
+    y_v5p = []
+    x_v6p = []
+    y_v6p = []
+    start1 = time.time()
     for i in range(0, steps):
         x_v, y_v, x_v2, y_v2, x_v3, y_v3, x_v4, y_v4, x_v5, y_v5, x_v6, y_v6 = pstl_mpc(
-                                x, y, x2, y2, x3, y3, x4, y4, x5, y5, x6, y6, i, period, ast, ranges)
-    end = time.time()
-    total_time = end -start
-    print("Total time: ", total_time)
+                                x, y, x2, y2, x3, y3, x4, y4, x5, y5, x6, y6, i, period, ast, ranges, 1)
+    end1 = time.time()
+    total_time1 = end1 -start1
+
+    start2 = time.time()
+    for i in range(0, steps):
+        x_vp, y_vp, x_v2p, y_v2p, x_v3p, y_v3p, x_v4p, y_v4p, x_v5p, y_v5p, x_v6p, y_v6p = pstl_mpc(
+                                x, y, x2, y2, x3, y3, x4, y4, x5, y5, x6, y6, i, period, ast2, ranges, 3)
+    end2 = time.time()
+    total_time2 = end2 -start2
+
+    # start3 = time.time()
+    # for i in range(0, steps):
+    #     x_v, y_v, x_v2, y_v2, x_v3, y_v3, x_v4, y_v4, x_v5, y_v5, x_v6, y_v6 = pstl_mpc(
+    #                             x, y, x2, y2, x3, y3, x4, y4, x5, y5, x6, y6, i, period, ast, ranges, 3)
+    # end3 = time.time()
+    # total_time3 = end3 -start3
+
+    
     # print(type(x_rho), len(x_rho), "rho: ", str(x_rho))
     # for i in range(60):
     #     val = np.sqrt(x_v[i]**2 +  y_v[i]**2)
@@ -397,66 +440,81 @@ def main():
     #         print("NEVER VIOLATED")
 
     fig, axs = plt.subplots(2)
-    axs[0].plot(t[0:period/2], x_v[0:period/2],linewidth=2)
-    lvertices3 = []
-    lcodes3 = []
-    lvertices4 = [] #method1
-    lcodes4 = []    #method1
-    lcodes4 += [Path.MOVETO] + [Path.LINETO]*3 + [Path.CLOSEPOLY] #method1
-    lvertices4 += [(10, -9.5), (20, -9.5), (20, -5.5), (10, -5.5), (0, 0)] #method1
-    lpath4 = Path(lvertices4, lcodes4) #method1
-    lpathpatch4 = PathPatch(lpath4, facecolor='lightcyan', edgecolor='lightcyan') #method1
-    axs[0].add_patch(lpathpatch4) #method1
-    # lcodes3 += [Path.MOVETO] + [Path.LINETO]*3 + [Path.CLOSEPOLY] #method3
-    # lvertices3 += [(10, 5.5), (20, 5.5), (20, 9.5), (10, 9.5), (0, 0)] #method3
-    
-    lcodes3 += [Path.MOVETO] + [Path.LINETO]*3 + [Path.CLOSEPOLY]
-    lvertices3 += [(25, 5.5), (28, 5.5), (28, 9.5), (25, 9.5), (0, 0)]    
-    lpath3 = Path(lvertices3, lcodes3)
-    lpathpatch3 = PathPatch(lpath3, facecolor='plum', edgecolor='plum', alpha=0.6)
-    axs[0].add_patch(lpathpatch3)
+    axs[0].plot(t[0:period/2], x_v[0:period/2],'g',linewidth=3, linestyle='dashed', marker='s', markersize=13)
+    axs[0].plot(t[0:period/2], x_v2[0:period/2],'b',linewidth=3, linestyle='dashed', marker='s', markersize=13)
+    axs[0].plot(t[0:period/2], x_v3[0:period/2],'r',linewidth=3, linestyle='dashed', marker='s', markersize=13)
+    axs[0].plot(t[0:period/2], x_v4[0:period/2],'m',linewidth=3, linestyle='dashed', marker='s', markersize=13)
+    axs[0].plot(t[0:period/2], x_v5[0:period/2],'y',linewidth=3, linestyle='dashed', marker='s', markersize=13)
+    axs[0].plot(t[0:period/2], x_v6[0:period/2],'c',linewidth=3, linestyle='dashed', marker='s', markersize=13)
+
+    axs[0].plot(t[0:period/2], x_vp[0:period/2],'pink',linewidth=3, marker='s', markersize=13)
+    axs[0].plot(t[0:period/2], x_v2p[0:period/2],'salmon',linewidth=3, marker='s', markersize=13)
+    axs[0].plot(t[0:period/2], x_v3p[0:period/2],'lime',linewidth=3, marker='s', markersize=13)
+    axs[0].plot(t[0:period/2], x_v4p[0:period/2],'orange',linewidth=3, marker='s', markersize=13)
+    axs[0].plot(t[0:period/2], x_v5p[0:period/2],'brown',linewidth=3, marker='s', markersize=13)
+    axs[0].plot(t[0:period/2], x_v6p[0:period/2],'maroon',linewidth=3, marker='s', markersize=13)
     axs[0].grid()
-    axs[0].set_xlabel('x-position', fontsize=25)
-    axs[0].set_ylabel("time", fontsize=25)
-    axs[0].axvspan(10, 10.2, facecolor='gray')
-    axs[0].axvspan(20, 20.2, facecolor='gray')
-    axs[0].axvspan(25, 25.2, facecolor='gray')
-    axs[0].axvspan(28, 28.2, facecolor='gray')
+    axs[0].set_xlabel('time', fontsize=25)
+    axs[0].set_ylabel("x-position", fontsize=25)
+    # axs[0].axvspan(10, 10.2, facecolor='gray')
+    # axs[0].axvspan(20, 20.2, facecolor='gray')
+    # axs[0].axvspan(25, 25.2, facecolor='gray')
+    # axs[0].axvspan(28, 28.2, facecolor='gray')
     axs[0].set_ylim(-10, 10)
     axs[0].set_xlim(0, 30)
-    axs[1].plot(t[0:period/2], y_v[0:period/2], linewidth=2.)
-    lvertices4 = [] #method1
-    lcodes4 = []    #method1
-    lcodes4 += [Path.MOVETO] + [Path.LINETO]*3 + [Path.CLOSEPOLY] #method1
-    lvertices4 += [(10, 5.5), (20, 5.5), (20, 9.5), (10, 9.5), (0, 0)]#method1
-    lpath4 = Path(lvertices4, lcodes4) #method1
-    lpathpatch4 = PathPatch(lpath4, facecolor='lightcyan', edgecolor='lightcyan') #method1
-    axs[1].add_patch(lpathpatch4) #method1
-    lvertices3 = []
-    lcodes3 = []
+
+    
+    axs[1].plot(t[0:period/2], y_vp[0:period/2],'g', linewidth=3., linestyle='dashed', marker='s', markersize=13)
+    axs[1].plot(t[0:period/2], y_v2[0:period/2], 'b',linewidth=3., linestyle='dashed', marker='s', markersize=13)
+    axs[1].plot(t[0:period/2], y_v3[0:period/2], 'r',linewidth=3., linestyle='dashed', marker='s', markersize=13)
+    axs[1].plot(t[0:period/2], y_v4[0:period/2], 'm',linewidth=3., linestyle='dashed', marker='s', markersize=13)
+    axs[1].plot(t[0:period/2], y_v5[0:period/2], 'y',linewidth=3., linestyle='dashed', marker='s', markersize=13)
+    axs[1].plot(t[0:period/2], y_v6[0:period/2], 'c', linewidth=3., linestyle='dashed', marker='s', markersize=13)
+    
+    axs[1].plot(t[0:period/2], y_vp[0:period/2], 'pink',linewidth=3., marker='s', markersize=13)
+    axs[1].plot(t[0:period/2], y_v2p[0:period/2], 'salmon',linewidth=3., marker='s', markersize=13)
+    axs[1].plot(t[0:period/2], y_v3p[0:period/2], 'lime',linewidth=3., marker='s', markersize=13)
+    axs[1].plot(t[0:period/2], y_v4p[0:period/2], 'orange',linewidth=3., marker='s', markersize=13)
+    axs[1].plot(t[0:period/2], y_v5p[0:period/2], 'brown',linewidth=3., marker='s', markersize=13)
+    axs[1].plot(t[0:period/2], y_v6p[0:period/2], 'maroon',linewidth=3., marker='s', markersize=13)
+    # lvertices4 = [] #method1
+    # lcodes4 = []    #method1
+    # lcodes4 += [Path.MOVETO] + [Path.LINETO]*3 + [Path.CLOSEPOLY] #method1
+    # lvertices4 += [(10, 5.5), (20, 5.5), (20, 9.5), (10, 9.5), (0, 0)]#method1
+    # lpath4 = Path(lvertices4, lcodes4) #method1
+    # lpathpatch4 = PathPatch(lpath4, facecolor='lightcyan', edgecolor='lightcyan') #method1
+    # axs[1].add_patch(lpathpatch4) #method1
+    # lvertices3 = []
+    # lcodes3 = []
     # lcodes3 += [Path.MOVETO] + [Path.LINETO]*3 + [Path.CLOSEPOLY] #method3
-    # lvertices3 += [(10, 5.5), (20, 5.5), (20, 9.5), (10, 9.5), (0, 0)] #method3
-    lcodes3 += [Path.MOVETO] + [Path.LINETO]*3 + [Path.CLOSEPOLY]
-    lvertices3 += [(25, 5.5), (28, 5.5), (28, 9.5), (25, 9.5), (0, 0)]    
-    lpath3 = Path(lvertices3, lcodes3)
-    lpathpatch3 = PathPatch(lpath3, facecolor='plum', edgecolor='plum', alpha=0.6)
-    axs[1].add_patch(lpathpatch3)
-    axs[1].axvspan(10, 10.2, facecolor='gray')
-    axs[1].axvspan(20, 20.2, facecolor='gray')
-    axs[1].axvspan(25, 25.2, facecolor='gray')
-    axs[1].axvspan(28, 28.2, facecolor='gray')
+    # # lvertices3 += [(10, 5.5), (20, 5.5), (20, 9.5), (10, 9.5), (0, 0)] #method3
+    # lcodes3 += [Path.MOVETO] + [Path.LINETO]*3 + [Path.CLOSEPOLY]
+    # lvertices3 += [(25, 5.5), (28, 5.5), (28, 9.5), (25, 9.5), (0, 0)]    
+    # lpath3 = Path(lvertices3, lcodes3)
+    # lpathpatch3 = PathPatch(lpath3, facecolor='plum', edgecolor='plum', alpha=0.6)
+    # # axs[1].add_patch(lpathpatch3)
+    # axs[1].axvspan(10, 10.2, facecolor='gray')
+    # axs[1].axvspan(20, 20.2, facecolor='gray')
+    # axs[1].axvspan(25, 25.2, facecolor='gray')
+    # axs[1].axvspan(28, 28.2, facecolor='gray')
     axs[1].grid()
-    axs[1].set_xlabel("y-position", fontsize=25)
-    axs[1].set_ylabel("time", fontsize=25)
+    axs[1].set_xlabel("time", fontsize=25)
+    axs[1].set_ylabel("y-position", fontsize=25)
     axs[1].set_ylim(-10, 10)
     axs[1].set_xlim(0, 30)
     fig.tight_layout()
     # plt.plot(t[10:26], x_rho)
     plt.show()
 
-    environment(x_v[0:period], y_v[0:period], x_v2[0:period], y_v2[0:period], 
-                x_v3[0:period], y_v3[0:period], x_v4[0:period], y_v4[0:period]
-                , x_v5[0:period], y_v5[0:period], x_v6[0:period], y_v6[0:period])
+    environment6(x_v[0:period/2], y_v[0:period/2], x_v2[0:period/2], y_v2[0:period/2], 
+                x_v3[0:period/2], y_v3[0:period/2], x_v4[0:period/2], y_v4[0:period/2]
+                , x_v5[0:period/2], y_v5[0:period/2], x_v6[0:period/2], y_v6[0:period/2],
+                x_vp[0:period/2], y_vp[0:period/2], x_v2p[0:period/2], y_v2p[0:period/2], 
+                x_v3p[0:period/2], y_v3p[0:period/2], x_v4p[0:period/2], y_v4p[0:period/2]
+                , x_v5p[0:period/2], y_v5p[0:period/2], x_v6p[0:period/2], y_v6p[0:period/2])
+    print("Total time1: ", total_time1)
+    # print("Total time2: ", total_time2)
+    # print("Total time3: ", total_time3)
     # environment(x_v[0:period/2], y_v[0:period/2])
 if __name__ == '__main__':
     main()

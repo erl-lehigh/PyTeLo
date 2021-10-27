@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 
-def environment(x, y, x2, y2, x3, y3, x4, y4, x5, y5, x6, y6):
+def environment6(x, y, x2, y2, x3, y3, x4, y4, x5, y5, x6, y6, x7,y7,x8,y8,x9,y9,x10,y10,x11,y11,x12,y12):
 # def environment(x, y, x2, y2):
     # Desired locations 
     lvertices1 = []
@@ -78,30 +78,44 @@ def environment(x, y, x2, y2, x3, y3, x4, y4, x5, y5, x6, y6):
     ax.add_patch(opathpatch)
     # ax.set(xlim=(-15, 15), ylim=(-15, 15))
     # ax.grid()
-    ax.plot(x[0], y[0],'salmon', marker='*', markersize=28)
-    ax.plot(x[20], y[20],'salmon', marker='s', markersize=20)
-    ax.plot(x2[0], y2[0],'lightblue', marker='*', markersize=28)
-    ax.plot(x2[20], y2[20],'lightblue', marker='s', markersize=20)
-    ax.plot(x3[0], y3[0],'salmon', marker='*', markersize=28)
-    ax.plot(x3[20], y3[20],'salmon', marker='s', markersize=20)
-    ax.plot(x4[0], y4[0], 'lightblue',marker='*', markersize=28)
-    ax.plot(x4[20], y4[20], 'lightblue',marker='s', markersize=20)
-
-    
-   
-
+    ax.plot(x[0], y[0],'g', marker='*', markersize=28)
+    ax.plot(x[29], y[29],'g', marker='s', markersize=20)
+    ax.plot(x2[0], y2[0],'b', marker='*', markersize=28)
+    ax.plot(x2[29], y2[29], 'b',marker='s', markersize=20)
+    ax.plot(x3[0], y3[0],'r', marker='*', markersize=28)
+    ax.plot(x3[29], y3[29],'r', marker='s', markersize=20)
+    ax.plot(x4[0], y4[0],'m', marker='*', markersize=28)
+    ax.plot(x4[29], y4[29],'m', marker='s', markersize=20)
+    ax.plot(x5[0], y5[0],'y', marker='*', markersize=28)
+    ax.plot(x5[29], y5[29],'y', marker='s', markersize=20)
+    ax.plot(x6[0], y6[0],'c', marker='*', markersize=28)
+    ax.plot(x6[29], y6[29],'c', marker='s', markersize=20)
+    ax.plot(x7[0], y7[0], 'pink',marker='*', markersize=28)
+    ax.plot(x7[29], y7[29],'pink', marker='s', markersize=20)
+    ax.plot(x8[0], y8[0], 'salmon',marker='*', markersize=28)
+    ax.plot(x8[29], y8[29], 'salmon',marker='s', markersize=20)
+    ax.plot(x9[0], y9[0],'lime', marker='*', markersize=28)
+    ax.plot(x9[29], y9[29], 'lime',marker='s', markersize=20)
+    ax.plot(x10[0], y10[0], 'orange',marker='*', markersize=28)
+    ax.plot(x10[29], y10[29],'orange', marker='s', markersize=20)
+    ax.plot(x11[0], y11[0], 'brown',marker='*', markersize=28)
+    ax.plot(x11[29], y11[29],'brown', marker='s', markersize=20)
+    ax.plot(x12[0], y12[0],'maroon', marker='*', markersize=28)
+    ax.plot(x12[29], y12[29], 'maroon',marker='s', markersize=20)
     ax.axis('equal')
-    ax.plot(x, y,'salmon', linestyle='dotted', linewidth=5.5, label = "FS-HO" )
-    ax.plot(x2, y2,'lightblue', linestyle='dotted', linewidth=5.5, label = "PS-HO")
-    ax.plot(x3, y3,'salmon', linestyle='dashed', linewidth=5.5, label = "FS-LDF")
-    ax.plot(x4, y4,'lightblue', linestyle='dashed', linewidth=5.5, label = "PS-LDF")
+    ax.plot(x, y,'g', linestyle='dashed', linewidth=5.5, label = "FS-Robot1" , alpha=0.5)
+    ax.plot(x2, y2,'b', linestyle='dashed', linewidth=5.5, label = "FS-Robot2", alpha=0.5)
+    ax.plot(x3, y3, 'r',linestyle='dashed', linewidth=5.5, label = "FS-Robot3", alpha=0.5)
+    ax.plot(x4, y4,'m', linestyle='dashed', linewidth=5.5, label = "FS-Robot4", alpha=0.5)
+    ax.plot(x5, y5, 'y', linestyle='dashed', linewidth=5, label = "FS-Robot5", alpha=0.5)
+    ax.plot(x6, y6,'c',  linestyle='dashed', linewidth=5, label = "FS-Robot6", alpha=0.5)
 
-    ax.plot(x5, y5, 'r', linewidth=5, label = "FS-WLN")
-    ax.plot(x5[0], y5[0],'r', marker='*', markersize=28)
-    ax.plot(x5[20], y5[20],'r', marker='s', markersize=20)
-    ax.plot(x6, y6, 'b', linewidth=5, label = "PS-WLN")
-    ax.plot(x6[0], y6[0], 'b', marker='*', markersize=38)
-    ax.plot(x6[20], y6[20], 'b', marker='s', markersize=20)
+    ax.plot(x7, y7,'pink', linewidth=5.5, label = "PS-Robot1" )
+    ax.plot(x8, y8,'salmon', linewidth=5.5, label = "PS-Robot2", alpha=0.8)
+    ax.plot(x9, y9,'lime',  linewidth=5.5, label = "PS-Robot3", alpha=0.8)
+    ax.plot(x10, y10, 'orange',linewidth=5.5, label = "PS-Robot4", alpha=0.8)
+    ax.plot(x11, y11,'brown', linewidth=5, label = "PS-Robot5", alpha=0.8)
+    ax.plot(x12, y12,'maroon', linewidth=5, label = "PS-Robot6", alpha=0.8)
     ax.legend(fontsize = 'xx-large')
     plt.show()
 
@@ -113,7 +127,7 @@ if __name__ == '__main__':
 
     start = time.time()
     print("hello")
-    environment(x, y, d, a)
+    environment6(x, y, d, a, x, y, d, a, x, y, d, a, x, y, d, a, x, y, d, a ,x, y, d, a)
     end = time.time()
     print(end - start)
    
