@@ -361,6 +361,7 @@ if __name__ == '__main__':
     # print(t.toStringTree())
 
     ast = STLAbstractSyntaxTreeExtractor().visit(t)
+    print(ast.variables())
     # print('AST:', ast)
 
     varnames = ['x', 'y', 'z']

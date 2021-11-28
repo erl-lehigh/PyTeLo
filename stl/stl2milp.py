@@ -5,6 +5,7 @@
  See license.txt file for license information.
 '''
 
+
 import gurobipy as grb
 
 from stl import Operation, RelOperation, STLFormula
@@ -13,14 +14,20 @@ from stl import Operation, RelOperation, STLFormula
 class stl2milp(object):
     '''Translate an STL formula to an MILP.'''
 
-    def __init__(self, formula, ranges, vtypes=None, model=None, robust=False):
+    def __init__(self, formula, ranges, vtypes=None, model=None, robust=False, mrho = None):
         self.formula = formula
 
         self.M = 1000
         self.ranges = ranges
         assert set(self.formula.variables()) <= set(self.ranges)
+        self.mrho = mrho
+
         if robust and 'rho' not in self.ranges:
-            self.ranges['rho'] = (-grb.GRB.INFINITY, self.M - 1)
+            if mrho is not None:
+                for i in range(len(self.mrho.keys())):
+                    self.ranges['rho' + str(i)] = (-grb.GRB.INFINITY, self.M - 1)
+            else:
+                self.ranges['rho'] = (-grb.GRB.INFINITY, self.M - 1)
 
         self.vtypes = vtypes
         if vtypes is None:
@@ -33,11 +40,21 @@ class stl2milp(object):
         self.variables = dict()
 
         if robust:
-            rho_min, rho_max = self.ranges['rho']
-            self.rho = self.model.addVar(vtype=self.vtypes['rho'], name='rho',
-                                         lb=rho_min, ub=rho_max, obj=-1)
+            if mrho is not None:
+                self.rho = dict()
+                for i in range(len(self.mrho.keys())):
+                    rho_min, rho_max = self.ranges['rho'+ str(i)]
+                    self.rho['rho%s' %i] = self.model.addVar(vtype=self.vtypes['rho%s'%i], name='rho%s'%i,lb=rho_min, ub=rho_max)
+     
+            else:    
+                rho_min, rho_max = self.ranges['rho']
+                self.rho = self.model.addVar(vtype=self.vtypes['rho'], name='rho',
+                                             lb=rho_min, ub=rho_max, obj=-1)
+
         else:
             self.rho = 0
+
+        
 
         self.__milp_call = {
             Operation.PRED : self.predicate,
@@ -86,23 +103,44 @@ class stl2milp(object):
             name='{}_{}'.format(state, t)
             v = self.model.addVar(vtype=vtype, lb=low, ub=high, name=name)
             self.variables[state][t] = v
-            print 'Added state:', state, 'time:', t
+            print ('Added state:', state, 'time:', t)
             self.model.update()
         return self.variables[state][t]
 
     def predicate(self, pred, z, t):
         '''Adds a predicate to the model.'''
-        assert pred.op == Operation.PRED
-        v = self.add_state(pred.variable, t)
-        if pred.relation in (RelOperation.GE, RelOperation.GT):
-            self.model.addConstr(v - self.M * z <= pred.threshold + self.rho)
-            self.model.addConstr(v + self.M * (1 - z) >= pred.threshold + self.rho)
-        elif pred.relation in (RelOperation.LE, RelOperation.LT):
-            self.model.addConstr(v + self.M * z >= pred.threshold - self.rho)
-            self.model.addConstr(v - self.M * (1 - z) <= pred.threshold - self.rho)
-#            raise NotImplementedError
+
+        if self.mrho is not None:
+            assert pred.op == Operation.PRED
+            v = self.add_state(pred.variable, t)
+
+            for r in self.mrho.values():
+                if str(pred.variable) in r.set:
+                    n_rho = r.id
+
+            if pred.relation in (RelOperation.GE, RelOperation.GT):
+                self.model.addConstr(v - self.M * z <= pred.threshold + self.rho['rho%s'%n_rho])
+                self.model.addConstr(v + self.M * (1 - z) >= pred.threshold + self.rho['rho%s'%n_rho])
+            elif pred.relation in (RelOperation.LE, RelOperation.LT):
+                self.model.addConstr(v + self.M * z >= pred.threshold - self.rho['rho%s'%n_rho])
+                self.model.addConstr(v - self.M * (1 - z) <= pred.threshold - self.rho['rho%s'%n_rho])
+            else:
+                raise NotImplementedError
+
+
         else:
-            raise NotImplementedError
+            assert pred.op == Operation.PRED
+            v = self.add_state(pred.variable, t)
+            
+            if pred.relation in (RelOperation.GE, RelOperation.GT):
+                self.model.addConstr(v - self.M * z <= pred.threshold + self.rho)
+                self.model.addConstr(v + self.M * (1 - z) >= pred.threshold + self.rho)
+            elif pred.relation in (RelOperation.LE, RelOperation.LT):
+                self.model.addConstr(v + self.M * z >= pred.threshold - self.rho)
+                self.model.addConstr(v - self.M * (1 - z) <= pred.threshold - self.rho)
+    #            raise NotImplementedError
+            else:
+                raise NotImplementedError
 
     def conjunction(self, formula, z, t):
         '''Adds a conjunction to the model.'''
@@ -178,3 +216,10 @@ class stl2milp(object):
 
             self.model.addConstr(z >= z_conj)
         self.model.addConstr(z <= sum(z_aux))
+
+    def optimize_multirho(self):
+        reward = sum([self.rho['rho%s'%i] * self.mrho['rho%s'%i].weight for i in range(len(self.mrho.keys()))])
+        self.model.setObjective(reward, grb.GRB.MAXIMIZE)
+        self.model.update()
+        self.model.optimize()
+        self.model.write('model_test.lp')
