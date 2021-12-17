@@ -39,21 +39,22 @@ nvar = ast.variables()
 
 print("HERE:", nvar)
 
-set1 = frozenset({'x', 'y'})
-set2 = frozenset({'z'})
+set1 = set({'x', 'y'})
+set2 = set({'z'})
 
 rhos = namedtuple('rhos','set weight id')
 
 args1 = [set1, 0.2, 0]
 args2 = [set2, 0.8, 1]
 
-mrho_nt = {
+mrho_dict = {
         "rho0" : rhos(*args1),
         "rho1" : rhos(*args2)
         }
+print(mrho_dict, 'AQUIIIIIIIIIIIIIIIIIIIIIII')
 # print('AST:', str(ast))
 
-stl_milp = stl2milp(ast, ranges={'x': [-4, 5], 'y': [-4, 1], 'z': [-10, 10]}, robust=True, mrho = mrho_nt)
+stl_milp = stl2milp(ast, ranges={'x': [-4, 5], 'y': [-4, 1], 'z': [-10, 10]}, robust=True, mrho = mrho_dict)
 stl_milp.translate(satisfaction=True)
 stl_milp.optimize_multirho()
 
