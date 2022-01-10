@@ -232,7 +232,7 @@ class pstl2milp(object):
         return ret
 
 
-    def method_1(self):
+    def method_1(self): #(Hierarchical Optimization)
         max_depth = max(self.objectives)
         for d in range(max_depth+1):
             self.model.setObjectiveN(-self.objectives[d], d, 
@@ -243,7 +243,7 @@ class pstl2milp(object):
         self.model.write('model_test.lp')
         return d
     
-    def method_2(self):
+    def method_2(self): #(Lowest depth first)
         M2 = 20 # FIXME: computed based on formula size
         reward = sum([term * M2**(-d) for d, term in self.objectives.items()])
         self.model.setObjective(reward, grb.GRB.MAXIMIZE)
@@ -251,7 +251,7 @@ class pstl2milp(object):
         self.model.optimize()
         self.model.write('model_test.lp')
 
-    def method_3(self, z):
+    def method_3(self, z): #(Weighted Largest Number)
         self.model.setObjective(z, grb.GRB.MAXIMIZE)
         self.model.update()
         self.model.optimize()
