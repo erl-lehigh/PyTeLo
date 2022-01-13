@@ -51,12 +51,12 @@ mrho_dict = {
         "rho0" : rhos(*args1),
         "rho1" : rhos(*args2)
         }
-print(mrho_dict, 'AQUIIIIIIIIIIIIIIIIIIIIIII')
+print(mrho_dict, 'HEREEEEEEE')
 # print('AST:', str(ast))
 
 stl_milp = stl2milp(ast, ranges={'x': [-4, 5], 'y': [-4, 1], 'z': [-10, 10]}, robust=True, mrho = mrho_dict)
 stl_milp.translate(satisfaction=True)
-stl_milp.optimize_multirho()
+stl_milp.optimize_multirho(transportation=True)
 
 
 # print('Vars')

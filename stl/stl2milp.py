@@ -217,9 +217,17 @@ class stl2milp(object):
             self.model.addConstr(z >= z_conj)
         self.model.addConstr(z <= sum(z_aux))
 
-    def optimize_multirho(self):
-        reward = sum([self.rho['rho%s'%i] * self.mrho['rho%s'%i].weight for i in range(len(self.mrho.keys()))])
-        self.model.setObjective(reward, grb.GRB.MAXIMIZE)
-        self.model.update()
-        self.model.optimize()
-        self.model.write('model_test.lp')
+    def optimize_multirho(self, transportation = False):
+
+        if transportation == True:
+            reward = sum([self.rho['rho%s'%i] * (self.mrho['rho%s'%i].weight) for i in range(len(self.mrho.keys()))])
+            self.model.setObjective(reward, grb.GRB.MAXIMIZE)
+            self.model.update()
+            # self.model.optimize()
+            # self.model.write('model_test_multirho.lp')            
+        else:
+            reward = sum([self.rho['rho%s'%i] * self.mrho['rho%s'%i].weight for i in range(len(self.mrho.keys()))])
+            self.model.setObjective(reward, grb.GRB.MAXIMIZE)
+            self.model.update()
+            self.model.optimize()
+            self.model.write('model_test_multirho.lp')
