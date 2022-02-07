@@ -44,12 +44,13 @@ class stl2milp(object):
                 self.rho = dict()
                 for i in range(len(self.mrho.keys())):
                     rho_min, rho_max = self.ranges['rho'+ str(i)]
-                    self.rho['rho%s' %i] = self.model.addVar(vtype=self.vtypes['rho%s'%i], name='rho%s'%i,lb=rho_min, ub=rho_max)
+                    self.rho['rho%s'%i] = self.model.addVar(vtype=self.vtypes['rho%s'%i],
+                                                name='rho%s'%i,lb=rho_min, ub=rho_max)
      
             else:    
                 rho_min, rho_max = self.ranges['rho']
                 self.rho = self.model.addVar(vtype=self.vtypes['rho'], name='rho',
-                                             lb=rho_min, ub=rho_max, obj=-1)
+                                                lb=rho_min, ub=rho_max, obj=-1)
 
         else:
             self.rho = 0
@@ -220,13 +221,20 @@ class stl2milp(object):
     def optimize_multirho(self, transportation = False):
 
         if transportation == True:
-            reward = sum([self.rho['rho%s'%i] * (self.mrho['rho%s'%i].weight) for i in range(len(self.mrho.keys()))])
-            self.model.setObjective(reward, grb.GRB.MAXIMIZE)
+
+            self.model.ModelSense = grb.GRB.MAXIMIZE
+            self.model.setObjectiveN(self.rho['rho0'], 0, 
+                                    weight = self.mrho['rho0'].weight,
+                                    name = 'cap_obj')
+
+            self.model.setObjectiveN(self.rho['rho1'], 1,
+                                     weight = self.mrho['rho1'].weight,
+                                     name = 'res_obj')
             self.model.update()
-            # self.model.optimize()
-            # self.model.write('model_test_multirho.lp')            
+               
         else:
-            reward = sum([self.rho['rho%s'%i] * self.mrho['rho%s'%i].weight for i in range(len(self.mrho.keys()))])
+            reward = sum([self.rho['rho%s'%i] * self.mrho['rho%s'%i].weight 
+                                    for i in range(len(self.mrho.keys()))])
             self.model.setObjective(reward, grb.GRB.MAXIMIZE)
             self.model.update()
             self.model.optimize()
