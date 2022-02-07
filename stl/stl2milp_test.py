@@ -69,4 +69,4 @@ stl_milp.optimize_multirho(transportation=True)
 
 print('Objective')
 obj = stl_milp.model.getObjective()
-print(str(obj), ':', obj.getValue())
+# print(str(obj), ':', obj.getValue())
