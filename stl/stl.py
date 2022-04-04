@@ -97,11 +97,13 @@ class STLFormula(object):
 
     def robustness(self, s, t, max_robustness=1):
         '''Computes the robustness of the STL formula.'''
+        no_signals = s.number_signals()
         if self.op == Operation.BOOL:
+            ret = np.array([max_robustness] * no_signals)
             if self.value:
-                return max_robustness
+                return ret
             else:
-                return -max_robustness
+                return -ret
         elif self.op == Operation.PRED:
             value = s.value(self.variable, t)
             if self.relation in (RelOperation.GE, RelOperation.GT):
@@ -109,39 +111,44 @@ class STLFormula(object):
             elif self.relation in (RelOperation.LE, RelOperation.LT):
                 return self.threshold - value
             elif self.relation == RelOperation.EQ:
-                return -abs(value - self.threshold)
+                return -np.abs(value - self.threshold)
             elif self.relation == RelOperation.NQ:
-                return abs(value - self.threshold)
+                return np.abs(value - self.threshold)
         elif self.op == Operation.AND:
-            return min(child.robustness(s, t, max_robustness)
-                                        for child in self.children)
+            res = np.array([child.robustness(s, t, max_robustness)
+                                        for child in self.children])
+            return np.amin(res, axis=0)
         elif self.op == Operation.OR:
-            return max(child.robustness(s, t, max_robustness)
-                                        for child in self.children)
+            res = np.array([child.robustness(s, t, max_robustness)
+                                        for child in self.children])
+            return np.amax(res, axis=0)
         elif self.op == Operation.IMPLIES:
-            return max(-self.left.robustness(s, t, max_robustness),
-                       self.right.robustness(s, t, max_robustness))
+            return np.maximum(-self.left.robustness(s, t, max_robustness),
+                              self.right.robustness(s, t, max_robustness))
         elif self.op == Operation.NOT:
             return -self.child.robustness(s, t, max_robustness)
         elif self.op == Operation.UNTIL:
-            r_acc = min(self.left.robustness(s, t+tau, max_robustness)
-                                               for tau in np.arange(self.low+1))
+            res = np.array([self.left.robustness(s, t+tau, max_robustness)
+                                              for tau in np.arange(self.low+1)])
+            r_acc = np.amin(res, axis = 0)
             rleft = (self.left.robustness(s, t+tau, max_robustness)
                                     for tau in np.arange(self.low, self.high+1))
             rright = (self.right.robustness(s, t+tau, max_robustness)
                                     for tau in np.arange(self.low, self.high+1))
-            value = -max_robustness
+            value = -np.array([max_robustness] * no_signals)
             for rl, rr in zip(rleft, rright):
-                r_acc = min(r_acc, rl)
-                r_conj = min(r_acc, rr)
-                value = max(value, r_conj)
+                r_acc = np.minimum(r_acc, rl)
+                r_conj = np.minimum(r_acc, rr)
+                value = np.maximum(value, r_conj)
             return value
         elif self.op == Operation.ALWAYS:
-            return min( (self.child.robustness(s, t+tau, max_robustness)
-                                for tau in np.arange(self.low, self.high+1)))
+            res = np.array([self.child.robustness(s, t+tau, max_robustness)
+                                for tau in np.arange(self.low, self.high+1)])
+            return np.amin(res, axis=0)
         elif self.op == Operation.EVENT:
-            return max( (self.child.robustness(s, t+tau, max_robustness)
-                                for tau in np.arange(self.low, self.high+1)))
+            res = np.array([self.child.robustness(s, t+tau, max_robustness)
+                                for tau in np.arange(self.low, self.high+1)])
+            return np.amax(res, axis=0)
 
     def negate(self):
         '''Computes the negation of the STL formula by propagating the negation
@@ -335,8 +342,8 @@ class Trace(object):
         '''Constructor'''
         # self.timePoints = list(timePoints)
         # self.data = np.array(data)
-        for variable, var_data in zip(variables, data):
-            print(variable, var_data, timePoints)
+        # for variable, var_data in zip(variables, data):
+        #     print(variable, var_data, timePoints)
         self.data = {variable : interp1d(timePoints, var_data, kind=kind)
                             for variable, var_data in zip(variables, data)}
 
@@ -348,12 +355,49 @@ class Trace(object):
         '''Returns value of the given signal component at desired timepoint.'''
         return self.data[variable](np.asarray(timepoints))
 
+    def number_signals(self):
+        return 1
+
     def __str__(self):
         raise NotImplementedError
 
+
+class TraceBatch(object):
+    '''Representation of a system trace.'''
+
+    def __init__(self, variables, timePoints, data, kind='nearest'):
+        '''Constructor
+
+        variables (iterable of strings)
+        timepoints (iterable of common time points)
+        data (iterable of multi-dimensional signals)
+        kind (type of interpolation)
+        '''
+        self.no_signals = len(data)
+        self.data = dict()
+        for k, variable in enumerate(variables):
+            var_data = np.array([d[k] for d in data])
+            self.data[variable] = interp1d(timePoints, var_data, kind=kind)
+
+    def value(self, variable, t):
+        '''Returns value of the given signal component at time t.'''
+        return self.data[variable](t)
+
+    def values(self, variable, timepoints):
+        '''Returns value of the given signal component at desired timepoint.'''
+        return self.data[variable](np.asarray(timepoints))
+
+    def number_signals(self):
+        return self.no_signals
+
+    def __str__(self):
+        raise NotImplementedError
+
+
 if __name__ == '__main__':
-    lexer = stlLexer(InputStream("!(x < 10) && F[0, 2] y > 2 || G[1, 3] z<=8"))
+    lexer = stlLexer(InputStream("!(x > 10) && F[0, 2] y > 2 && G[1, 3] z<=8"))
     # lexer = stlLexer(InputStream("!(x < 10) && y > 2 && z<=8"))
+    # lexer = stlLexer(InputStream("!(x < 10) U[1,3] (y > 2 && z<=8)"))
     tokens = CommonTokenStream(lexer)
 
     parser = stlParser(tokens)
@@ -361,7 +405,7 @@ if __name__ == '__main__':
     print(t.toStringTree())
 
     ast = STLAbstractSyntaxTreeExtractor().visit(t)
-    print('AST:', ast)
+    print('AST:', str(ast))
 
     varnames = ['x', 'y', 'z']
     data = [[8, 8, 11, 11, 11], [2, 3, 1, 2, 2], [3, 9, 8, 9, 9]]
@@ -369,6 +413,16 @@ if __name__ == '__main__':
     s = Trace(varnames, timepoints, data)
 
     print('r:', ast.robustness(s, 0, 20))
+
+    varnames = ['x', 'y', 'z']
+    data = [[[8, 8, 11, 11, 11], [2, 3, 1, 2, 2], [3, 9, 8, 9, 9]],
+            [[10, 9, 11, 11, 11], [2, 3, 1, 2, 2], [3, 9, 8, 9, 9]],
+            [[8, 8, 11, 11, 11], [2, 3, 1, 2, 2], [3, 5, 8, 7, 9]]
+           ]
+    timepoints = [0, 1, 2, 3, 4]
+    s = TraceBatch(varnames, timepoints, data)
+
+    print('r batch:', ast.robustness(s, 0, 20))
 
     pnf = ast.pnf()
     print(pnf)
