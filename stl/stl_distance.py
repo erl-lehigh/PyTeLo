@@ -100,5 +100,5 @@ def stl_distance(ast1, ast2, ranges, return_directed=False):
     d1 = stl_directed_distance(ast1, ast2, ranges)
     d2 = stl_directed_distance(ast2, ast1, ranges)
     if return_directed:
-        max(d1, d2), d1, d2
+        return max(d1, d2), d1, d2
     return max(d1, d2)
