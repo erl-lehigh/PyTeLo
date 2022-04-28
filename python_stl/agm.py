@@ -12,7 +12,7 @@ from antlr4 import InputStream, CommonTokenStream
 from stlLexer import stlLexer
 from stlParser import stlParser
 
-from stl import Operation, RelOperation, STLAbstractSyntaxTreeExtractor, Trace
+from python_stl import Operation, RelOperation, STLAbstractSyntaxTreeExtractor, Trace
 
 
 def powermean(vector, order, plus=0):

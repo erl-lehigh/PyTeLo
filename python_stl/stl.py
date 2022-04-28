@@ -11,9 +11,9 @@ import numpy as np
 from scipy.interpolate import interp1d
 from antlr4 import InputStream, CommonTokenStream
 
-from stl.stlLexer import stlLexer
-from stl.stlParser import stlParser
-from stl.stlVisitor import stlVisitor
+from python_stl.stlLexer import stlLexer
+from python_stl.stlParser import stlParser
+from python_stl.stlVisitor import stlVisitor
 
 
 class Operation(object):
