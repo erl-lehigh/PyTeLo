@@ -13,12 +13,12 @@ from antlr4 import InputStream, CommonTokenStream
 import sys
 sys.path.append('..')
 
-from python_stl import Operation, RelOperation, STLFormula
+from stl import Operation, RelOperation, STLFormula
 from stlLexer import stlLexer
 from stlParser import stlParser
 from stlVisitor import stlVisitor
 
-from python_stl import STLAbstractSyntaxTreeExtractor
+from stl import STLAbstractSyntaxTreeExtractor
 
 from stl2milp import stl2milp_pulp
 import pulp

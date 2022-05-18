@@ -9,7 +9,7 @@ setup(
     maintainer='Cristian-Ioan Vasile',
     maintainer_email='crv519@lehigh.edu',
     description='A library for manipulating Signal Temporal Logic Formulae',
-    packages=find_namespace_packages(include=['python_stl', 'python_stl.*']),
+    packages=find_namespace_packages(include=['stl', 'stl.*']),
     install_requires=[
         "scipy"
     ]
