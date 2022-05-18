@@ -14,13 +14,13 @@ import sys
 sys.path.append('..')
 
 from stl import Operation, RelOperation, STLFormula
-from stlLexer import stlLexer
-from stlParser import stlParser
-from stlVisitor import stlVisitor
+from stl.stlLexer import stlLexer
+from stl.stlParser import stlParser
+from stl.stlVisitor import stlVisitor
 
 from stl import STLAbstractSyntaxTreeExtractor
 
-from stl2milp import stl2milp_pulp
+from stl import stl2milp_pulp
 import pulp
 
 # formula = "(x > 10) && F[0, 2] y > 2 || G[1, 6] z > 8"
