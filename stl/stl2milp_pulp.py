@@ -114,7 +114,6 @@ class stl2milp_pulp(object):
             v = pl.LpVariable(name, cat=vtype, lowBound=low, upBound=high)
             self.variables[state][t] = v
             if self._verbose:
-                print('Added state:', state, 'time:', t)
         return self.variables[state][t]
 
     def predicate(self, pred, z, t):
