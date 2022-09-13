@@ -26,7 +26,7 @@ Otherwise
 ```bash
 cd <clone-dir>
 export CLASSPATH=".:$PWD/lib/antlr-4.7.1-complete.jar:$CLASSPATH"
-alias antlr4="java -jar $PWD/lib/antlr-4.7.1-complete.jar -visitor"'
+alias antlr4="java -jar $PWD/lib/antlr-4.7.1-complete.jar -visitor"
 alias grun="java org.antlr.v4.gui.TestRig"
 ```
 
