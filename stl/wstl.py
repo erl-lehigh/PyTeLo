@@ -45,7 +45,7 @@ class WSTLFormula(STLFormula):
         STLFormula.__init__(self, operation, **kwargs)
 
         if self.op in (Operation.AND, Operation.OR, Operation.ALWAYS,
-                       Operation.EVENT, Operation.UNTIL):
+                       Operation.EVENT, Operation.UNTIL, Operation.RELEASE):
             self.weight = kwargs.get('weight', None)
 
         self.__string = None # string representation cache for quick lookup
@@ -126,7 +126,7 @@ class WSTLFormula(STLFormula):
                 children = [str(child) for child in self.children]
                 join_str = ' {op}{weight} '.format(op=opname, weight=op_weight)
                 s = '(' + join_str.join(children) + ')'
-            elif self.op == Operation.UNTIL:
+            elif self.op in (Operation.UNTIL, Operation.RELEASE):
                 s = '({left} {op}[{low}, {high}]{weight} {right})'.format(
                       op=opname, weight=op_weight, left=self.left,
                       right=self.right, low=self.low, high=self.high)
@@ -204,7 +204,7 @@ class WSTLAbstractSyntaxTreeExtractor(wstlVisitor):
                              right=self.visit(ctx.right))
         elif op == Operation.NOT:
             ret = WSTLFormula(op, child=self.visit(ctx.child))
-        elif op == Operation.UNTIL:
+        elif op in (Operation.UNTIL, Operation.RELEASE):
             low = float(ctx.low.text)
             high = float(ctx.high.text)
             weight = self.getWeight(ctx)

@@ -17,16 +17,23 @@ class stl2milp(object):
         self.formula = formula
 
         self.M = 1000
+        
         self.ranges = ranges
+        if ranges is None:
+            self.ranges = {v: (0, 10) for v in self.formula.variables()}
+        
         assert set(self.formula.variables()) <= set(self.ranges)
+
         if robust and 'rho' not in self.ranges:
             self.ranges['rho'] = (-grb.GRB.INFINITY, self.M - 1)
 
         self.vtypes = vtypes
+        
         if vtypes is None:
             self.vtypes = {v: grb.GRB.CONTINUOUS for v in self.ranges}
 
         self.model = model
+        
         if model is None:
             self.model = grb.Model('STL formula: {}'.format(formula))
 

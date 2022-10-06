@@ -9,7 +9,7 @@ import gurobipy as grb
 from stl import Operation, RelOperation, STLFormula
 
 
-class wstl2milp(object):
+class short_wstl2milp(object):
     '''Translate an WSTL formula to an MILP.'''
 
     def __init__(self, formula, ranges=None, vtypes=None, model=None):
@@ -25,7 +25,7 @@ class wstl2milp(object):
 
         self.model = model
         if model is None:
-            self.model = grb.Model('WSTL formula: {}'.format(formula))
+            self.model = grb.Model('S-WSTL formula: {}'.format(formula))
 
         self.M = 1000
         self.variables = dict()
@@ -37,8 +37,16 @@ class wstl2milp(object):
             Operation.OR : self.disjunction,
             Operation.EVENT : self.eventually,
             Operation.ALWAYS : self.globally,
-            Operation.UNTIL : self.until
+            Operation.UNTIL : self.until,
+            Operation.RELEASE : self.release
         }
+
+    def translate(self, satisfaction=True):
+        '''Translates the STL formula to MILP from time 0.'''
+        z, rho = self.to_milp(self.formula)
+        if satisfaction:
+            self.model.addConstr(z == 1, 'formula_satisfaction')
+        return z, rho
 
     def to_milp(self, formula, t=0):
         '''Generates the MILP from the STL formula.'''
@@ -47,34 +55,34 @@ class wstl2milp(object):
             self.__milp_call[formula.op](formula, z, rho, t)
         return z, rho
 
-    def add_formula_variables(self, formula, t):
+    def add_formula_variables(self, formula, parent, t):
         '''Adds a variable for the `formula` at time `t`.'''
-        if formula not in self.variables:
-            self.variables[formula] = dict()
-        if t not in self.variables[formula]:
+        if parent not in self.hat_variables:
+            self.hat_variables[parent] = dict()
+        if formula not in self.hat_variables[parent]:
+            self.hat_variables[parent][formula] = dict()
+        if t not in self.hat_variables[parent][formula]:
             opname = Operation.getString(formula.op)
             identifier = formula.identifier()
-            z_name = 'z_{}_{}_{}'.format(opname, identifier, t)
-            if formula.op == Operation.PRED:
-                z = self.model.addVar(vtype=grb.GRB.BINARY, name=z_name)
-            else:
-                z = self.model.addVar(vtype=grb.GRB.CONTINUOUS, name=z_name,
-                                      lb=0, ub=1)
-            rho_name = 'rho_{}_{}_{}'.format(opname, identifier, t)
-            rho = self.model.addVar(vtype=grb.GRB.CONTINUOUS, name=rho_name,
-                                    lb=-grb.GRB.INFINITY,ub=grb.GRB.INFINITY)
-            self.variables[formula][t] = (z, rho)
+            parent_identifier = parent.identifier()
+            z_name = 'zhat_{}_{}_{}_{}'.format(opname, identifier,
+                                               parent_identifier, t)
+            #TODO: we need to check if this will work for continuos interval [0.1]
+            # and compare performance then proof in the paper this relaxation                                               
+            self.hat_variables[parent][formula][t] = self.model.addVar(
+                            vtype=grb.GRB.BINARY, name=z_name)#, lb=0, ub=1)
             self.model.update()
-            return self.variables[formula][t], True
-        return self.variables[formula][t], False
+            return self.hat_variables[parent][formula][t], True
+        return self.hat_variables[parent][formula][t], False
 
     def add_hat(self, formula, t):
         '''Adds a hat variable for the `formula` at time `t`
         TODO:
-
+        TODO: check if we need the parent
         NOTE: Is caching correct, or does every disjunction, eventually,
         and until need their own version?
         '''
+        
         if formula not in self.hat_variables:
             self.hat_variables[formula] = dict()
         if t not in self.hat_variables[formula]:
@@ -82,7 +90,7 @@ class wstl2milp(object):
             identifier = formula.identifier()
             z_name = 'zhat_{}_{}_{}'.format(opname, identifier, t)
             self.hat_variables[formula][t] = self.model.addVar(
-                            vtype=grb.GRB.CONTINUOUS, name=z_name, lb=0, ub=1)
+                            vtype=grb.GRB.BINARY, name=z_name)#, lb=0, ub=1)
             self.model.update()
             return self.hat_variables[formula][t], True
         return self.hat_variables[formula][t], False

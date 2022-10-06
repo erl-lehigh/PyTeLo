@@ -25,7 +25,7 @@ class long_wstl2milp(object):
 
         self.model = model
         if model is None:
-            self.model = grb.Model('WSTL formula: {}'.format(formula))
+            self.model = grb.Model('L-WSTL formula: {}'.format(formula))
 
         self.M = 1000
         self.variables = dict()
@@ -38,7 +38,7 @@ class long_wstl2milp(object):
             Operation.EVENT : self.eventually,
             Operation.ALWAYS : self.globally,
             Operation.UNTIL : self.until,
-            # Operation.RELEASE : self.release #TODO:
+            Operation.RELEASE : self.release 
         }
 
     def translate(self, satisfaction=True):
@@ -70,7 +70,7 @@ class long_wstl2milp(object):
                                       lb=0, ub=1)
             rho_name = 'rho_{}_{}_{}'.format(opname, identifier, t)
             rho = self.model.addVar(vtype=grb.GRB.CONTINUOUS, name=rho_name,
-                                    lb=-grb.GRB.INFINITY,ub=grb.GRB.INFINITY)
+                                    lb=-grb.GRB.INFINITY, ub=grb.GRB.INFINITY)
             self.variables[formula][t] = (z, rho)
             self.model.update()
             return self.variables[formula][t], True
@@ -93,6 +93,8 @@ class long_wstl2milp(object):
             parent_identifier = parent.identifier()
             z_name = 'zhat_{}_{}_{}_{}'.format(opname, identifier,
                                                parent_identifier, t)
+            #TODO: we need to check if this will work for continuos interval [0.1]
+            # and compare performance then proof in the paper this relaxation                                               
             self.hat_variables[parent][formula][t] = self.model.addVar(
                             vtype=grb.GRB.BINARY, name=z_name)#, lb=0, ub=1)
             self.model.update()
@@ -131,30 +133,42 @@ class long_wstl2milp(object):
         '''Adds a conjunction to the model.'''
         assert formula.op == Operation.AND
         vars_children = [self.to_milp(f, t) for f in formula.children]
-        z_sum = 0
-        for k, (z_child, rho_child) in enumerate(vars_children):
-            self.model.addConstr(z <= z_child)
-            self.model.addConstr(rho <= (1 - formula.weight(k)) * rho_child
-                                        + self.M * (1 - z))
-            self.model.addConstr(rho <= formula.weight(k) * rho_child
-                                        + self.M * z)
 
+        for k, (z_child, rho_child) in enumerate(vars_children):
+            weight = formula.weight(k)
+            self.model.addConstr(rho <= (1-weight) * rho_child + self.M*(1 - z))
+            self.model.addConstr(rho <= weight * rho_child + self.M * z)
+            self.model.addConstr(z <= z_child)           
+            
     def disjunction(self, formula, z, rho, t):
         '''Adds a disjunction to the model.'''
         assert formula.op == Operation.OR
         z_children, rho_children = zip(*[self.to_milp(f, t)
                                          for f in formula.children])
-        z_hat_children,_ = zip(*[self.add_hat_variable(f, formula, t)
+        z_hat_children, _ = zip(*[self.add_hat_variable(f, formula, t)
                                  for f in formula.children])
-        vars_children = zip(z_children, z_hat_children, rho_children)
-        for k, (z_child, z_hat_child, rho_child) in enumerate(vars_children):
+        vars_children = zip(z_hat_children, rho_children)
+        for k, (z_hat_child, rho_child) in enumerate(vars_children):
             weight = formula.weight(k)
             self.model.addConstr(rho <= weight * rho_child
                                         + self.M * (2 - z_hat_child - z))
             self.model.addConstr(rho <= (1 - weight) * rho_child
-                                        + self.M * (1 - z_hat_child + z))
+                                        + self.M * (1 + z - z_hat_child))
         self.model.addConstr(z <= sum(z_children))
         self.model.addConstr(sum(z_hat_children) >= 1)
+
+    def globally(self, formula, z, rho, t):
+        '''Adds a globally to the model.'''
+        assert formula.op == Operation.ALWAYS
+        a, b = int(formula.low), int(formula.high)
+        child = formula.child
+        vars_children = [self.to_milp(child, t + tau) for tau in range(a, b+1)]
+        for tau, (z_child, rho_child) in zip(range(a, b+1), vars_children):
+            weight = formula.weight(tau)
+            self.model.addConstr(rho <= (1 - weight) * rho_child 
+                                        + self.M * (1 - z))
+            self.model.addConstr(rho <= weight * rho_child + self.M * z)
+            self.model.addConstr(z <= z_child)
 
     def eventually(self, formula, z, rho, t):
         '''Adds an eventually to the model.'''
@@ -175,19 +189,6 @@ class long_wstl2milp(object):
                                         + self.M * (1 - z_hat_child + z))
         self.model.addConstr(z <= sum(z_children))
         self.model.addConstr(sum(z_hat_children) >= 1)
-
-    def globally(self, formula, z, rho, t):
-        '''Adds a globally to the model.'''
-        assert formula.op == Operation.ALWAYS
-        a, b = int(formula.low), int(formula.high)
-        child = formula.child
-        vars_children = [self.to_milp(child, t + tau) for tau in range(a, b+1)]
-        for tau, (z_child, rho_child) in zip(range(a, b+1), vars_children):
-            self.model.addConstr(z <= z_child)
-            self.model.addConstr(rho <= formula.weight(tau) * rho_child
-                                        + self.M * (1 - z))
-            self.model.addConstr(rho <= formula.weight(tau) * rho_child
-                                        + self.M * z)
 
     def until(self, formula, z, rho, t):
         '''Adds an until to the model.'''
