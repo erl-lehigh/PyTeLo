@@ -283,12 +283,12 @@ class WSTLAbstractSyntaxTreeExtractor(wstlVisitor):
 
 
 if __name__ == '__main__':
-    lexer = stlLexer(InputStream("!(x < 10) &&^p1 F[0, 2]^w1 y > 2"
+    lexer = wstlLexer(InputStream("!(x < 10) &&^p1 F[0, 2]^w1 y > 2"
                                  " ||^p2 G[1, 3]^w2 z<=8"))
     tokens = CommonTokenStream(lexer)
 
-    parser = stlParser(tokens)
-    t = parser.stlProperty()
+    parser = wstlParser(tokens)
+    t = parser.wstlProperty()
     print(t.toStringTree())
 
     predicate_weights = {
@@ -297,7 +297,7 @@ if __name__ == '__main__':
         'w1': lambda x: 2 - np.abs(x - 1),
         'w2': lambda x: 1 + (x-2)**2
     }
-    ast = WSTLAbstractSyntaxTreeExtractor().visit(t)
+    ast = WSTLAbstractSyntaxTreeExtractor(predicate_weights).visit(t)
     print('AST:', ast)
 
     varnames = ['x', 'y', 'z']
@@ -305,7 +305,7 @@ if __name__ == '__main__':
     timepoints = [0, 1, 2, 3, 4]
     s = Trace(varnames, timepoints, data)
 
-    print('r:', ast.robustness(s, 0))
+    # print('r:', ast.robustness(s, 0))
 
     pnf = ast.pnf()
     print(pnf)
