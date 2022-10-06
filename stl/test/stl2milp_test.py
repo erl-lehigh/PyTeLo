@@ -8,7 +8,7 @@ Created on Mon Oct 22 17:07:07 2018
 from antlr4 import InputStream, CommonTokenStream
 
 import sys
-sys.path.append('..')
+sys.path.append('/home/gustavo/lehigh/erl/python-stl/stl')
 
 from stl import Operation, RelOperation, STLFormula
 from stlLexer import stlLexer
@@ -27,9 +27,10 @@ parser = stlParser(tokens)
 t = parser.stlProperty()
 print(t.toStringTree())
 ast = STLAbstractSyntaxTreeExtractor().visit(t)
-print "AST:", ast
+print ("AST:", ast)
 
-MILP=stl2milp(ast,robust=True)
+MILP=stl2milp(ast, ranges={'x': [-10, 10], 'y':[-10, 10], 'z':[10,10]}, 
+              robust=True)
 
 
 z=MILP.to_milp(ast,t=0)

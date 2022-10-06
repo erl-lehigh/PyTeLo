@@ -9,7 +9,7 @@ import gurobipy as grb
 from stl import Operation, RelOperation, STLFormula
 
 
-class wstl2milp(object):
+class long_wstl2milp(object):
     '''Translate an WSTL formula to an MILP.'''
 
     def __init__(self, formula, ranges=None, vtypes=None, model=None):

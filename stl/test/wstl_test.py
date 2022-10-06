@@ -3,7 +3,7 @@ from antlr4 import InputStream, CommonTokenStream
 import numpy as np
 
 import sys
-sys.path.append('..')
+sys.path.append('/home/gustavo/lehigh/erl/python-stl/stl')
 
 from stl import Operation, RelOperation, STLFormula
 from wstlLexer import wstlLexer
@@ -12,7 +12,7 @@ from wstlVisitor import wstlVisitor
 
 from wstl import WSTLAbstractSyntaxTreeExtractor
 
-from wstl2milp import wstl2milp
+from long_wstl2milp import long_wstl2milp
 
 from gurobipy import *
 
@@ -41,7 +41,7 @@ weights = {'weight1': lambda x: 0.5, 'weight2': lambda x: 0.25}
 ast = WSTLAbstractSyntaxTreeExtractor(weights).visit(t)
 
 # Translate WSTL to MILP and retrieve integer variable for the formula
-wstl_milp = wstl2milp(ast, model=m)
+wstl_milp = long_wstl2milp(ast, model=m)
 z_formula, rho_formula = wstl_milp.translate()
 
 # Get/create state variables
