@@ -124,8 +124,9 @@ class long_wstl2milp(object):
             self.model.addConstr(rho >= -self.M * (1 - z))
             self.model.addConstr(rho <= self.M * z)
         elif pred.relation in (RelOperation.LE, RelOperation.LT):
-            raise NotImplementedError
-            # self.model.addConstr(rho == pred.threshold - v)
+            self.model.addConstr(rho == pred.threshold - v)
+            self.model.addConstr(rho <= self.M * (1 - z))
+            self.model.addConstr(rho >= -self.M * z)
         else:
             raise NotImplementedError
 
