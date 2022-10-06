@@ -94,7 +94,7 @@ class wstl2milp(object):
             z_name = 'zhat_{}_{}_{}_{}'.format(opname, identifier,
                                                parent_identifier, t)
             self.hat_variables[parent][formula][t] = self.model.addVar(
-                            vtype=grb.GRB.CONTINUOUS, name=z_name, lb=0, ub=1)
+                            vtype=grb.GRB.BINARY, name=z_name)#, lb=0, ub=1)
             self.model.update()
             return self.hat_variables[parent][formula][t], True
         return self.hat_variables[parent][formula][t], False
@@ -109,7 +109,7 @@ class wstl2milp(object):
             name='{}_{}'.format(state, t)
             v = self.model.addVar(vtype=vtype, lb=low, ub=high, name=name)
             self.variables[state][t] = v
-            print 'Added state:', state, 'time:', t
+            print ('Added state:', state, 'time:', t)
             self.model.update()
         return self.variables[state][t]
 
@@ -119,7 +119,7 @@ class wstl2milp(object):
         v = self.add_state(pred.variable, t)
         if pred.relation in (RelOperation.GE, RelOperation.GT):
             self.model.addConstr(rho == v - pred.threshold)
-            self.model.addConstr(rho >= self.M * (1 - z))
+            self.model.addConstr(rho >= -self.M * (1 - z))
             self.model.addConstr(rho <= self.M * z)
         elif pred.relation in (RelOperation.LE, RelOperation.LT):
             raise NotImplementedError
