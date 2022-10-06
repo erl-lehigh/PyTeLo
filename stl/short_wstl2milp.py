@@ -55,7 +55,7 @@ class short_wstl2milp(object):
             self.__milp_call[formula.op](formula, z, rho, t)
         return z, rho
 
-    def add_formula_variables(self, formula, parent, t):
+    def add_formula_variables(self, formula, t):
         '''Adds a variable for the `formula` at time `t`.'''
         if formula not in self.variables:
             self.variables[formula] = dict()
@@ -174,8 +174,8 @@ class short_wstl2milp(object):
         child = formula.child
         z_children, rho_children = zip(*[self.to_milp(child, t + tau)
                                          for tau in range(a, b+1)])
-        z_hat_children = [self.add_hat_variable(f, t + tau)
-                          for tau in range(a, b+1)]
+        z_hat_children, _ = zip(*[self.add_hat_variable(child, formula, t + tau)
+                                  for tau in range(a, b+1)])
         vars_children = zip(range(a, b+1), z_children, z_hat_children,
                             rho_children)
         for tau, z_child, z_hat_child, rho_child in vars_children:
@@ -226,3 +226,8 @@ class short_wstl2milp(object):
 
             self.model.addConstr(z >= z_conj)
         self.model.addConstr(z <= sum(z_aux))
+    def release(self, formula, z, rho, t):
+        '''Adds an release to the model.'''
+        assert formula.op == Operation.release
+
+        raise NotImplementedError #TODO: under construction

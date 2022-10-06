@@ -13,6 +13,7 @@ from wstlVisitor import wstlVisitor
 from wstl import WSTLAbstractSyntaxTreeExtractor
 
 from long_wstl2milp import long_wstl2milp
+from short_wstl2milp import short_wstl2milp
 
 from gurobipy import *
 
@@ -41,7 +42,8 @@ weights = {'weight1': lambda x: 0.5, 'weight2': lambda x: 0.25}
 ast = WSTLAbstractSyntaxTreeExtractor(weights).visit(t)
 
 # Translate WSTL to MILP and retrieve integer variable for the formula
-wstl_milp = long_wstl2milp(ast, model=m)
+wstl_milp = short_wstl2milp(ast, model=m)
+
 z_formula, rho_formula = wstl_milp.translate()
 
 # Get/create state variables
