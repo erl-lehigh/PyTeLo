@@ -44,18 +44,18 @@ ROWS
  G  R39     
  G  R40     
 COLUMNS
-    z_&&_2dx326e099b3448659a_0  R25       1
-    z_&&_2dx326e099b3448659a_0  R26       1000
-    z_&&_2dx326e099b3448659a_0  R27       -1000
-    z_&&_2dx326e099b3448659a_0  R28       1
-    z_&&_2dx326e099b3448659a_0  R29       1000
-    z_&&_2dx326e099b3448659a_0  R30       -1000
+    z_&&_2dx326e099b3448659a_0  R25       1000
+    z_&&_2dx326e099b3448659a_0  R26       -1000
+    z_&&_2dx326e099b3448659a_0  R27       1
+    z_&&_2dx326e099b3448659a_0  R28       1000
+    z_&&_2dx326e099b3448659a_0  R29       -1000
+    z_&&_2dx326e099b3448659a_0  R30       1
     z_&&_2dx326e099b3448659a_0  formula_satisfaction  1
     rho_&&_2dx326e099b3448659a_0  OBJ       1
+    rho_&&_2dx326e099b3448659a_0  R25       1
     rho_&&_2dx326e099b3448659a_0  R26       1
-    rho_&&_2dx326e099b3448659a_0  R27       1
+    rho_&&_2dx326e099b3448659a_0  R28       1
     rho_&&_2dx326e099b3448659a_0  R29       1
-    rho_&&_2dx326e099b3448659a_0  R30       1
     z_F_2dx78126bafcf5d8fc2_0  R12       1000
     z_F_2dx78126bafcf5d8fc2_0  R13       -1000
     z_F_2dx78126bafcf5d8fc2_0  R14       1000
@@ -65,7 +65,7 @@ COLUMNS
     z_F_2dx78126bafcf5d8fc2_0  R18       1000
     z_F_2dx78126bafcf5d8fc2_0  R19       -1000
     z_F_2dx78126bafcf5d8fc2_0  R20       1
-    z_F_2dx78126bafcf5d8fc2_0  R25       -1
+    z_F_2dx78126bafcf5d8fc2_0  R27       -1
     rho_F_2dx78126bafcf5d8fc2_0  R12       1
     rho_F_2dx78126bafcf5d8fc2_0  R13       1
     rho_F_2dx78126bafcf5d8fc2_0  R14       1
@@ -74,8 +74,8 @@ COLUMNS
     rho_F_2dx78126bafcf5d8fc2_0  R17       1
     rho_F_2dx78126bafcf5d8fc2_0  R18       1
     rho_F_2dx78126bafcf5d8fc2_0  R19       1
+    rho_F_2dx78126bafcf5d8fc2_0  R25       -0.5
     rho_F_2dx78126bafcf5d8fc2_0  R26       -0.5
-    rho_F_2dx78126bafcf5d8fc2_0  R27       -0.5
     MARKER    'MARKER'                 'INTORG'
     z_predicate_2dx14fcdaada9e9bb5e_1  R1        -1000
     z_predicate_2dx14fcdaada9e9bb5e_1  R2        -1000
@@ -146,13 +146,13 @@ COLUMNS
     zhat_predicate_2dx14fcdaada9e9bb5e_2dx78126bafcf5d8fc2_4  R21       1
     z_predicate_2dx31a58ce076bcd859_0  R23       -1000
     z_predicate_2dx31a58ce076bcd859_0  R24       -1000
-    z_predicate_2dx31a58ce076bcd859_0  R28       -1
+    z_predicate_2dx31a58ce076bcd859_0  R30       -1
     MARKER    'MARKER'                 'INTEND'
     rho_predicate_2dx31a58ce076bcd859_0  R22       1
     rho_predicate_2dx31a58ce076bcd859_0  R23       1
     rho_predicate_2dx31a58ce076bcd859_0  R24       1
+    rho_predicate_2dx31a58ce076bcd859_0  R28       -0.5
     rho_predicate_2dx31a58ce076bcd859_0  R29       -0.5
-    rho_predicate_2dx31a58ce076bcd859_0  R30       -0.5
     x_0       R22       -1
     x_0       R32       -1
     x_0       R36       1
@@ -181,8 +181,8 @@ RHS
     RHS1      R21       1
     RHS1      R22       -0.1
     RHS1      R23       -1000
-    RHS1      R26       1000
-    RHS1      R29       1000
+    RHS1      R25       1000
+    RHS1      R28       1000
     RHS1      formula_satisfaction  1
     RHS1      R32       -0.1
     RHS1      R33       -0.1

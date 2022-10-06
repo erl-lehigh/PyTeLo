@@ -18,12 +18,12 @@ from stlVisitor import stlVisitor
 
 class Operation(object):
     '''STL operations'''
-    NOP, NOT, OR, AND, IMPLIES, UNTIL, EVENT, ALWAYS, PRED, BOOL = range(10)
-    opnames = [None, '!', '||', '&&', '=>', 'U', 'F', 'G', 'predicate', 'bool']
+    NOP, NOT, OR, AND, IMPLIES, UNTIL, EVENT, ALWAYS, RELEASE, PRED, BOOL = range(11)
+    opnames = [None, '!', '||', '&&', '=>', 'U', 'F', 'G', 'R', 'predicate', 'bool']
     opcodes = {'!': NOT, '&&': AND, '||' : OR, '=>': IMPLIES,
-               'U': UNTIL, 'F': EVENT, 'G': ALWAYS}
+               'U': UNTIL, 'F': EVENT, 'G': ALWAYS, 'R': RELEASE}
     # negation closure of operations
-    negop = (NOP, NOP, AND, OR, AND, NOP, ALWAYS, EVENT, PRED, BOOL)
+    negop = (NOP, NOP, AND, OR, AND, NOP, ALWAYS, EVENT, NOP, PRED, BOOL)
 
     @classmethod
     def getCode(cls, text):
@@ -80,6 +80,11 @@ class STLFormula(object):
             self.high = kwargs['high']
             self.child = kwargs['child']
         elif self.op == Operation.UNTIL:
+            self.low = kwargs['low']
+            self.high = kwargs['high']
+            self.left = kwargs['left']
+            self.right = kwargs['right']
+        elif self.op == Operation.RELEASE:
             self.low = kwargs['low']
             self.high = kwargs['high']
             self.left = kwargs['left']
@@ -259,7 +264,7 @@ class STLFormula(object):
             s = '(' + ' {op} '.format(op=opname).join(children) + ')'
         elif self.op == Operation.NOT:
             s = '{op} {child}'.format(op=opname, child=self.child)
-        elif self.op == Operation.UNTIL:
+        elif self.op in (Operation.UNTIL, Operation.RELEASE):
             s = '({left} {op}[{low}, {high}] {right})'.format(op=opname,
                  left=self.left, right=self.right, low=self.low, high=self.high)
         elif self.op in (Operation.ALWAYS, Operation.EVENT):
