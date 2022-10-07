@@ -3,7 +3,7 @@ from antlr4 import InputStream, CommonTokenStream
 import numpy as np
 
 import sys
-sys.path.append('/home/gustavo/lehigh/erl/python-stl/stl')
+sys.path.append('../')
 
 from stl import Operation, RelOperation, STLFormula
 from wstlLexer import wstlLexer
