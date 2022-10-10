@@ -120,13 +120,25 @@ class short_wstl2milp(object):
         assert pred.op == Operation.PRED
         v = self.add_state(pred.variable, t)
         if pred.relation in (RelOperation.GE, RelOperation.GT):
-            self.model.addConstr(rho == v - pred.threshold)
-            self.model.addConstr(rho >= -self.M * (1 - z))
-            self.model.addConstr(rho <= self.M * z)
+            self.model.addConstr(v - self.M * z <= pred.threshold + rho)
+            self.model.addConstr(v + self.M * (1 - z) >= pred.threshold + rho)
+            # self.model.addConstr(rho == v - pred.threshold)
+            # self.model.addConstr(rho >= -self.M * (1 - z))
+            # self.model.addConstr(rho <= self.M * z)
         elif pred.relation in (RelOperation.LE, RelOperation.LT):
-            self.model.addConstr(rho == pred.threshold - v)
-            self.model.addConstr(rho <= self.M * (1 - z))
-            self.model.addConstr(rho >= -self.M * z)
+            ## from STL
+            self.model.addConstr(v + self.M * z >= pred.threshold - rho)
+            self.model.addConstr(v - self.M * (1 - z) <= pred.threshold - rho)
+
+            ## Tavo's repo
+            # self.model.addConstr(rho == pred.threshold - v)
+            # self.model.addConstr(rho <= self.M * (1 - z))
+            # self.model.addConstr(rho >= -self.M * z)
+
+            ## Try(old wstl)
+            # self.model.addConstr(rho == pred.threshold - v)
+            # self.model.addConstr(rho <= self.M * z)
+            # self.model.addConstr(rho >= -self.M * (1 - z))
         else:
             raise NotImplementedError
 
