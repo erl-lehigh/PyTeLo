@@ -93,7 +93,21 @@ class WSTLFormula(STLFormula):
         elif self.op == Operation.EVENT:
             return max(self.child.robustness(s, t+tau) * self.weight(tau)
                        for tau in np.arange(self.low, self.high+1))
-
+    def bound(self):
+        '''Computes the bound of the STL formula.'''
+        if self.op in (Operation.BOOL, Operation.PRED):
+            return 0
+        elif self.op in (Operation.AND, Operation.OR):
+            return max([ch.bound() for ch in self.children])
+        elif self.op == Operation.IMPLIES:
+            return max(self.left.bound(), self.right.bound())
+        elif self.op == Operation.NOT:
+            return self.child.bound()
+        elif self.op == Operation.UNTIL:
+            return self.high + max(self.left.bound(), self.right.bound())
+        elif self.op in (Operation.ALWAYS, Operation.EVENT):
+            return self.high + self.child.bound()
+            
     def __str__(self):
         '''Computes the string representation. The result is cached internally
         for quick subsequent calls.

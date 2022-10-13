@@ -1,4 +1,4 @@
-\ Model STL formula: (G[5.0, 20.0] ((x >= 2.0) && (y >= 2.0) && (z <= 1.0)))
+\ Model STL formula: (G[5.0, 20.0] ((x >= 4.0) && (y >= 2.0) && (z <= 1.0)))
 \ LP format - for model browsing. Use MPS format to capture full model detail.
 Minimize
   - rho + 0 u_0 + 0 v_0 + 0 w_0 + 0 u_1 + 0 v_1 + 0 w_1 + 0 u_2 + 0 v_2
@@ -14,59 +14,59 @@ Minimize
    + 0 v_27 + 0 w_27 + 0 u_28 + 0 v_28 + 0 w_28 + 0 u_58 + 0 v_58 + 0 w_58
 Subject To
  R0: x_0 = 5
- R1: y_0 = 5
+ R1: y_0 = 3
  R2: z_0 = -3
  R3: x_1 = 5
- R4: y_1 = 5
+ R4: y_1 = 3
  R5: z_1 = -3
  R6: x_2 = 5
- R7: y_2 = 5
- R8: z_2 = -4
+ R7: y_2 = 3
+ R8: z_2 = -3
  R9: x_3 = 5
- R10: y_3 = 5
+ R10: y_3 = 3
  R11: z_3 = -3
  R12: x_4 = 5
- R13: y_4 = 5
+ R13: y_4 = 3
  R14: z_4 = -3
  R15: x_5 = 5
- R16: y_5 = 5
+ R16: y_5 = 4
  R17: z_5 = -3
  R18: x_6 = 5
- R19: y_6 = 5
- R20: z_6 = -3
+ R19: y_6 = 3
+ R20: z_6 = -2
  R21: x_7 = 5
- R22: y_7 = 5
- R23: z_7 = -4
+ R22: y_7 = 4
+ R23: z_7 = -2
  R24: x_8 = 5
- R25: y_8 = 5
- R26: z_8 = -3
+ R25: y_8 = 4
+ R26: z_8 = -2
  R27: x_9 = 5
  R28: y_9 = 5
  R29: z_9 = -3
  R30: x_10 = 5
- R31: y_10 = 5
- R32: z_10 = -3
+ R31: y_10 = 4
+ R32: z_10 = -2
  R33: x_11 = 4
- R34: y_11 = 4
- R35: z_11 = -2
+ R34: y_11 = 5
+ R35: z_11 = -3
  R36: x_12 = 4
- R37: y_12 = 3
- R38: z_12 = -1
- R39: x_13 = 3
- R40: y_13 = 4
- R41: z_13 = 0
- R42: x_14 = 3
- R43: y_14 = 4
- R44: z_14 = 1
- R45: x_15 = 4
- R46: y_15 = 5
- R47: z_15 = 2
- R48: x_16 = 5
+ R37: y_12 = 4
+ R38: z_12 = -2
+ R39: x_13 = 5
+ R40: y_13 = 3
+ R41: z_13 = -1
+ R42: x_14 = 4
+ R43: y_14 = 3
+ R44: z_14 = 0
+ R45: x_15 = 3
+ R46: y_15 = 4
+ R47: z_15 = 1
+ R48: x_16 = 3
  R49: y_16 = 4
- R50: z_16 = 3
- R51: x_17 = 4
+ R50: z_16 = 2
+ R51: x_17 = 3
  R52: y_17 = 4
- R53: z_17 = 4
+ R53: z_17 = 3
  R54: x_18 = 4
  R55: y_18 = 5
  R56: z_18 = 4
@@ -190,224 +190,224 @@ Subject To
  R174: - x_57 - u_57 + x_58 = 0
  R175: - y_57 - v_57 + y_58 = 0
  R176: - z_57 - w_57 + z_58 = 0
- R177: - rho + x_5 - 20 predicate_2dx14fcdaada9e9bb5e_5 <= 2
- R178: - rho + x_5 - 20 predicate_2dx14fcdaada9e9bb5e_5 >= -18
+ R177: - rho + x_5 - 20 predicate_2dx30be4d89f565bb0c_5 <= 4
+ R178: - rho + x_5 - 20 predicate_2dx30be4d89f565bb0c_5 >= -16
  R179: - rho + y_5 - 20 predicate_2dx48c103ba2c928dd_5 <= 2
  R180: - rho + y_5 - 20 predicate_2dx48c103ba2c928dd_5 >= -18
  R181: rho + z_5 + 20 predicate_2bx3eade0100db0fe27_5 >= 1
  R182: rho + z_5 + 20 predicate_2bx3eade0100db0fe27_5 <= 21
- R183: &&_2bx371038b465683911_5 - predicate_2dx14fcdaada9e9bb5e_5 <= 0
- R184: &&_2bx371038b465683911_5 - predicate_2dx48c103ba2c928dd_5 <= 0
- R185: &&_2bx371038b465683911_5 - predicate_2bx3eade0100db0fe27_5 <= 0
- R186: &&_2bx371038b465683911_5 - predicate_2dx14fcdaada9e9bb5e_5
+ R183: &&_2dx128a266ee5f5b921_5 - predicate_2dx30be4d89f565bb0c_5 <= 0
+ R184: &&_2dx128a266ee5f5b921_5 - predicate_2dx48c103ba2c928dd_5 <= 0
+ R185: &&_2dx128a266ee5f5b921_5 - predicate_2bx3eade0100db0fe27_5 <= 0
+ R186: &&_2dx128a266ee5f5b921_5 - predicate_2dx30be4d89f565bb0c_5
    - predicate_2dx48c103ba2c928dd_5 - predicate_2bx3eade0100db0fe27_5
    >= -2
- R187: - rho + x_6 - 20 predicate_2dx14fcdaada9e9bb5e_6 <= 2
- R188: - rho + x_6 - 20 predicate_2dx14fcdaada9e9bb5e_6 >= -18
+ R187: - rho + x_6 - 20 predicate_2dx30be4d89f565bb0c_6 <= 4
+ R188: - rho + x_6 - 20 predicate_2dx30be4d89f565bb0c_6 >= -16
  R189: - rho + y_6 - 20 predicate_2dx48c103ba2c928dd_6 <= 2
  R190: - rho + y_6 - 20 predicate_2dx48c103ba2c928dd_6 >= -18
  R191: rho + z_6 + 20 predicate_2bx3eade0100db0fe27_6 >= 1
  R192: rho + z_6 + 20 predicate_2bx3eade0100db0fe27_6 <= 21
- R193: &&_2bx371038b465683911_6 - predicate_2dx14fcdaada9e9bb5e_6 <= 0
- R194: &&_2bx371038b465683911_6 - predicate_2dx48c103ba2c928dd_6 <= 0
- R195: &&_2bx371038b465683911_6 - predicate_2bx3eade0100db0fe27_6 <= 0
- R196: &&_2bx371038b465683911_6 - predicate_2dx14fcdaada9e9bb5e_6
+ R193: &&_2dx128a266ee5f5b921_6 - predicate_2dx30be4d89f565bb0c_6 <= 0
+ R194: &&_2dx128a266ee5f5b921_6 - predicate_2dx48c103ba2c928dd_6 <= 0
+ R195: &&_2dx128a266ee5f5b921_6 - predicate_2bx3eade0100db0fe27_6 <= 0
+ R196: &&_2dx128a266ee5f5b921_6 - predicate_2dx30be4d89f565bb0c_6
    - predicate_2dx48c103ba2c928dd_6 - predicate_2bx3eade0100db0fe27_6
    >= -2
- R197: - rho + x_7 - 20 predicate_2dx14fcdaada9e9bb5e_7 <= 2
- R198: - rho + x_7 - 20 predicate_2dx14fcdaada9e9bb5e_7 >= -18
+ R197: - rho + x_7 - 20 predicate_2dx30be4d89f565bb0c_7 <= 4
+ R198: - rho + x_7 - 20 predicate_2dx30be4d89f565bb0c_7 >= -16
  R199: - rho + y_7 - 20 predicate_2dx48c103ba2c928dd_7 <= 2
  R200: - rho + y_7 - 20 predicate_2dx48c103ba2c928dd_7 >= -18
  R201: rho + z_7 + 20 predicate_2bx3eade0100db0fe27_7 >= 1
  R202: rho + z_7 + 20 predicate_2bx3eade0100db0fe27_7 <= 21
- R203: &&_2bx371038b465683911_7 - predicate_2dx14fcdaada9e9bb5e_7 <= 0
- R204: &&_2bx371038b465683911_7 - predicate_2dx48c103ba2c928dd_7 <= 0
- R205: &&_2bx371038b465683911_7 - predicate_2bx3eade0100db0fe27_7 <= 0
- R206: &&_2bx371038b465683911_7 - predicate_2dx14fcdaada9e9bb5e_7
+ R203: &&_2dx128a266ee5f5b921_7 - predicate_2dx30be4d89f565bb0c_7 <= 0
+ R204: &&_2dx128a266ee5f5b921_7 - predicate_2dx48c103ba2c928dd_7 <= 0
+ R205: &&_2dx128a266ee5f5b921_7 - predicate_2bx3eade0100db0fe27_7 <= 0
+ R206: &&_2dx128a266ee5f5b921_7 - predicate_2dx30be4d89f565bb0c_7
    - predicate_2dx48c103ba2c928dd_7 - predicate_2bx3eade0100db0fe27_7
    >= -2
- R207: - rho + x_8 - 20 predicate_2dx14fcdaada9e9bb5e_8 <= 2
- R208: - rho + x_8 - 20 predicate_2dx14fcdaada9e9bb5e_8 >= -18
+ R207: - rho + x_8 - 20 predicate_2dx30be4d89f565bb0c_8 <= 4
+ R208: - rho + x_8 - 20 predicate_2dx30be4d89f565bb0c_8 >= -16
  R209: - rho + y_8 - 20 predicate_2dx48c103ba2c928dd_8 <= 2
  R210: - rho + y_8 - 20 predicate_2dx48c103ba2c928dd_8 >= -18
  R211: rho + z_8 + 20 predicate_2bx3eade0100db0fe27_8 >= 1
  R212: rho + z_8 + 20 predicate_2bx3eade0100db0fe27_8 <= 21
- R213: &&_2bx371038b465683911_8 - predicate_2dx14fcdaada9e9bb5e_8 <= 0
- R214: &&_2bx371038b465683911_8 - predicate_2dx48c103ba2c928dd_8 <= 0
- R215: &&_2bx371038b465683911_8 - predicate_2bx3eade0100db0fe27_8 <= 0
- R216: &&_2bx371038b465683911_8 - predicate_2dx14fcdaada9e9bb5e_8
+ R213: &&_2dx128a266ee5f5b921_8 - predicate_2dx30be4d89f565bb0c_8 <= 0
+ R214: &&_2dx128a266ee5f5b921_8 - predicate_2dx48c103ba2c928dd_8 <= 0
+ R215: &&_2dx128a266ee5f5b921_8 - predicate_2bx3eade0100db0fe27_8 <= 0
+ R216: &&_2dx128a266ee5f5b921_8 - predicate_2dx30be4d89f565bb0c_8
    - predicate_2dx48c103ba2c928dd_8 - predicate_2bx3eade0100db0fe27_8
    >= -2
- R217: - rho + x_9 - 20 predicate_2dx14fcdaada9e9bb5e_9 <= 2
- R218: - rho + x_9 - 20 predicate_2dx14fcdaada9e9bb5e_9 >= -18
+ R217: - rho + x_9 - 20 predicate_2dx30be4d89f565bb0c_9 <= 4
+ R218: - rho + x_9 - 20 predicate_2dx30be4d89f565bb0c_9 >= -16
  R219: - rho + y_9 - 20 predicate_2dx48c103ba2c928dd_9 <= 2
  R220: - rho + y_9 - 20 predicate_2dx48c103ba2c928dd_9 >= -18
  R221: rho + z_9 + 20 predicate_2bx3eade0100db0fe27_9 >= 1
  R222: rho + z_9 + 20 predicate_2bx3eade0100db0fe27_9 <= 21
- R223: &&_2bx371038b465683911_9 - predicate_2dx14fcdaada9e9bb5e_9 <= 0
- R224: &&_2bx371038b465683911_9 - predicate_2dx48c103ba2c928dd_9 <= 0
- R225: &&_2bx371038b465683911_9 - predicate_2bx3eade0100db0fe27_9 <= 0
- R226: &&_2bx371038b465683911_9 - predicate_2dx14fcdaada9e9bb5e_9
+ R223: &&_2dx128a266ee5f5b921_9 - predicate_2dx30be4d89f565bb0c_9 <= 0
+ R224: &&_2dx128a266ee5f5b921_9 - predicate_2dx48c103ba2c928dd_9 <= 0
+ R225: &&_2dx128a266ee5f5b921_9 - predicate_2bx3eade0100db0fe27_9 <= 0
+ R226: &&_2dx128a266ee5f5b921_9 - predicate_2dx30be4d89f565bb0c_9
    - predicate_2dx48c103ba2c928dd_9 - predicate_2bx3eade0100db0fe27_9
    >= -2
- R227: - rho + x_10 - 20 predicate_2dx14fcdaada9e9bb5e_10 <= 2
- R228: - rho + x_10 - 20 predicate_2dx14fcdaada9e9bb5e_10 >= -18
+ R227: - rho + x_10 - 20 predicate_2dx30be4d89f565bb0c_10 <= 4
+ R228: - rho + x_10 - 20 predicate_2dx30be4d89f565bb0c_10 >= -16
  R229: - rho + y_10 - 20 predicate_2dx48c103ba2c928dd_10 <= 2
  R230: - rho + y_10 - 20 predicate_2dx48c103ba2c928dd_10 >= -18
  R231: rho + z_10 + 20 predicate_2bx3eade0100db0fe27_10 >= 1
  R232: rho + z_10 + 20 predicate_2bx3eade0100db0fe27_10 <= 21
- R233: &&_2bx371038b465683911_10 - predicate_2dx14fcdaada9e9bb5e_10 <= 0
- R234: &&_2bx371038b465683911_10 - predicate_2dx48c103ba2c928dd_10 <= 0
- R235: &&_2bx371038b465683911_10 - predicate_2bx3eade0100db0fe27_10 <= 0
- R236: &&_2bx371038b465683911_10 - predicate_2dx14fcdaada9e9bb5e_10
+ R233: &&_2dx128a266ee5f5b921_10 - predicate_2dx30be4d89f565bb0c_10 <= 0
+ R234: &&_2dx128a266ee5f5b921_10 - predicate_2dx48c103ba2c928dd_10 <= 0
+ R235: &&_2dx128a266ee5f5b921_10 - predicate_2bx3eade0100db0fe27_10 <= 0
+ R236: &&_2dx128a266ee5f5b921_10 - predicate_2dx30be4d89f565bb0c_10
    - predicate_2dx48c103ba2c928dd_10 - predicate_2bx3eade0100db0fe27_10
    >= -2
- R237: - rho + x_11 - 20 predicate_2dx14fcdaada9e9bb5e_11 <= 2
- R238: - rho + x_11 - 20 predicate_2dx14fcdaada9e9bb5e_11 >= -18
+ R237: - rho + x_11 - 20 predicate_2dx30be4d89f565bb0c_11 <= 4
+ R238: - rho + x_11 - 20 predicate_2dx30be4d89f565bb0c_11 >= -16
  R239: - rho + y_11 - 20 predicate_2dx48c103ba2c928dd_11 <= 2
  R240: - rho + y_11 - 20 predicate_2dx48c103ba2c928dd_11 >= -18
  R241: rho + z_11 + 20 predicate_2bx3eade0100db0fe27_11 >= 1
  R242: rho + z_11 + 20 predicate_2bx3eade0100db0fe27_11 <= 21
- R243: &&_2bx371038b465683911_11 - predicate_2dx14fcdaada9e9bb5e_11 <= 0
- R244: &&_2bx371038b465683911_11 - predicate_2dx48c103ba2c928dd_11 <= 0
- R245: &&_2bx371038b465683911_11 - predicate_2bx3eade0100db0fe27_11 <= 0
- R246: &&_2bx371038b465683911_11 - predicate_2dx14fcdaada9e9bb5e_11
+ R243: &&_2dx128a266ee5f5b921_11 - predicate_2dx30be4d89f565bb0c_11 <= 0
+ R244: &&_2dx128a266ee5f5b921_11 - predicate_2dx48c103ba2c928dd_11 <= 0
+ R245: &&_2dx128a266ee5f5b921_11 - predicate_2bx3eade0100db0fe27_11 <= 0
+ R246: &&_2dx128a266ee5f5b921_11 - predicate_2dx30be4d89f565bb0c_11
    - predicate_2dx48c103ba2c928dd_11 - predicate_2bx3eade0100db0fe27_11
    >= -2
- R247: - rho + x_12 - 20 predicate_2dx14fcdaada9e9bb5e_12 <= 2
- R248: - rho + x_12 - 20 predicate_2dx14fcdaada9e9bb5e_12 >= -18
+ R247: - rho + x_12 - 20 predicate_2dx30be4d89f565bb0c_12 <= 4
+ R248: - rho + x_12 - 20 predicate_2dx30be4d89f565bb0c_12 >= -16
  R249: - rho + y_12 - 20 predicate_2dx48c103ba2c928dd_12 <= 2
  R250: - rho + y_12 - 20 predicate_2dx48c103ba2c928dd_12 >= -18
  R251: rho + z_12 + 20 predicate_2bx3eade0100db0fe27_12 >= 1
  R252: rho + z_12 + 20 predicate_2bx3eade0100db0fe27_12 <= 21
- R253: &&_2bx371038b465683911_12 - predicate_2dx14fcdaada9e9bb5e_12 <= 0
- R254: &&_2bx371038b465683911_12 - predicate_2dx48c103ba2c928dd_12 <= 0
- R255: &&_2bx371038b465683911_12 - predicate_2bx3eade0100db0fe27_12 <= 0
- R256: &&_2bx371038b465683911_12 - predicate_2dx14fcdaada9e9bb5e_12
+ R253: &&_2dx128a266ee5f5b921_12 - predicate_2dx30be4d89f565bb0c_12 <= 0
+ R254: &&_2dx128a266ee5f5b921_12 - predicate_2dx48c103ba2c928dd_12 <= 0
+ R255: &&_2dx128a266ee5f5b921_12 - predicate_2bx3eade0100db0fe27_12 <= 0
+ R256: &&_2dx128a266ee5f5b921_12 - predicate_2dx30be4d89f565bb0c_12
    - predicate_2dx48c103ba2c928dd_12 - predicate_2bx3eade0100db0fe27_12
    >= -2
- R257: - rho + x_13 - 20 predicate_2dx14fcdaada9e9bb5e_13 <= 2
- R258: - rho + x_13 - 20 predicate_2dx14fcdaada9e9bb5e_13 >= -18
+ R257: - rho + x_13 - 20 predicate_2dx30be4d89f565bb0c_13 <= 4
+ R258: - rho + x_13 - 20 predicate_2dx30be4d89f565bb0c_13 >= -16
  R259: - rho + y_13 - 20 predicate_2dx48c103ba2c928dd_13 <= 2
  R260: - rho + y_13 - 20 predicate_2dx48c103ba2c928dd_13 >= -18
  R261: rho + z_13 + 20 predicate_2bx3eade0100db0fe27_13 >= 1
  R262: rho + z_13 + 20 predicate_2bx3eade0100db0fe27_13 <= 21
- R263: &&_2bx371038b465683911_13 - predicate_2dx14fcdaada9e9bb5e_13 <= 0
- R264: &&_2bx371038b465683911_13 - predicate_2dx48c103ba2c928dd_13 <= 0
- R265: &&_2bx371038b465683911_13 - predicate_2bx3eade0100db0fe27_13 <= 0
- R266: &&_2bx371038b465683911_13 - predicate_2dx14fcdaada9e9bb5e_13
+ R263: &&_2dx128a266ee5f5b921_13 - predicate_2dx30be4d89f565bb0c_13 <= 0
+ R264: &&_2dx128a266ee5f5b921_13 - predicate_2dx48c103ba2c928dd_13 <= 0
+ R265: &&_2dx128a266ee5f5b921_13 - predicate_2bx3eade0100db0fe27_13 <= 0
+ R266: &&_2dx128a266ee5f5b921_13 - predicate_2dx30be4d89f565bb0c_13
    - predicate_2dx48c103ba2c928dd_13 - predicate_2bx3eade0100db0fe27_13
    >= -2
- R267: - rho + x_14 - 20 predicate_2dx14fcdaada9e9bb5e_14 <= 2
- R268: - rho + x_14 - 20 predicate_2dx14fcdaada9e9bb5e_14 >= -18
+ R267: - rho + x_14 - 20 predicate_2dx30be4d89f565bb0c_14 <= 4
+ R268: - rho + x_14 - 20 predicate_2dx30be4d89f565bb0c_14 >= -16
  R269: - rho + y_14 - 20 predicate_2dx48c103ba2c928dd_14 <= 2
  R270: - rho + y_14 - 20 predicate_2dx48c103ba2c928dd_14 >= -18
  R271: rho + z_14 + 20 predicate_2bx3eade0100db0fe27_14 >= 1
  R272: rho + z_14 + 20 predicate_2bx3eade0100db0fe27_14 <= 21
- R273: &&_2bx371038b465683911_14 - predicate_2dx14fcdaada9e9bb5e_14 <= 0
- R274: &&_2bx371038b465683911_14 - predicate_2dx48c103ba2c928dd_14 <= 0
- R275: &&_2bx371038b465683911_14 - predicate_2bx3eade0100db0fe27_14 <= 0
- R276: &&_2bx371038b465683911_14 - predicate_2dx14fcdaada9e9bb5e_14
+ R273: &&_2dx128a266ee5f5b921_14 - predicate_2dx30be4d89f565bb0c_14 <= 0
+ R274: &&_2dx128a266ee5f5b921_14 - predicate_2dx48c103ba2c928dd_14 <= 0
+ R275: &&_2dx128a266ee5f5b921_14 - predicate_2bx3eade0100db0fe27_14 <= 0
+ R276: &&_2dx128a266ee5f5b921_14 - predicate_2dx30be4d89f565bb0c_14
    - predicate_2dx48c103ba2c928dd_14 - predicate_2bx3eade0100db0fe27_14
    >= -2
- R277: - rho + x_15 - 20 predicate_2dx14fcdaada9e9bb5e_15 <= 2
- R278: - rho + x_15 - 20 predicate_2dx14fcdaada9e9bb5e_15 >= -18
+ R277: - rho + x_15 - 20 predicate_2dx30be4d89f565bb0c_15 <= 4
+ R278: - rho + x_15 - 20 predicate_2dx30be4d89f565bb0c_15 >= -16
  R279: - rho + y_15 - 20 predicate_2dx48c103ba2c928dd_15 <= 2
  R280: - rho + y_15 - 20 predicate_2dx48c103ba2c928dd_15 >= -18
  R281: rho + z_15 + 20 predicate_2bx3eade0100db0fe27_15 >= 1
  R282: rho + z_15 + 20 predicate_2bx3eade0100db0fe27_15 <= 21
- R283: &&_2bx371038b465683911_15 - predicate_2dx14fcdaada9e9bb5e_15 <= 0
- R284: &&_2bx371038b465683911_15 - predicate_2dx48c103ba2c928dd_15 <= 0
- R285: &&_2bx371038b465683911_15 - predicate_2bx3eade0100db0fe27_15 <= 0
- R286: &&_2bx371038b465683911_15 - predicate_2dx14fcdaada9e9bb5e_15
+ R283: &&_2dx128a266ee5f5b921_15 - predicate_2dx30be4d89f565bb0c_15 <= 0
+ R284: &&_2dx128a266ee5f5b921_15 - predicate_2dx48c103ba2c928dd_15 <= 0
+ R285: &&_2dx128a266ee5f5b921_15 - predicate_2bx3eade0100db0fe27_15 <= 0
+ R286: &&_2dx128a266ee5f5b921_15 - predicate_2dx30be4d89f565bb0c_15
    - predicate_2dx48c103ba2c928dd_15 - predicate_2bx3eade0100db0fe27_15
    >= -2
- R287: - rho + x_16 - 20 predicate_2dx14fcdaada9e9bb5e_16 <= 2
- R288: - rho + x_16 - 20 predicate_2dx14fcdaada9e9bb5e_16 >= -18
+ R287: - rho + x_16 - 20 predicate_2dx30be4d89f565bb0c_16 <= 4
+ R288: - rho + x_16 - 20 predicate_2dx30be4d89f565bb0c_16 >= -16
  R289: - rho + y_16 - 20 predicate_2dx48c103ba2c928dd_16 <= 2
  R290: - rho + y_16 - 20 predicate_2dx48c103ba2c928dd_16 >= -18
  R291: rho + z_16 + 20 predicate_2bx3eade0100db0fe27_16 >= 1
  R292: rho + z_16 + 20 predicate_2bx3eade0100db0fe27_16 <= 21
- R293: &&_2bx371038b465683911_16 - predicate_2dx14fcdaada9e9bb5e_16 <= 0
- R294: &&_2bx371038b465683911_16 - predicate_2dx48c103ba2c928dd_16 <= 0
- R295: &&_2bx371038b465683911_16 - predicate_2bx3eade0100db0fe27_16 <= 0
- R296: &&_2bx371038b465683911_16 - predicate_2dx14fcdaada9e9bb5e_16
+ R293: &&_2dx128a266ee5f5b921_16 - predicate_2dx30be4d89f565bb0c_16 <= 0
+ R294: &&_2dx128a266ee5f5b921_16 - predicate_2dx48c103ba2c928dd_16 <= 0
+ R295: &&_2dx128a266ee5f5b921_16 - predicate_2bx3eade0100db0fe27_16 <= 0
+ R296: &&_2dx128a266ee5f5b921_16 - predicate_2dx30be4d89f565bb0c_16
    - predicate_2dx48c103ba2c928dd_16 - predicate_2bx3eade0100db0fe27_16
    >= -2
- R297: - rho + x_17 - 20 predicate_2dx14fcdaada9e9bb5e_17 <= 2
- R298: - rho + x_17 - 20 predicate_2dx14fcdaada9e9bb5e_17 >= -18
+ R297: - rho + x_17 - 20 predicate_2dx30be4d89f565bb0c_17 <= 4
+ R298: - rho + x_17 - 20 predicate_2dx30be4d89f565bb0c_17 >= -16
  R299: - rho + y_17 - 20 predicate_2dx48c103ba2c928dd_17 <= 2
  R300: - rho + y_17 - 20 predicate_2dx48c103ba2c928dd_17 >= -18
  R301: rho + z_17 + 20 predicate_2bx3eade0100db0fe27_17 >= 1
  R302: rho + z_17 + 20 predicate_2bx3eade0100db0fe27_17 <= 21
- R303: &&_2bx371038b465683911_17 - predicate_2dx14fcdaada9e9bb5e_17 <= 0
- R304: &&_2bx371038b465683911_17 - predicate_2dx48c103ba2c928dd_17 <= 0
- R305: &&_2bx371038b465683911_17 - predicate_2bx3eade0100db0fe27_17 <= 0
- R306: &&_2bx371038b465683911_17 - predicate_2dx14fcdaada9e9bb5e_17
+ R303: &&_2dx128a266ee5f5b921_17 - predicate_2dx30be4d89f565bb0c_17 <= 0
+ R304: &&_2dx128a266ee5f5b921_17 - predicate_2dx48c103ba2c928dd_17 <= 0
+ R305: &&_2dx128a266ee5f5b921_17 - predicate_2bx3eade0100db0fe27_17 <= 0
+ R306: &&_2dx128a266ee5f5b921_17 - predicate_2dx30be4d89f565bb0c_17
    - predicate_2dx48c103ba2c928dd_17 - predicate_2bx3eade0100db0fe27_17
    >= -2
- R307: - rho + x_18 - 20 predicate_2dx14fcdaada9e9bb5e_18 <= 2
- R308: - rho + x_18 - 20 predicate_2dx14fcdaada9e9bb5e_18 >= -18
+ R307: - rho + x_18 - 20 predicate_2dx30be4d89f565bb0c_18 <= 4
+ R308: - rho + x_18 - 20 predicate_2dx30be4d89f565bb0c_18 >= -16
  R309: - rho + y_18 - 20 predicate_2dx48c103ba2c928dd_18 <= 2
  R310: - rho + y_18 - 20 predicate_2dx48c103ba2c928dd_18 >= -18
  R311: rho + z_18 + 20 predicate_2bx3eade0100db0fe27_18 >= 1
  R312: rho + z_18 + 20 predicate_2bx3eade0100db0fe27_18 <= 21
- R313: &&_2bx371038b465683911_18 - predicate_2dx14fcdaada9e9bb5e_18 <= 0
- R314: &&_2bx371038b465683911_18 - predicate_2dx48c103ba2c928dd_18 <= 0
- R315: &&_2bx371038b465683911_18 - predicate_2bx3eade0100db0fe27_18 <= 0
- R316: &&_2bx371038b465683911_18 - predicate_2dx14fcdaada9e9bb5e_18
+ R313: &&_2dx128a266ee5f5b921_18 - predicate_2dx30be4d89f565bb0c_18 <= 0
+ R314: &&_2dx128a266ee5f5b921_18 - predicate_2dx48c103ba2c928dd_18 <= 0
+ R315: &&_2dx128a266ee5f5b921_18 - predicate_2bx3eade0100db0fe27_18 <= 0
+ R316: &&_2dx128a266ee5f5b921_18 - predicate_2dx30be4d89f565bb0c_18
    - predicate_2dx48c103ba2c928dd_18 - predicate_2bx3eade0100db0fe27_18
    >= -2
- R317: - rho + x_19 - 20 predicate_2dx14fcdaada9e9bb5e_19 <= 2
- R318: - rho + x_19 - 20 predicate_2dx14fcdaada9e9bb5e_19 >= -18
+ R317: - rho + x_19 - 20 predicate_2dx30be4d89f565bb0c_19 <= 4
+ R318: - rho + x_19 - 20 predicate_2dx30be4d89f565bb0c_19 >= -16
  R319: - rho + y_19 - 20 predicate_2dx48c103ba2c928dd_19 <= 2
  R320: - rho + y_19 - 20 predicate_2dx48c103ba2c928dd_19 >= -18
  R321: rho + z_19 + 20 predicate_2bx3eade0100db0fe27_19 >= 1
  R322: rho + z_19 + 20 predicate_2bx3eade0100db0fe27_19 <= 21
- R323: &&_2bx371038b465683911_19 - predicate_2dx14fcdaada9e9bb5e_19 <= 0
- R324: &&_2bx371038b465683911_19 - predicate_2dx48c103ba2c928dd_19 <= 0
- R325: &&_2bx371038b465683911_19 - predicate_2bx3eade0100db0fe27_19 <= 0
- R326: &&_2bx371038b465683911_19 - predicate_2dx14fcdaada9e9bb5e_19
+ R323: &&_2dx128a266ee5f5b921_19 - predicate_2dx30be4d89f565bb0c_19 <= 0
+ R324: &&_2dx128a266ee5f5b921_19 - predicate_2dx48c103ba2c928dd_19 <= 0
+ R325: &&_2dx128a266ee5f5b921_19 - predicate_2bx3eade0100db0fe27_19 <= 0
+ R326: &&_2dx128a266ee5f5b921_19 - predicate_2dx30be4d89f565bb0c_19
    - predicate_2dx48c103ba2c928dd_19 - predicate_2bx3eade0100db0fe27_19
    >= -2
- R327: - rho + x_20 - 20 predicate_2dx14fcdaada9e9bb5e_20 <= 2
- R328: - rho + x_20 - 20 predicate_2dx14fcdaada9e9bb5e_20 >= -18
+ R327: - rho + x_20 - 20 predicate_2dx30be4d89f565bb0c_20 <= 4
+ R328: - rho + x_20 - 20 predicate_2dx30be4d89f565bb0c_20 >= -16
  R329: - rho + y_20 - 20 predicate_2dx48c103ba2c928dd_20 <= 2
  R330: - rho + y_20 - 20 predicate_2dx48c103ba2c928dd_20 >= -18
  R331: rho + z_20 + 20 predicate_2bx3eade0100db0fe27_20 >= 1
  R332: rho + z_20 + 20 predicate_2bx3eade0100db0fe27_20 <= 21
- R333: &&_2bx371038b465683911_20 - predicate_2dx14fcdaada9e9bb5e_20 <= 0
- R334: &&_2bx371038b465683911_20 - predicate_2dx48c103ba2c928dd_20 <= 0
- R335: &&_2bx371038b465683911_20 - predicate_2bx3eade0100db0fe27_20 <= 0
- R336: &&_2bx371038b465683911_20 - predicate_2dx14fcdaada9e9bb5e_20
+ R333: &&_2dx128a266ee5f5b921_20 - predicate_2dx30be4d89f565bb0c_20 <= 0
+ R334: &&_2dx128a266ee5f5b921_20 - predicate_2dx48c103ba2c928dd_20 <= 0
+ R335: &&_2dx128a266ee5f5b921_20 - predicate_2bx3eade0100db0fe27_20 <= 0
+ R336: &&_2dx128a266ee5f5b921_20 - predicate_2dx30be4d89f565bb0c_20
    - predicate_2dx48c103ba2c928dd_20 - predicate_2bx3eade0100db0fe27_20
    >= -2
- R337: G_2dx10e2e2d61022ef9_0 - &&_2bx371038b465683911_5 <= 0
- R338: G_2dx10e2e2d61022ef9_0 - &&_2bx371038b465683911_6 <= 0
- R339: G_2dx10e2e2d61022ef9_0 - &&_2bx371038b465683911_7 <= 0
- R340: G_2dx10e2e2d61022ef9_0 - &&_2bx371038b465683911_8 <= 0
- R341: G_2dx10e2e2d61022ef9_0 - &&_2bx371038b465683911_9 <= 0
- R342: G_2dx10e2e2d61022ef9_0 - &&_2bx371038b465683911_10 <= 0
- R343: G_2dx10e2e2d61022ef9_0 - &&_2bx371038b465683911_11 <= 0
- R344: G_2dx10e2e2d61022ef9_0 - &&_2bx371038b465683911_12 <= 0
- R345: G_2dx10e2e2d61022ef9_0 - &&_2bx371038b465683911_13 <= 0
- R346: G_2dx10e2e2d61022ef9_0 - &&_2bx371038b465683911_14 <= 0
- R347: G_2dx10e2e2d61022ef9_0 - &&_2bx371038b465683911_15 <= 0
- R348: G_2dx10e2e2d61022ef9_0 - &&_2bx371038b465683911_16 <= 0
- R349: G_2dx10e2e2d61022ef9_0 - &&_2bx371038b465683911_17 <= 0
- R350: G_2dx10e2e2d61022ef9_0 - &&_2bx371038b465683911_18 <= 0
- R351: G_2dx10e2e2d61022ef9_0 - &&_2bx371038b465683911_19 <= 0
- R352: G_2dx10e2e2d61022ef9_0 - &&_2bx371038b465683911_20 <= 0
- R353: G_2dx10e2e2d61022ef9_0 - &&_2bx371038b465683911_5
-   - &&_2bx371038b465683911_6 - &&_2bx371038b465683911_7
-   - &&_2bx371038b465683911_8 - &&_2bx371038b465683911_9
-   - &&_2bx371038b465683911_10 - &&_2bx371038b465683911_11
-   - &&_2bx371038b465683911_12 - &&_2bx371038b465683911_13
-   - &&_2bx371038b465683911_14 - &&_2bx371038b465683911_15
-   - &&_2bx371038b465683911_16 - &&_2bx371038b465683911_17
-   - &&_2bx371038b465683911_18 - &&_2bx371038b465683911_19
-   - &&_2bx371038b465683911_20 >= -15
- formula_satisfaction: G_2dx10e2e2d61022ef9_0 = 1
+ R337: G_2bx368d2d3787075aa9_0 - &&_2dx128a266ee5f5b921_5 <= 0
+ R338: G_2bx368d2d3787075aa9_0 - &&_2dx128a266ee5f5b921_6 <= 0
+ R339: G_2bx368d2d3787075aa9_0 - &&_2dx128a266ee5f5b921_7 <= 0
+ R340: G_2bx368d2d3787075aa9_0 - &&_2dx128a266ee5f5b921_8 <= 0
+ R341: G_2bx368d2d3787075aa9_0 - &&_2dx128a266ee5f5b921_9 <= 0
+ R342: G_2bx368d2d3787075aa9_0 - &&_2dx128a266ee5f5b921_10 <= 0
+ R343: G_2bx368d2d3787075aa9_0 - &&_2dx128a266ee5f5b921_11 <= 0
+ R344: G_2bx368d2d3787075aa9_0 - &&_2dx128a266ee5f5b921_12 <= 0
+ R345: G_2bx368d2d3787075aa9_0 - &&_2dx128a266ee5f5b921_13 <= 0
+ R346: G_2bx368d2d3787075aa9_0 - &&_2dx128a266ee5f5b921_14 <= 0
+ R347: G_2bx368d2d3787075aa9_0 - &&_2dx128a266ee5f5b921_15 <= 0
+ R348: G_2bx368d2d3787075aa9_0 - &&_2dx128a266ee5f5b921_16 <= 0
+ R349: G_2bx368d2d3787075aa9_0 - &&_2dx128a266ee5f5b921_17 <= 0
+ R350: G_2bx368d2d3787075aa9_0 - &&_2dx128a266ee5f5b921_18 <= 0
+ R351: G_2bx368d2d3787075aa9_0 - &&_2dx128a266ee5f5b921_19 <= 0
+ R352: G_2bx368d2d3787075aa9_0 - &&_2dx128a266ee5f5b921_20 <= 0
+ R353: G_2bx368d2d3787075aa9_0 - &&_2dx128a266ee5f5b921_5
+   - &&_2dx128a266ee5f5b921_6 - &&_2dx128a266ee5f5b921_7
+   - &&_2dx128a266ee5f5b921_8 - &&_2dx128a266ee5f5b921_9
+   - &&_2dx128a266ee5f5b921_10 - &&_2dx128a266ee5f5b921_11
+   - &&_2dx128a266ee5f5b921_12 - &&_2dx128a266ee5f5b921_13
+   - &&_2dx128a266ee5f5b921_14 - &&_2dx128a266ee5f5b921_15
+   - &&_2dx128a266ee5f5b921_16 - &&_2dx128a266ee5f5b921_17
+   - &&_2dx128a266ee5f5b921_18 - &&_2dx128a266ee5f5b921_19
+   - &&_2dx128a266ee5f5b921_20 >= -15
+ formula_satisfaction: G_2bx368d2d3787075aa9_0 = 1
 Bounds
  -infinity <= rho <= 999
  -4 <= x_0 <= 5
@@ -765,37 +765,37 @@ Bounds
  -1 <= v_58 <= 1
  -1 <= w_58 <= 1
 Binaries
- G_2dx10e2e2d61022ef9_0 &&_2bx371038b465683911_5
- predicate_2dx14fcdaada9e9bb5e_5 predicate_2dx48c103ba2c928dd_5
- predicate_2bx3eade0100db0fe27_5 &&_2bx371038b465683911_6
- predicate_2dx14fcdaada9e9bb5e_6 predicate_2dx48c103ba2c928dd_6
- predicate_2bx3eade0100db0fe27_6 &&_2bx371038b465683911_7
- predicate_2dx14fcdaada9e9bb5e_7 predicate_2dx48c103ba2c928dd_7
- predicate_2bx3eade0100db0fe27_7 &&_2bx371038b465683911_8
- predicate_2dx14fcdaada9e9bb5e_8 predicate_2dx48c103ba2c928dd_8
- predicate_2bx3eade0100db0fe27_8 &&_2bx371038b465683911_9
- predicate_2dx14fcdaada9e9bb5e_9 predicate_2dx48c103ba2c928dd_9
- predicate_2bx3eade0100db0fe27_9 &&_2bx371038b465683911_10
- predicate_2dx14fcdaada9e9bb5e_10 predicate_2dx48c103ba2c928dd_10
- predicate_2bx3eade0100db0fe27_10 &&_2bx371038b465683911_11
- predicate_2dx14fcdaada9e9bb5e_11 predicate_2dx48c103ba2c928dd_11
- predicate_2bx3eade0100db0fe27_11 &&_2bx371038b465683911_12
- predicate_2dx14fcdaada9e9bb5e_12 predicate_2dx48c103ba2c928dd_12
- predicate_2bx3eade0100db0fe27_12 &&_2bx371038b465683911_13
- predicate_2dx14fcdaada9e9bb5e_13 predicate_2dx48c103ba2c928dd_13
- predicate_2bx3eade0100db0fe27_13 &&_2bx371038b465683911_14
- predicate_2dx14fcdaada9e9bb5e_14 predicate_2dx48c103ba2c928dd_14
- predicate_2bx3eade0100db0fe27_14 &&_2bx371038b465683911_15
- predicate_2dx14fcdaada9e9bb5e_15 predicate_2dx48c103ba2c928dd_15
- predicate_2bx3eade0100db0fe27_15 &&_2bx371038b465683911_16
- predicate_2dx14fcdaada9e9bb5e_16 predicate_2dx48c103ba2c928dd_16
- predicate_2bx3eade0100db0fe27_16 &&_2bx371038b465683911_17
- predicate_2dx14fcdaada9e9bb5e_17 predicate_2dx48c103ba2c928dd_17
- predicate_2bx3eade0100db0fe27_17 &&_2bx371038b465683911_18
- predicate_2dx14fcdaada9e9bb5e_18 predicate_2dx48c103ba2c928dd_18
- predicate_2bx3eade0100db0fe27_18 &&_2bx371038b465683911_19
- predicate_2dx14fcdaada9e9bb5e_19 predicate_2dx48c103ba2c928dd_19
- predicate_2bx3eade0100db0fe27_19 &&_2bx371038b465683911_20
- predicate_2dx14fcdaada9e9bb5e_20 predicate_2dx48c103ba2c928dd_20
+ G_2bx368d2d3787075aa9_0 &&_2dx128a266ee5f5b921_5
+ predicate_2dx30be4d89f565bb0c_5 predicate_2dx48c103ba2c928dd_5
+ predicate_2bx3eade0100db0fe27_5 &&_2dx128a266ee5f5b921_6
+ predicate_2dx30be4d89f565bb0c_6 predicate_2dx48c103ba2c928dd_6
+ predicate_2bx3eade0100db0fe27_6 &&_2dx128a266ee5f5b921_7
+ predicate_2dx30be4d89f565bb0c_7 predicate_2dx48c103ba2c928dd_7
+ predicate_2bx3eade0100db0fe27_7 &&_2dx128a266ee5f5b921_8
+ predicate_2dx30be4d89f565bb0c_8 predicate_2dx48c103ba2c928dd_8
+ predicate_2bx3eade0100db0fe27_8 &&_2dx128a266ee5f5b921_9
+ predicate_2dx30be4d89f565bb0c_9 predicate_2dx48c103ba2c928dd_9
+ predicate_2bx3eade0100db0fe27_9 &&_2dx128a266ee5f5b921_10
+ predicate_2dx30be4d89f565bb0c_10 predicate_2dx48c103ba2c928dd_10
+ predicate_2bx3eade0100db0fe27_10 &&_2dx128a266ee5f5b921_11
+ predicate_2dx30be4d89f565bb0c_11 predicate_2dx48c103ba2c928dd_11
+ predicate_2bx3eade0100db0fe27_11 &&_2dx128a266ee5f5b921_12
+ predicate_2dx30be4d89f565bb0c_12 predicate_2dx48c103ba2c928dd_12
+ predicate_2bx3eade0100db0fe27_12 &&_2dx128a266ee5f5b921_13
+ predicate_2dx30be4d89f565bb0c_13 predicate_2dx48c103ba2c928dd_13
+ predicate_2bx3eade0100db0fe27_13 &&_2dx128a266ee5f5b921_14
+ predicate_2dx30be4d89f565bb0c_14 predicate_2dx48c103ba2c928dd_14
+ predicate_2bx3eade0100db0fe27_14 &&_2dx128a266ee5f5b921_15
+ predicate_2dx30be4d89f565bb0c_15 predicate_2dx48c103ba2c928dd_15
+ predicate_2bx3eade0100db0fe27_15 &&_2dx128a266ee5f5b921_16
+ predicate_2dx30be4d89f565bb0c_16 predicate_2dx48c103ba2c928dd_16
+ predicate_2bx3eade0100db0fe27_16 &&_2dx128a266ee5f5b921_17
+ predicate_2dx30be4d89f565bb0c_17 predicate_2dx48c103ba2c928dd_17
+ predicate_2bx3eade0100db0fe27_17 &&_2dx128a266ee5f5b921_18
+ predicate_2dx30be4d89f565bb0c_18 predicate_2dx48c103ba2c928dd_18
+ predicate_2bx3eade0100db0fe27_18 &&_2dx128a266ee5f5b921_19
+ predicate_2dx30be4d89f565bb0c_19 predicate_2dx48c103ba2c928dd_19
+ predicate_2bx3eade0100db0fe27_19 &&_2dx128a266ee5f5b921_20
+ predicate_2dx30be4d89f565bb0c_20 predicate_2dx48c103ba2c928dd_20
  predicate_2bx3eade0100db0fe27_20
 End

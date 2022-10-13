@@ -95,7 +95,7 @@ def stl_milp_solver(ast, x_init, y_init, z_init, current_step, period, M, B):
 
 def main():
     # Define the formula that you want to apply 
-    formula = "G[5,20] ((x>=2) && (y>=2) && (z<=1))"
+    formula = "G[5,20] ((x>=4) && (y>=2) && (z<=1))"
     # Define the matrixes that used for linear system 
     M = [[1, 0, 0], [0, 1, 0],[0, 0, 1]] 
     B = [[1, 0, 0], [0, 1, 0],[0, 0, 1]] 

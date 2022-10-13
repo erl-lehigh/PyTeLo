@@ -13,15 +13,16 @@ from stl import Operation, RelOperation, STLFormula
 class stl2milp(object):
     '''Translate an STL formula to an MILP.'''
 
-    def __init__(self, formula, ranges, vtypes=None, model=None, robust=False):
+    def __init__(self, formula, ranges=None, vtypes=None, model=None, robust=False):
         self.formula = formula
 
         self.M = 1000
         
-        self.ranges = ranges
         if ranges is None:
-            self.ranges = {v: (0, 10) for v in self.formula.variables()}
-        
+            self.ranges = {v: (-9, 9) for v in self.formula.variables()}
+        else:
+            self.ranges = ranges
+
         assert set(self.formula.variables()) <= set(self.ranges)
 
         if robust and 'rho' not in self.ranges:

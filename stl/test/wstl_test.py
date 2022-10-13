@@ -39,17 +39,17 @@ def wstl_solve(wstl_formula, weights, type='short', varname='x', end_time = 15):
     else:
         raise NotImplementedError
     z_formula, rho_formula = wstl_milp.translate()
-    x = [wstl_milp.variables[varname].get(time, wstl_milp.model.addVar(lb=-GRB.INFINITY,
-                                                         ub=GRB.INFINITY))
-         for time in range(end_time + 1)]
+    # x = [wstl_milp.variables[varname].get(time, wstl_milp.model.addVar(lb=-GRB.INFINITY,
+    #                                                      ub=GRB.INFINITY))
+    #      for time in range(end_time + 1)]
     wstl_milp.model.update()
 
     # Add dynamics constraints
     # for time in range(end_time): # example of state transition (system dynamics)
     #     m.addConstr(x[time+1] == x[time] + 0.1)
 
-    for time in range(end_time + 1):  # example if state constraints (e.g., safety)
-        wstl_milp.model.addConstr(x[time] >= 0)
+    # for time in range(end_time + 1):  # example if state constraints (e.g., safety)
+    #     wstl_milp.model.addConstr(x[time] >= 0)
 
     # Set objective
     wstl_milp.model.setObjective(rho_formula, GRB.MAXIMIZE)
@@ -62,12 +62,12 @@ def wstl_solve(wstl_formula, weights, type='short', varname='x', end_time = 15):
     # Solve problem
     wstl_milp.model.optimize()
 
-    if (wstl_milp.model.status == 2):
-        y = np.array([x[i].X for i in range(end_time + 1)], dtype=np.float)
-    else:
-        print("cannot solve...")
-        y = None
-
+    # if (wstl_milp.model.status == 2):
+    #     y = np.array([x[i].X for i in range(end_time + 1)], dtype=np.float)
+    # else:
+    #     print("cannot solve...")
+    #     y = None
+    y = [var.X for var in wstl_milp.variables['x'].values()]
     return y
 
 def stl_solve(stl_formula, varname='x', end_time=15):
@@ -118,7 +118,7 @@ if __name__ == '__main__':
 
     # Eventually
     # wstl_formula = "(F[0,2]^weight1  (x<=3))"
-    wstl_formula = "&&^weight2 (F[0,2]^weight1  (x<=5), F[0,2]^weight2 (x<=2), F[0,4]^weight3 (x>=9))"
+    wstl_formula = "&&^weight2 ( F[0,2]^weight1  (x<=5), F[0,2]^weight3 (x<=2), F[0,4]^weight3 (x>=9) )"
 
     #Always
     # wstl_formula = "(G[0,2]^weight1  (x>=3))"
@@ -141,7 +141,7 @@ if __name__ == '__main__':
     # Get AST from parse tree
     end_time = 15
 
-    weights = {'weight1': lambda x: 10, 'weight2': lambda x: 1, 'weight3': lambda x: 5}
+    weights = {'weight1': lambda x: 10, 'weight2': lambda k: [1, 2, 3 ][k], 'weight3': lambda x: 5}
 
     # Translate WSTL to MILP and retrieve integer variable for the formula
     x1=wstl_solve(wstl_formula, weights, type='long')
