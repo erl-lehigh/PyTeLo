@@ -21,8 +21,10 @@ from stlLexer import stlLexer
 from stlParser import stlParser
 from stlVisitor import stlVisitor
 from stl import STLAbstractSyntaxTreeExtractor
+from environment import environment, stl_zone, wstl_zone
 
-def stl_synthesis_control(formula, A, B, vars_ub, vars_lb, control_ub, control_lb):
+def stl_synthesis_control(formula, A, B, vars_ub, vars_lb, control_ub, 
+                          control_lb):
     
     lexer = stlLexer(InputStream(formula))
     tokens = CommonTokenStream(lexer)
@@ -70,16 +72,21 @@ def stl_synthesis_control(formula, A, B, vars_ub, vars_lb, control_ub, control_l
 
     # system constraints x[k+1] = A X[k]+ B U[k]
     for k in range(time_bound-1):
-        stl_milp.model.addConstr(x[k+1] == A[0][0] * x[k] + A[0][1] * y[k] + A[0][2] * z[k] + \
-            B[0][0] * u[k] + B[0][1] * v[k] + B[0][2] * w[k])
-        stl_milp.model.addConstr(y[k+1] == A[1][0] * x[k] + A[1][1] * y[k] + A[1][2] * z[k] + \
-            B[1][0] * u[k] + B[1][1] * v[k] + B[1][2] * w[k])
-        stl_milp.model.addConstr(z[k+1] == A[2][0] * x[k] + A[2][1] * y[k] + A[2][2] * z[k] + \
-            B[2][0] * u[k] + B[2][1] * v[k] + B[2][2] * w[k])
+        stl_milp.model.addConstr(x[k+1] == A[0][0] * x[k] + A[0][1] * y[k] +
+                                           A[0][2] * z[k] + B[0][0] * u[k] + 
+                                           B[0][1] * v[k] + B[0][2] * w[k] )
+
+        stl_milp.model.addConstr(y[k+1] == A[1][0] * x[k] + A[1][1] * y[k] + 
+                                           A[1][2] * z[k] + B[1][0] * u[k] + 
+                                           B[1][1] * v[k] + B[1][2] * w[k] )
+
+        stl_milp.model.addConstr(z[k+1] == A[2][0] * x[k] + A[2][1] * y[k] + 
+                                           A[2][2] * z[k] + B[2][0] * u[k] + 
+                                           B[2][1] * v[k] + B[2][2] * w[k] )
     
     #initial conditions
-    stl_milp.model.addConstr(x[0] == 0)
-    stl_milp.model.addConstr(y[0] == 0)
+    stl_milp.model.addConstr(x[0] == -9)
+    stl_milp.model.addConstr(y[0] == -9)
     stl_milp.model.addConstr(z[0] == 0)
     stl_milp.model.addConstr(u[0] == 0)
     stl_milp.model.addConstr(v[0] == 0)
@@ -144,15 +151,20 @@ def wstl_synthesis_control(wstl_formula, weights, A, B, vars_ub, vars_lb,
 
     # system constraints
     for k in range(time_bound-1):
-        wstl_milp.model.addConstr(x[k+1] == A[0][0] * x[k] + A[0][1] * y[k] + A[0][2] * z[k] + \
-            B[0][0] * u[k] + B[0][1] * v[k] + B[0][2] * w[k])
-        wstl_milp.model.addConstr(y[k+1] == A[1][0] * x[k] + A[1][1] * y[k] + A[1][2] * z[k] + \
-            B[1][0] * u[k] + B[1][1] * v[k] + B[1][2] * w[k])
-        wstl_milp.model.addConstr(z[k+1] == A[2][0] * x[k] + A[2][1] * y[k] + A[2][2] * z[k] + \
-            B[2][0] * u[k] + B[2][1] * v[k] + B[2][2] * w[k])
+        wstl_milp.model.addConstr(x[k+1] == A[0][0] * x[k] + A[0][1] * y[k] + 
+                                            A[0][2] * z[k] + B[0][0] * u[k] + 
+                                            B[0][1] * v[k] + B[0][2] * w[k] )
 
-    wstl_milp.model.addConstr(x[0] == 0)
-    wstl_milp.model.addConstr(y[0] == 0)
+        wstl_milp.model.addConstr(y[k+1] == A[1][0] * x[k] + A[1][1] * y[k] + 
+                                            A[1][2] * z[k] + B[1][0] * u[k] + 
+                                            B[1][1] * v[k] + B[1][2] * w[k])
+
+        wstl_milp.model.addConstr(z[k+1] == A[2][0] * x[k] + A[2][1] * y[k] + 
+                                            A[2][2] * z[k] + B[2][0] * u[k] + 
+                                            B[2][1] * v[k] + B[2][2] * w[k])
+
+    wstl_milp.model.addConstr(x[0] == -9)
+    wstl_milp.model.addConstr(y[0] == -9)
     wstl_milp.model.addConstr(z[0] == 0)
     wstl_milp.model.addConstr(u[0] == 0)
     wstl_milp.model.addConstr(v[0] == 0)
@@ -224,20 +236,30 @@ def visualize(stl_milp, wstl_milp):
     axs[2][1].legend()
     fig.tight_layout()
     plt.show()
+    environment(stl_x, stl_y, wstl_x, wstl_y)
+
 
 if __name__ == '__main__':
     #Formulas
-    formula = 'G[5,10] x >= 3 && G[5,10] (y <= -2) && G[5, 10] (z >= 1)'
-    wstl_formula = "&&^weight2 ( G[5,10]^weight1  (x>=3), G[5,10]^weight3 \
-                    (y<=-2), G[5,10]^weight3 (z>=1) )"
-    weights = {'weight1': lambda x: 10, 'weight2': lambda k: [1, 2, 3][k], 
-               'weight3': lambda x: 5}
+    # formula = 'G[5,10] x >= 3 && G[5,10] (y <= -2) && G[5, 10] (z >= 1)'    
+    # wstl_formula = "&&^weight2 ( G[5,10]^weight0  (x>=3),G[5,10]^weight3 \
+    #                 (y<=-2), G[5,10]^weight3 (z>=1) )"
+    obstacle = "&&" + stl_zone("O", "G", 0, 30, "x", "y")
+    formula = '(' + stl_zone("C", "G", 25, 30, "x", "y") + obstacle + ')'
 
+    wstl_obs = wstl_zone("O", "G", 0, 30, "x", "y")
+    wstl_formula = '&&^weight0 ('+wstl_zone("C", "G", 25, 30, "x", "y")+ \
+                    ','+wstl_obs+')'
+
+    
+    weights = {'weight0': lambda x: 1, 'weight1': lambda x:10, 
+               'weight2': lambda k:[1, 2, 3][k], 'weight3': lambda x: 5}
+   
     # Define the matrixes that used for linear system 
     A = [[1, 0, 0], [0, 1, 0],[0, 0, 1]] 
     B = [[1, 0, 0], [0, 1, 0],[0, 0, 1]] 
-    vars_ub = 10
-    vars_lb = -10
+    vars_ub = 9
+    vars_lb = -9
     control_ub = 3
     control_lb = -3
 
@@ -248,7 +270,8 @@ if __name__ == '__main__':
                                        vars_lb, control_ub, control_lb)
 
     visualize(stl_milp, wstl_milp)
-    
+    print(formula)
+    print(wstl_formula)    
     
     
 
