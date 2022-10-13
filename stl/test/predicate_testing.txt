@@ -1,0 +1,71 @@
+1.     wstl_formula = " (x<=8)"
+
+stl : [-10.0]
+old : [-10.0]
+opt : [-10.0]
+
+2.     wstl_formula = " (x>=8)"
+
+stl : [10.0]
+old : [10.0]
+opt : [10.0]
+
+3.     wstl_formula = " &&^weight2 (&&^weight1 ( (x<=3), (x>=6)) , (x>=2))"
+
+stl :  [4.5]
+old: no sol
+
+4.     wstl_formula = " &&^weight2 (&&^weight1 ( (x<=4), (x>=8)) , (x<=3))"
+
+stl : [4.67]
+old : no sol
+
+5.     wstl_formula = " &&^weight2 ((x>=3), &&^weight1 ( (x>=4), (x<=8)))"
+
+stl : [6.0]
+old : [6.0]
+
+6.     wstl_formula = " ||^weight2 ( (x>=5), (x<=1) )"   w2 = [1,0.01,1]
+
+stl : [-10.0]
+old : [-10.0]
+
+6.     wstl_formula = " ||^weight2 ( (x<=3), (x>=6) ,(x>=2) )"   w2 = [0.1,0.2,1]
+
+stl : [10.0]
+old : [10.0]
+
+7.     wstl_formula = " ||^weight2 ( (x<=-8), (x<=0) ,(x>=2) )"  w2 = [0.4, 0.2, 0.1]
+
+
+stl : [-10.0]
+old : [-10.0]
+
+
+8.     wstl_formula = " ||^weight2 (||^weight1 ( (x<=3), (x>=6)) , (x>=2))" w1 = 0.5, w2 = [0.4, 0.2, 0.1] 
+
+stl : [-10.0]
+old : [-10.0]
+
+
+9.     wstl_formula = " ||^weight2 (||^weight1 ( (x<=3), (x>=6)) , (x>=2))" w1 = 0.5, w2 = [0.4, 0.6, 0.1] 
+
+stl : [10.0]
+old : [10.0] 
+
+
+11.     wstl_formula = " ||^weight2 ((x>=3), ||^weight1 ( (x>=4), (x<=8)))" w1 = 0.5, w2 = [0.4, 0.6, 0.1]
+
+stl : [10.0]
+old : [-10.0]
+
+12.     wstl_formula = " ||^weight2 ((x>=3), ||^weight1 ( (x>=4), (x<=8)))" w1 = 0.5, w2 = [0.4, 0.7, 0.1]
+
+stl : [10.0]
+old : [-10.0]
+
+13.     wstl_formula = " ||^weight2 ((x>=3), ||^weight1 ( (x>=4), (x<=8)))" w1 = 0.5, w2 = [0.4, 0.8, 0.1]
+
+stl : [-10.0]
+old : [-10.0]
+
