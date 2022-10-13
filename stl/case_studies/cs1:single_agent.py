@@ -1,5 +1,5 @@
 from antlr4 import InputStream, CommonTokenStream
-
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 import gurobipy as grb
@@ -264,14 +264,21 @@ if __name__ == '__main__':
     control_lb = -3
 
     # Translate WSTL to MILP and retrieve integer variable for the formula
+    stl_start = time.time()
     stl_milp = stl_synthesis_control(formula, A, B, vars_ub, vars_lb, control_ub,
                                     control_lb)
+    stl_end = time.time()
+    stl_time = stl_end - stl_start
+
+    wstl_start = time.time()
     wstl_milp = wstl_synthesis_control(wstl_formula, weights, A, B, vars_ub, 
                                        vars_lb, control_ub, control_lb)
+    wstl_end = time.time()
+    wstl_time = wstl_end - wstl_start
 
     visualize(stl_milp, wstl_milp)
-    print(formula)
-    print(wstl_formula)    
+    print(formula, 'Time needed:', stl_time)
+    print(wstl_formula, 'Time needed:', wstl_time)    
     
     
 

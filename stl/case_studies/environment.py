@@ -8,108 +8,109 @@ def stl_zone(ap, T, l, u, a, b):
     # atomic proposition, Temporal operator, lower bound, upper bound, agent_x, agent_y
     if ap == "A":
         if T == "G":
-            ret = " (G[{},{}](({}<=-6) && ({}<=-6))) ".format(l,u,a,b)
+            phi = " (G[{},{}](({}<=-6) && ({}<=-6))) ".format(l,u,a,b)
         elif T == "F":
-            ret = " (F[{},{}](({}<=-6) && ({}<=-6))) ".format(l,u,a,b)
+            phi = " (F[{},{}](({}<=-6) && ({}<=-6))) ".format(l,u,a,b)
         else:
             raise NotImplementedError
     
     elif ap == "B":
         if T == "G":
-            ret = " (G[{},{}](({}>=6) && ({}<=-6))) ".format(l,u,a,b)
+            phi = " (G[{},{}](({}>=6) && ({}<=-6))) ".format(l,u,a,b)
         elif T == "F":
-            ret = " (F[{},{}](({}>=6) && ({}<=-6))) ".format(l,u,a,b)
+            phi = " (F[{},{}](({}>=6) && ({}<=-6))) ".format(l,u,a,b)
         else:
             raise NotImplementedError
     
     elif ap == "C":
         if T == "G":
-            ret = " (G[{},{}](({}>=6) && ({}>=6))) ".format(l,u,a,b)
+            phi = " (G[{},{}](({}>=6) && ({}>=6))) ".format(l,u,a,b)
         elif T == "F":
-            ret = " (F[{},{}](({}>=6) && ({}>=6))) ".format(l,u,a,b)
+            phi = " (F[{},{}](({}>=6) && ({}>=6))) ".format(l,u,a,b)
         else:
             raise NotImplementedError
     
     elif ap == "D":
         if T == "G": 
-            ret = " (G[{},{}](({}<=-6) && ({}>=6))) ".format(l,u,a,b)
+            phi = " (G[{},{}](({}<=-6) && ({}>=6))) ".format(l,u,a,b)
         elif T == "F":
-            ret = " (F[{},{}](({}<=-6) && ({}>=6))) ".format(l,u,a,b)
+            phi = " (F[{},{}](({}<=-6) && ({}>=6))) ".format(l,u,a,b)
         else:
             raise NotImplementedError
     
     elif ap == "O":
         if T == "G": 
-            ret = " (G[{},{}]( ({}>= 3) || ({}<=-3) || ({}>=3) || ({}<=-3))) ".format(l,u,a,a,b,b)
+            phi = " (G[{},{}]( ({}>= 3) || ({}<=-3) || ({}>=3) || ({}<=-3))) ".format(l,u,a,a,b,b)
         elif T == "F":
-            ret = " (F[{},{}]( ({}>= 3) || ({}<=-3) || ({}>=3) || ({}<=-3))) ".format(l,u,a,a,b,b)
+            phi = " (F[{},{}]( ({}>= 3) || ({}<=-3) || ({}>=3) || ({}<=-3))) ".format(l,u,a,a,b,b)
         else:
             raise NotImplementedError
     
     elif ap == "E":
         if T == "G": 
-            ret = " (G[{},{}]( ({}<= 1) && ({}>=-1) && ({}<=1) && ({}>=-1))) ".format(l,u,a,a,b,b)
+            phi = " (G[{},{}]( ({}<= 1) && ({}>=-1) && ({}<=1) && ({}>=-1))) ".format(l,u,a,a,b,b)
         elif T == "F":
-            ret = " (F[{},{}]( ({}>= 3) || ({}<=-3) || ({}>=3) || ({}<=-3))) ".format(l,u,a,a,b,b)
+            phi = " (F[{},{}]( ({}>= 3) || ({}<=-3) || ({}>=3) || ({}<=-3))) ".format(l,u,a,a,b,b)
         else:
             raise NotImplementedError
     else:
         raise NotImplementedError
-    return ret
+    return phi
 
 def wstl_zone(ap, T, l, u, a, b): 
     '''atomic proposition, Temporal operator, lower bound, upper bound, 
         agent_x, agent_y, weights'''
     if ap == "A":
         if T == "G":
-            ret = " (G[{},{}]^weight0 (&&^weight0 (({}<=-6),({}<=-6) ))) ".format(l,u,a,b)
+            phi = " (G[{},{}]^weight0 (&&^weight0 (({}<=-6),({}<=-6) ))) ".format(l,u,a,b)
         elif T == "F":
-            ret = " (F[{},{}]^weight0 (&&^weight0 (({}<=-6),({}<=-6) ))) ".format(l,u,a,b)
+            phi = " (F[{},{}]^weight0 (&&^weight0 (({}<=-6),({}<=-6) ))) ".format(l,u,a,b)
         else:
             raise NotImplementedError
     
     elif ap == "B":
         if T == "G":
-            ret = " (G[{},{}]^weight0 (&&^weight0 (({}>=6),({}<=-6) ))) ".format(l,u,a,b)
+            phi = " (G[{},{}]^weight0 (&&^weight0 (({}>=6),({}<=-6) ))) ".format(l,u,a,b)
         elif T == "F":
-            ret = " (F[{},{}]^weight0 (&&^weight0 (({}>=6),({}<=-6) ))) ".format(l,u,a,b)
+            phi = " (F[{},{}]^weight0 (&&^weight0 (({}>=6),({}<=-6) ))) ".format(l,u,a,b)
         else:
             raise NotImplementedError
     
     elif ap == "C":
         if T == "G":
-            ret = " (G[{},{}]^weight0 (&&^weight0 (({}>=6),({}>=6) ))) ".format(l,u,a,b)
+            phi = " (G[{},{}]^weight0 (&&^weight0 (({}>=6),({}>=6) ))) ".format(l,u,a,b)
         elif T == "F":
-            ret = " (F[{},{}]^weight0 (&&^weight0 (({}>=6),({}>=6) ))) ".format(l,u,a,b)
+            phi = " (F[{},{}]^weight0 (&&^weight0 (({}>=6),({}>=6) ))) ".format(l,u,a,b)
         else:
             raise NotImplementedError
     
     elif ap == "D":
         if T == "G": 
-            ret = " (G[{},{}]^weight0 (&&^weight0 (({}<=-6),({}>=6) ))) ".format(l,u,a,b)
+            phi = " (G[{},{}]^weight0 (&&^weight0 (({}<=-6),({}>=6) ))) ".format(l,u,a,b)
         elif T == "F":
-            ret = " (G[{},{}]^weight0 (&&^weight0 (({}<=-6),({}>=6) ))) ".format(l,u,a,b)
+            phi = " (G[{},{}]^weight0 (&&^weight0 (({}<=-6),({}>=6) ))) ".format(l,u,a,b)
         else:
             raise NotImplementedError
     
     elif ap == "O":
         if T == "G": 
-            ret = " (G[{},{}]^weight0( ||^weight0( ({}>= 3),({}<=-3),({}>=3),({}<=-3) ))) ".format(l,u,a,a,b,b)
+            phi = " (G[{},{}]^weight0( ||^weight0( ({}>= 3),({}<=-3),({}>=3),({}<=-3) ))) ".format(l,u,a,a,b,b)
         elif T == "F":
-            ret = " (F[{},{}]^weight0( ||^weight0( ({}>= 3),({}<=-3),({}>=3),({}<=-3) ))) ".format(l,u,a,a,b,b)
+            phi = " (F[{},{}]^weight0( ||^weight0( ({}>= 3),({}<=-3),({}>=3),({}<=-3) ))) ".format(l,u,a,a,b,b)
         else:
             raise NotImplementedError
     
     elif ap == "E":
         if T == "G": 
-            ret = " (G[{},{}]^weight0( ||^weight0( ({}>= 3),({}<=-3),({}>=3),({}<=-3) ))) ".format(l,u,a,a,b,b)
+            phi = " (G[{},{}]^weight0( ||^weight0( ({}>= 3),({}<=-3),({}>=3),({}<=-3) ))) ".format(l,u,a,a,b,b)
         elif T == "F":
-            ret = " (F[{},{}]^weight0( ||^weight0( ({}>= 3),({}<=-3),({}>=3),({}<=-3) ))) ".format(l,u,a,a,b,b)
+            phi = " (F[{},{}]^weight0( ||^weight0( ({}>= 3),({}<=-3),({}>=3),({}<=-3) ))) ".format(l,u,a,a,b,b)
         else:
             raise NotImplementedError
     else:
         raise NotImplementedError
-    return ret
+    return phi
+    
 def environment(x, y, x2, y2):
     # Desired locations 
     lvertices1 = []
