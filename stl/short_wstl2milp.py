@@ -17,7 +17,7 @@ class short_wstl2milp(object):
 
         self.ranges = ranges
         if ranges is None:
-            self.ranges = {v: (0, 10) for v in self.formula.variables()}
+            self.ranges = {v: (-9, 9) for v in self.formula.variables()}
 
         self.vtypes = vtypes
         if vtypes is None:
@@ -96,7 +96,9 @@ class short_wstl2milp(object):
             #TODO: we need to check if this will work for continuos interval [0.1]
             # and compare performance then proof in the paper this relaxation                                               
             self.hat_variables[parent][formula][t] = self.model.addVar(
-                            vtype=grb.GRB.BINARY, name=z_name)#, lb=0, ub=1)
+                            vtype=grb.GRB.BINARY, name=z_name)
+            # self.hat_variables[parent][formula][t] = self.model.addVar(
+            #                 vtype=grb.GRB.CONTINUOUS, name=z_name, lb=0, ub=1)
             self.model.update()
             return self.hat_variables[parent][formula][t], True
         return self.hat_variables[parent][formula][t], False
@@ -120,25 +122,19 @@ class short_wstl2milp(object):
         assert pred.op == Operation.PRED
         v = self.add_state(pred.variable, t)
         if pred.relation in (RelOperation.GE, RelOperation.GT):
-            self.model.addConstr(v - self.M * z <= pred.threshold + rho)
             self.model.addConstr(v + self.M * (1 - z) >= pred.threshold + rho)
+            self.model.addConstr(v - self.M * z <= pred.threshold + rho)
             # self.model.addConstr(rho == v - pred.threshold)
             # self.model.addConstr(rho >= -self.M * (1 - z))
             # self.model.addConstr(rho <= self.M * z)
+
         elif pred.relation in (RelOperation.LE, RelOperation.LT):
             ## from STL
-            self.model.addConstr(v + self.M * z >= pred.threshold - rho)
             self.model.addConstr(v - self.M * (1 - z) <= pred.threshold - rho)
-
-            ## Tavo's repo
+            self.model.addConstr(v + self.M * z >= pred.threshold - rho)
             # self.model.addConstr(rho == pred.threshold - v)
-            # self.model.addConstr(rho <= self.M * (1 - z))
-            # self.model.addConstr(rho >= -self.M * z)
-
-            ## Try(old wstl)
-            # self.model.addConstr(rho == pred.threshold - v)
-            # self.model.addConstr(rho <= self.M * z)
             # self.model.addConstr(rho >= -self.M * (1 - z))
+            # self.model.addConstr(rho <= self.M * z)
         else:
             raise NotImplementedError
 
@@ -151,6 +147,9 @@ class short_wstl2milp(object):
             weight = formula.weight(k)
             self.model.addConstr(rho <= weight * rho_child)
             self.model.addConstr(z <= z_child)
+            # self.model.addConstr(z <)
+        z_children, _ = zip(*vars_children)
+        self.model.addConstr(z >= 1 - len(z_children) + sum(z_children))
 
     def disjunction(self, formula, z, rho, t):
         '''Adds a disjunction to the model.'''
@@ -164,6 +163,8 @@ class short_wstl2milp(object):
             weight = formula.weight(k)
             self.model.addConstr(
                 rho <= weight * rho_child + self.M * (1 - z_hat_child))
+            self.model.addConstr(z >= z_child)
+            self.model.addConstr(z_hat_child <= z_child)
         self.model.addConstr(z <= sum(z_children))
         self.model.addConstr(sum(z_hat_children) >= 1)
 
@@ -177,7 +178,8 @@ class short_wstl2milp(object):
             weight = formula.weight(tau)
             self.model.addConstr(rho <= weight * rho_child)
             self.model.addConstr(z <= z_child)
-        
+        z_children, _ = zip(*vars_children)
+        self.model.addConstr(z >= 1 - len(z_children) + sum(z_children))
     
     def eventually(self, formula, z, rho, t):
         '''Adds an eventually to the model.'''
@@ -194,7 +196,8 @@ class short_wstl2milp(object):
             weight = formula.weight(tau)
             self.model.addConstr(
                 rho <= weight * rho_child + self.M * (1 - z_hat_child))
-            self.model.addConstr(z_hat_child <= z_child)  
+            self.model.addConstr(z_hat_child <= z_child)
+            self.model.addConstr(z >= z_child)
         self.model.addConstr(z <= sum(z_children))
         self.model.addConstr(sum(z_hat_children) >= z)
 

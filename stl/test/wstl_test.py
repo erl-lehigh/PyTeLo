@@ -52,6 +52,11 @@ def wstl_solve(wstl_formula, weights, type='short', varname='x', end_time = 15):
     #     wstl_milp.model.addConstr(x[time] >= 0)
 
     # Set objective
+    # reward = z_formula + rho_formula
+    # wstl_milp.model.setObjectiveN(-rho_formula, 0, weight =2, name = 'robustness')
+    # wstl_milp.model.setObjectiveN(z_formula, 1, weight =100, name = 'satis')
+    # wstl_milp.model.setObjective(z_formula, GRB.MAXIMIZE)
+    print(rho_formula, 'AQUI')
     wstl_milp.model.setObjective(rho_formula, GRB.MAXIMIZE)
     wstl_milp.model.update()
     if type == 'long':
@@ -68,7 +73,7 @@ def wstl_solve(wstl_formula, weights, type='short', varname='x', end_time = 15):
     #     print("cannot solve...")
     #     y = None
     y = [var.X for var in wstl_milp.variables['x'].values()]
-    return y
+    return wstl_milp
 
 def stl_solve(stl_formula, varname='x', end_time=15):
     lexer = stlLexer(InputStream(stl_formula))
@@ -91,12 +96,12 @@ def stl_solve(stl_formula, varname='x', end_time=15):
     # Solve problem
     stl_milp.model.optimize()
     y = [var.X for var in stl_milp.variables['x'].values()]
-    print("y_stl:", y)
-    return y
+    # print("y_stl:", y)
+    # return wstl_milp
 
 def visualize(end_time, x1, x2, x3):
     t = [i for i in range(0, end_time + 1)]
-    print("t;", t)
+    # print("t;", t)
     # Print solution
     fig, ax = plt.subplots()
     ax.grid()
@@ -112,13 +117,13 @@ if __name__ == '__main__':
     # wstl_formula = "||^weight1 (F[5, 10]^weight2 (x <= 2), x>=5)"
     # wstl_formula = " ||^weight1 ((x >= 6), (x <= 5)^weight2)"
     # wstl_formula = "(x >= 7) ||^weight2 (x <= 2)^weight2 "
-    # wstl_formula = "(x >= 7) ||^weight3 (x<=2)"
+    wstl_formula = " &&^weight2 ((x >= 5), (x<=1))"
     # wstl_formula = "||^weight1 ( G[5, 10]^weight3 (x >= 7), G[5, 10]^weight2 (x<=3))"
     # stl_formula = " (G[5, 10] (x>=8) || G[5, 10] (x <= 3))"
 
     # Eventually
     # wstl_formula = "(F[0,2]^weight1  (x<=3))"
-    wstl_formula = "&&^weight2 ( F[0,2]^weight1  (x<=5), F[0,2]^weight3 (x<=2), F[0,4]^weight3 (x>=9) )"
+    # wstl_formula = "&&^weight2 ( F[0,2]^weight1  (x<=5), F[0,2]^weight3 (x<=2), F[0,4]^weight3 (x>=9) )"
 
     #Always
     # wstl_formula = "(G[0,2]^weight1  (x>=3))"
@@ -127,7 +132,7 @@ if __name__ == '__main__':
     # Disjunctions
     # wstl_formula = " ||^weight2 (||^weight1 ( (x<=3), (x>=6)) , (x>=2))"
     # wstl_formula = " ||^weight2 (||^weight1 ( (x<=4), (x>=8)) , (x<=3))"
-    # wstl_formula = " ||^weight2 ((x>=3), ||^weight1 ( (x>=4), (x<=8)))"
+    wstl_formula = " ||^weight2 ((x>=3), ||^weight1 ( (x>=4), (x<=8)))"
 
     #conjunctions
     # wstl_formula = " &&^weight2 (&&^weight1 ( (x<=3), (x>=6)) , (x>=2))"
@@ -137,23 +142,33 @@ if __name__ == '__main__':
     #predicates
     # wstl_formula = " (x<=8)"
     # wstl_formula = " (x>=8)"
-    stl_formula = "((x <= 8) && (x >= 4)) && (x >= 3)"
+    # stl_formula = "((x <= 8) && (x >= 4)) && (x >= 3)"
     # Get AST from parse tree
-    end_time = 15
+    # end_time = 15
 
-    weights = {'weight1': lambda x: 10, 'weight2': lambda k: [1, 2, 3 ][k], 'weight3': lambda x: 5}
+    weights = {'weight1': lambda x: 0.5, 'weight2': lambda k: [0.4, 0.6][k], 'weight3': lambda x: 5}
 
     # Translate WSTL to MILP and retrieve integer variable for the formula
-    x1=wstl_solve(wstl_formula, weights, type='long')
+    # x1=wstl_solve(wstl_formula, weights, type='long')
 
-    x2 = wstl_solve(wstl_formula, weights,type='short' )
-    x3 = stl_solve(stl_formula)
-    print("long", x1)
-    print("short:", x2)
-    print("stl:", x3)
+    wstl_milp = wstl_solve(wstl_formula, weights,type='short' )
+    # x3 = stl_solve(stl_formula)
+    # print("long", x1)
+    # print("short:", x
+    # print("stl:", x3)
     # visualize(end_time, x1,x2,x3)
 
+    print('Vars')
+    for var in wstl_milp.model.getVars():
+        print(var.VarName, ':', var.x)
 
+    print('Constraints')
+    for constr in wstl_milp.model.getConstrs():
+        print(':', str(constr))
+
+    print('Objective')
+    obj = wstl_milp.model.getObjective()
+    print(str(obj), ':', obj.getValue())
 
 # Parse the WSTL formula string
 # lexer = wstlLexer(InputStream("<>[1, 3]^weight1 (y <= 2)"))

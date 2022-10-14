@@ -170,7 +170,7 @@ def wstl_synthesis_control(wstl_formula, weights, A, B, vars_ub, vars_lb,
     wstl_milp.model.addConstr(v[0] == 0)
     wstl_milp.model.addConstr(w[0] == 0)
 
-    z_formula, rho_formula = wstl_milp.translate()
+    z_formula, rho_formula = wstl_milp.translate(satisfaction=True)
     wstl_milp.model.setObjective(rho_formula, grb.GRB.MAXIMIZE)
     wstl_milp.model.update()
 
@@ -245,23 +245,29 @@ if __name__ == '__main__':
     # wstl_formula = "&&^weight2 ( G[5,10]^weight0  (x>=3),G[5,10]^weight3 \
     #                 (y<=-2), G[5,10]^weight3 (z>=1) )"
     obstacle = "&&" + stl_zone("O", "G", 0, 30, "x", "y")
-    formula = '(' + stl_zone("C", "G", 25, 30, "x", "y") + obstacle + ')'
+    formula = '(' + stl_zone("C", "G", 12, 13, "x", "y") + ' && '+\
+                  stl_zone("D", "G", 22, 30, "x", "y") + ' && '+ \
+                    stl_zone("A", "G", 0, 1, "x", "y") + obstacle + ')'
 
+    # formula = '(' + stl_zone("C", "F", 5, 6, "x", "y") + obstacle + ')'
+    # wstl_formula= 
     wstl_obs = wstl_zone("O", "G", 0, 30, "x", "y")
-    wstl_formula = '&&^weight0 ('+wstl_zone("C", "G", 25, 30, "x", "y")+ \
-                    ','+wstl_obs+')'
+    wstl_formula = '&&^weight2 ('+wstl_zone("C", "G", 12, 13, "x", "y")+ \
+                    ','+wstl_zone("D", "G", 22, 30, "x", "y")+ \
+                    ','+wstl_zone("A", "G", 0, 1, "x", "y")+','+wstl_obs+')'
 
-    
+    # wstl_formula = '&&^weight2 ('+','+wstl_zone("C", "F", 5, 6, "x", "y")+','+wstl_obs+')'
+    # wstl_formula = '&&^weight0 ( G[0,2]^weight0 (||^weight0 ( ) ), F[2,2] )'
     weights = {'weight0': lambda x: 1, 'weight1': lambda x:10, 
-               'weight2': lambda k:[1, 2, 3][k], 'weight3': lambda x: 5}
+               'weight2': lambda k:[1, 1, 1, 1][k], 'weight3': lambda x: 1}
    
     # Define the matrixes that used for linear system 
     A = [[1, 0, 0], [0, 1, 0],[0, 0, 1]] 
     B = [[1, 0, 0], [0, 1, 0],[0, 0, 1]] 
     vars_ub = 9
     vars_lb = -9
-    control_ub = 3
-    control_lb = -3
+    control_ub = 4
+    control_lb = -4
 
     # Translate WSTL to MILP and retrieve integer variable for the formula
     stl_start = time.time()
@@ -276,9 +282,10 @@ if __name__ == '__main__':
     wstl_end = time.time()
     wstl_time = wstl_end - wstl_start
 
-    visualize(stl_milp, wstl_milp)
     print(formula, 'Time needed:', stl_time)
-    print(wstl_formula, 'Time needed:', wstl_time)    
+    print(wstl_formula, 'Time needed:', wstl_time)   
+    visualize(stl_milp, wstl_milp)
+ 
     
     
 
