@@ -1,18 +1,18 @@
 from __future__ import division
 from antlr4 import InputStream, CommonTokenStream
-
 import numpy as np
 import matplotlib.pyplot as plt
-
+from scipy.interpolate import interp1d, spline
 import sys
-
+from scipy.interpolate import make_interp_spline
+import scipy
 sys.path.append('../')
-
+import random
 from stl import Operation, RelOperation, STLFormula
 from wstlLexer import wstlLexer
 from wstlParser import wstlParser
 from wstlVisitor import wstlVisitor
-
+import math
 from wstl import WSTLAbstractSyntaxTreeExtractor
 from stl import STLAbstractSyntaxTreeExtractor
 from long_wstl2milp import long_wstl2milp
@@ -38,41 +38,19 @@ def wstl_solve(wstl_formula, weights, type='short', varname='x', end_time=15):
     else:
         raise NotImplementedError
     z_formula, rho_formula = wstl_milp.translate()
-    # x = [wstl_milp.variables[varname].get(time, wstl_milp.model.addVar(lb=-GRB.INFINITY,
-    #                                                      ub=GRB.INFINITY))
-    #      for time in range(end_time + 1)]
+
     wstl_milp.model.update()
-
-    # Add dynamics constraints
-    # for time in range(end_time): # example of state transition (system dynamics)
-    #     m.addConstr(x[time+1] == x[time] + 0.1)
-
-    # for time in range(end_time + 1):  # example if state constraints (e.g., safety)
-    #     wstl_milp.model.addConstr(x[time] >= 0)
-
-    # Set objective
-    # reward = z_formula + rho_formula
-    # wstl_milp.model.setObjectiveN(-rho_formula, 0, weight =2, name = 'robustness')
-    # wstl_milp.model.setObjectiveN(z_formula, 1, weight =100, name = 'satis')
-    # wstl_milp.model.setObjective(z_formula, GRB.MAXIMIZE)
-    print(rho_formula, 'AQUI')
     wstl_milp.model.setObjective(rho_formula, GRB.MAXIMIZE)
     wstl_milp.model.update()
-    if type == 'long':
-        wstl_milp.model.write('long_milp.lp')
-    else:
-        wstl_milp.model.write('short_milp.lp')
+    # if type == 'long':
+    #     wstl_milp.model.write('long_milp.lp')
+    # else:
+    #     wstl_milp.model.write('short_milp.lp')
 
     # Solve problem
     wstl_milp.model.optimize()
-
-    # if (wstl_milp.model.status == 2):
-    #     y = np.array([x[i].X for i in range(end_time + 1)], dtype=np.float)
-    # else:
-    #     print("cannot solve...")
-    #     y = None
     y = [var.X for var in wstl_milp.variables['x'].values()]
-    return wstl_milp
+    return y
 
 
 def stl_solve(stl_formula, varname='x', end_time=15):
@@ -97,36 +75,17 @@ def stl_solve(stl_formula, varname='x', end_time=15):
     stl_milp.model.optimize()
     y = [var.X for var in stl_milp.variables['x'].values()]
     # print("y_stl:", y)
-    # return wstl_milp
+    return y
 
+def simple_vis(t,x, wstl_x, stl_x):
 
-def visualize(end_time, x1, x2, x3):
-    t = [i for i in range(0, end_time + 1)]
-    # print("t;", t)
-    # Print solution
-    fig, ax = plt.subplots()
-    ax.grid()
-    ax.plot(t, x1, '-r', label='long')
-    ax.plot(t, x2, '--b', label='short')
-    t_stl = np.arange(len(x3))
-    ax.plot(t_stl, x3, '*g', label='the OG')
-    ax.legend()
-    ax.set_title('x vs t')
-    plt.show()
-
-def simple_vis(t,x, wstl_x):
-    # fig, ax = plt.subplots()
-    # ax.grid()
-    # ax.plot(t, x, '-g', label='the OG')
-    # ax.legend()
-    # ax.set_title('x vs t')
-    # plt.show()
-    x_upper = [7 for i in range(len(t))]
+    x_upper = [8 for i in range(len(t))]
     x_lower = [1 for i in range(len(t))]
     plt.plot(t,x, '-k', label='x_ref')
     plt.plot(t,x_upper, '--g',  label='x_upper')
     plt.plot(t,x_lower, '--b',  label='x_lower')
     plt.plot(t,wstl_x, '-c', label='x_wstl')
+    plt.plot(t,stl_x, '-r', label='y_stl')
     plt.legend()
     plt.show()
 
@@ -136,61 +95,52 @@ def get_weights(T,t):
 
 def reference_func(T): 
     t = np.arange(T)
-    step1 = int(np.floor(T/3))
     x = []
-    print(step1)
-    x[0:step1] = [2 for i in range(step1)]
-    step2 = int(np.floor(2*T/3))
-    x[step1+1:step2] = [4 for i in range(step1,step2)]
-    x[step2+1:T] = [6 for i in range(step2,T)]
+
+    ## A simple monotonically increasing curve
+    step1 = int(np.floor(T/4))
+    x[0:step1] = [1.2 + 0.1 * random.random() for i in range(step1)]
+    step2 = int(np.floor(T/3))
+    x[step1+1:step2] = [3 + np.sin(math.sqrt(t[i])) for i in range(step1,step2)]
+    step3 = int(np.floor(2*T/3))
+    increments = np.linspace(0,1,step3-step2)
+    x[step2+1:step3] = [5 + increments[i] for i in range(step3-step2)]
+    x[step3+1:T] = [7 + 0.2* np.cos((t[i]/2))**2 for i in range(T-step3)]
+    poly1 = np.poly1d(np.polyfit(t,x,4))
+    x = poly1(t)
+
+
     return t,x
 
 
 if __name__ == '__main__':
     T = 20
-    t = 5
-    sol = []
-    for t in range(0,T):
-        # weight2 = get_weights(T,t)
-        w1 = t/T
-        print("weights:", 5/20)
+    sol1 = []
 
-        wstl_formula = " &&^weight2 ((x<= 7), (x>=4))"
-        weights = {'weight1': lambda x: 0.5, 'weight2': lambda k: [t/T, 1-(t/T)][k], 'weight3': lambda x: 5}
-        # weights = {'weight1': lambda x: 0.5, 'weight2': lambda k: [0.5, 0.5][k], 'weight3': lambda x: 5}
+    ## Cannot use G[a, b] since the weights are time-varying
+    for t in range(0,T):
+
+        wstl_formula = " &&^weight2 ((x<= 7), (x>=1))"
+        weights = {'weight1': lambda x: 0.5, 'weight2': lambda k: [(t**1.5/T), 1-(t/T)][k], 'weight3': lambda x: 5}
 
         # Translate WSTL to MILP and retrieve integer variable for the formula
-        # x1=wstl_solve(wstl_formula, weights, type='long')
-        wstl_milp = wstl_solve(wstl_formula, weights, type='short')
-        y = [var.X for var in wstl_milp.variables['x'].values()]
-        sol.append(y)
+        wstl_x = wstl_solve(wstl_formula, weights, type='short')
+        sol1.append(wstl_x[0])
 
+
+    ## Equivalent STL formula
+    stl_formula = "G[0,19] ((x<= 7) && (x>=1))"
+    stl_x = stl_solve(stl_formula)
+
+    ## Desired signal
     steps,x_ref = reference_func(T)
-    simple_vis(steps,x_ref,sol)
-    # x3 = stl_solve(stl_formula)
-    # print("long", x1)
-    # print("short:", x
-    # print("stl:", x3)
-    # visualize(end_time, x1,x2,x3)
-    print("sol:",sol)
-    # for var in wstl_milp.model.getVars():
-    #     print(var.VarName, ':', var.x)
-    #
-    # print('Constraints')
-    # for constr in wstl_milp.model.getConstrs():
-    #     print(':', str(constr))
-    #
-    # print('Objective')
-    # obj = wstl_milp.model.getObjective()
-    # print(str(obj), ':', obj.getValue())
 
-# Parse the WSTL formula string
-# lexer = wstlLexer(InputStream("<>[1, 3]^weight1 (y <= 2)"))
-# lexer = wstlLexer(InputStream("[][1, 3]^weight1 (y <= 2)"))
-# lexer = wstlLexer(InputStream("(y > 1) U[1, 3]^weight1 (y <= 2)"))
-# lexer = wstlLexer(InputStream("(y > 1) &^weight1 (y <= 2)"))
-# lexer = wstlLexer(InputStream("(y > 1) &^weight1 (y <= 2) &^weight2 (y > 3)"))
-# lexer = wstlLexer(InputStream("(y > 1) |^weight1 (y <= 2) |^weight2 (y > 3)"))
-# lexer = wstlLexer(InputStream("(y > 1) |^weight1 (y <= 2)"))
-# lexer = wstlLexer(InputStream("(y > 1) &^weight1 (y <= 2) |^weight2 (y > 3)"))
-# lexer = wstlLexer(InputStream("&&^weight1 (F[2, 5] (y <= 2), y > 3, x < 0.2)"))
+    ## Curve fitting through obtained discrete values
+    increments = np.arange(0,T)
+    poly1 = np.poly1d(np.polyfit(increments,sol1,4))
+    wstl_x = poly1(increments)
+
+    poly2 =  np.poly1d(np.polyfit(increments,stl_x,4))
+    stl_x = poly2(increments)
+
+    simple_vis(steps,x_ref,wstl_x, stl_x)
