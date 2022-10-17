@@ -81,12 +81,13 @@ def simple_vis(t,x, wstl_x, stl_x):
 
     x_upper = [8 for i in range(len(t))]
     x_lower = [1 for i in range(len(t))]
-    plt.plot(t,x, '-k', label='x_ref')
-    plt.plot(t,x_upper, '--g',  label='x_upper')
-    plt.plot(t,x_lower, '--b',  label='x_lower')
-    plt.plot(t,wstl_x, '-c', label='x_wstl')
-    plt.plot(t,stl_x, '-r', label='y_stl')
+    plt.plot(t,x, '-sk', label='x_ref')
+    plt.plot(t,x_upper, '--g')
+    plt.plot(t,x_lower, '--c')
+    plt.plot(t,wstl_x, '--sb', label='wstl')
+    plt.plot(t,stl_x, '-sr', label='stl')
     plt.legend()
+    plt.grid(color='lightgrey')
     plt.show()
 
 def get_weights(T,t):

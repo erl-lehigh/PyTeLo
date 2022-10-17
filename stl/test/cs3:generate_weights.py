@@ -81,11 +81,13 @@ def stl_solve(stl_formula, varname='x', end_time=15):
 
 def simple_vis(t,x, wstl_x, y1, y2):
 
-    plt.plot(t,x, '-k', label='x_ref')
-    plt.plot(t,wstl_x, '-b', label='x_wstl')
-    plt.plot(t,y1, '--g', label='y_stl')
-    plt.plot(t,y2, '--r', label='y_stl')
+    plt.plot(t,x, '-sk', label='x_ref')
+    plt.plot(t,wstl_x, '--sb', label='x_wstl')
+    plt.plot(t,y1, '--g', label='A')
+    plt.plot(t,y2, '--c', label='B')
     plt.legend()
+    plt.grid()
+    plt.grid(color='lightgrey')
     plt.show()
 
 def get_weights(T,t):
