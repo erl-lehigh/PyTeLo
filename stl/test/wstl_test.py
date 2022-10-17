@@ -72,7 +72,7 @@ def wstl_solve(wstl_formula, weights, type='short', varname='x', end_time = 15):
     # else:
     #     print("cannot solve...")
     #     y = None
-    y = [var.X for var in wstl_milp.variables['x'].values()]
+    # y = [var.X for var in wstl_milp.variables['x'].values()]
     return wstl_milp
 
 def stl_solve(stl_formula, varname='x', end_time=15):
@@ -95,7 +95,7 @@ def stl_solve(stl_formula, varname='x', end_time=15):
     stl_milp.model.write('stl_milp.lp')
     # Solve problem
     stl_milp.model.optimize()
-    y = [var.X for var in stl_milp.variables['x'].values()]
+    # y = [var.X for var in stl_milp.variables['x'].values()]
     # print("y_stl:", y)
     # return wstl_milp
 
@@ -132,7 +132,7 @@ if __name__ == '__main__':
     # Disjunctions
     # wstl_formula = " ||^weight2 (||^weight1 ( (x<=3), (x>=6)) , (x>=2))"
     # wstl_formula = " ||^weight2 (||^weight1 ( (x<=4), (x>=8)) , (x<=3))"
-    wstl_formula = " ||^weight2 ((x>=3), ||^weight1 ( (x>=4), (x<=8)))"
+    wstl_formula = "&&^weight1 (G[5,6]^weight1(w<=5), (G[4,9]^weight1 ( ||^weight1(y>=-3,u<=0))), (F[5,10]^weight1 ( ||^weight1(u<=-4,y<=7))))"
 
     #conjunctions
     # wstl_formula = " &&^weight2 (&&^weight1 ( (x<=3), (x>=6)) , (x>=2))"
