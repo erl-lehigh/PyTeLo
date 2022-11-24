@@ -10,7 +10,7 @@ from stl import Operation, RelOperation, STLFormula
 from wstlLexer import wstlLexer
 from wstlParser import wstlParser
 from wstlVisitor import wstlVisitor
-
+from pswstl2milp import pswstl2milp
 from wstl import WSTLAbstractSyntaxTreeExtractor
 from stl import STLAbstractSyntaxTreeExtractor
 from long_wstl2milp import long_wstl2milp
@@ -108,6 +108,8 @@ def wstl_synthesis_control(wstl_formula, weights, A, B, vars_ub, vars_lb,
         wstl_milp = long_wstl2milp(ast)
     elif type == 'short':
         wstl_milp = short_wstl2milp(ast)
+    elif type == 'partial':
+        wstl_milp = pswstl2milp(ast)
     else:
         raise NotImplementedError
 
@@ -170,7 +172,10 @@ def wstl_synthesis_control(wstl_formula, weights, A, B, vars_ub, vars_lb,
     wstl_milp.model.addConstr(v[0] == 0)
     wstl_milp.model.addConstr(w[0] == 0)
 
-    z_formula, rho_formula = wstl_milp.translate(satisfaction=True)
+    if type=='partial':
+        rho_formula = wstl_milp.translate()    
+    else:
+        z_formula, rho_formula = wstl_milp.translate(satisfaction=True)
     wstl_milp.model.setObjective(rho_formula, grb.GRB.MAXIMIZE)
     wstl_milp.model.update()
 
@@ -274,10 +279,11 @@ if __name__ == '__main__':
 
     # formula = '(' + stl_zone("C", "F", 5, 6, "x", "y") + obstacle + ')'
     # wstl_formula= 
-    wstl_obs = wstl_zone("O", "G", 0, 30, "x", "y")
-    wstl_formula = '&&^weight2 ('+wstl_zone("C", "G", 10, 15, "x", "y")+ \
-                    ','+wstl_zone("D", "G", 25, 30, "x", "y")+ \
-                    ','+wstl_zone("A", "G", 0, 1, "x", "y")+','+wstl_obs+')'
+    wstl_obs = wstl_zone("O", "G", 0, 15, "x", "y")
+    wstl_formula = '&&^weight2 ('+wstl_zone("D", "G", 4, 10, "x", "y")+','+wstl_zone("B", "G", 4, 10, "x", "y")+')'
+    # + \
+    #                 ','+wstl_zone("D", "G", 25, 30, "x", "y")+ \
+    #                 ','+wstl_zone("A", "G", 0, 1, "x", "y")+','+wstl_obs+')'
 
     # wstl_formula = '&&^weight2 ('+','+wstl_zone("C", "F", 5, 6, "x", "y")+','+wstl_obs+')'
     # wstl_formula = '&&^weight0 ( G[0,2]^weight0 (||^weight0 ( ) ), F[2,2] )'
@@ -291,8 +297,7 @@ if __name__ == '__main__':
     #            'weight2': lambda k:[.1, .1, .1, .8][k], 'weight3': lambda x: 1}
 
     # NOTE: case where there is higher weight to avoiding the obstacle
-    weights = {'weight0': lambda x: 1, 'weight1': lambda x:10, 
-               'weight2': lambda k:[.9, .9, .9, .1][k], 'weight3': lambda x: 1}
+    weights = {'weight0': lambda x: 1, 'weight1': lambda x:10, 'weight2': lambda k:[.4, .6, .9, .1][k], 'weight3': lambda x: 1}
 
     # Define the matrixes that used for linear system 
     A = [[1, 0, 0], [0, 1, 0],[0, 0, 1]] 
@@ -311,7 +316,7 @@ if __name__ == '__main__':
 
     wstl_start = time.time()
     wstl_milp = wstl_synthesis_control(wstl_formula, weights, A, B, vars_ub, 
-                                       vars_lb, control_ub, control_lb)
+                                       vars_lb, control_ub, control_lb, 'partial')
     wstl_end = time.time()
     wstl_time = wstl_end - wstl_start
 

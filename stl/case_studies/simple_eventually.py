@@ -19,6 +19,7 @@ from wstl import WSTLAbstractSyntaxTreeExtractor
 from stl import STLAbstractSyntaxTreeExtractor
 from long_wstl2milp import long_wstl2milp
 from short_wstl2milp import short_wstl2milp
+from pswstl2milp import pswstl2milp
 from stl2milp import stl2milp
 from gurobipy import *
 from stlLexer import stlLexer
@@ -40,9 +41,14 @@ def wstl_solve(wstl_formula, weights, type='short', varname='x', end_time=15):
         wstl_milp = long_wstl2milp(ast)
     elif type == 'short':
         wstl_milp = short_wstl2milp(ast)
+    elif type == 'partial':
+        wstl_milp = pswstl2milp(ast)
     else:
         raise NotImplementedError
-    z_formula, rho_formula = wstl_milp.translate()
+    if type == 'partial':
+        rho_formula = wstl_milp.translate()
+    else:
+        z_formula, rho_formula = wstl_milp.translate()
     wstl_milp.model.update()
 
     # print(rho_formula)
@@ -175,7 +181,7 @@ if __name__ == '__main__':
         weights = {'weight1': lambda x: item[x],
                        'weight2': lambda x: 1-item[x],
                        'weight3': lambda x: 1}
-        wstl_milp = wstl_solve(wstl_formula, weights, type='short')
+        wstl_milp = wstl_solve(wstl_formula, weights, type='partial')
         # x = [var.X for var in wstl_milp.variables['x'].values()]
         if num == 0:
             print("weight:", item)
