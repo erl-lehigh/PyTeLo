@@ -44,8 +44,10 @@ class WSTLFormula(STLFormula):
         '''
         STLFormula.__init__(self, operation, **kwargs)
 
-        if self.op in (Operation.AND, Operation.OR, Operation.ALWAYS,
-                       Operation.EVENT, Operation.UNTIL, Operation.RELEASE):
+        if self.op in (Operation.EAND, Operation.AND, Operation.EOR, 
+                       Operation.EALWAYS, Operation.EEVENT, Operation.OR, 
+                       Operation.ALWAYS, Operation.EVENT, Operation.UNTIL, 
+                       Operation.RELEASE):
             self.weight = kwargs.get('weight', None)
 
         self.__string = None # string representation cache for quick lookup
@@ -71,9 +73,15 @@ class WSTLFormula(STLFormula):
         elif self.op == Operation.AND:
             return min(child.robustness(s, t) * self.weight(k)
                        for k, child in enumerate(self.children))
+        elif self.op == Operation.EAND:
+            return min(child.robustness(s, t) * self.weight(k)
+                       for k, child in enumerate(self.children))
         elif self.op == Operation.OR:
             return max(child.robustness(s, t) * self.weight(k)
                        for k, child in enumerate(self.children))
+        elif self.op == Operation.EOR:
+            return max(child.robustness(s, t) * self.weight(k)
+                       for k, child in enumerate(self.children))                       
         elif self.op == Operation.UNTIL:
             r_acc = min(self.left.robustness(s, t+tau)
                                                for tau in np.arange(self.low+1))
@@ -93,11 +101,18 @@ class WSTLFormula(STLFormula):
         elif self.op == Operation.EVENT:
             return max(self.child.robustness(s, t+tau) * self.weight(tau)
                        for tau in np.arange(self.low, self.high+1))
+        elif self.op == Operation.EALWAYS:
+            return min(self.child.robustness(s, t+tau) * self.weight(tau)
+                       for tau in np.arange(self.low, self.high+1))
+        elif self.op == Operation.EEVENT:
+            return max(self.child.robustness(s, t+tau) * self.weight(tau)
+                       for tau in np.arange(self.low, self.high+1))
     def bound(self):
         '''Computes the bound of the STL formula.'''
         if self.op in (Operation.BOOL, Operation.PRED):
             return 0
-        elif self.op in (Operation.AND, Operation.OR):
+        elif self.op in (Operation.AND, Operation.OR, Operation.EAND, 
+                         Operation.EOR):
             return max([ch.bound() for ch in self.children])
         elif self.op == Operation.IMPLIES:
             return max(self.left.bound(), self.right.bound())
@@ -105,7 +120,8 @@ class WSTLFormula(STLFormula):
             return self.child.bound()
         elif self.op == Operation.UNTIL:
             return self.high + max(self.left.bound(), self.right.bound())
-        elif self.op in (Operation.ALWAYS, Operation.EVENT):
+        elif self.op in (Operation.ALWAYS, Operation.EVENT, Operation.EALWAYS, 
+                         Operation.EEVENT):
             return self.high + self.child.bound()
             
     def __str__(self):
@@ -136,7 +152,8 @@ class WSTLFormula(STLFormula):
             else:
                 op_weight = '^{weight}'.format(weight=self.weight.__name__)
 
-            if self.op in (Operation.AND, Operation.OR):
+            if self.op in (Operation.AND, Operation.OR, Operation.EAND, 
+                           Operation.EOR):
                 children = [str(child) for child in self.children]
                 join_str = ' {op}{weight} '.format(op=opname, weight=op_weight)
                 s = '(' + join_str.join(children) + ')'
@@ -144,7 +161,8 @@ class WSTLFormula(STLFormula):
                 s = '({left} {op}[{low}, {high}]{weight} {right})'.format(
                       op=opname, weight=op_weight, left=self.left,
                       right=self.right, low=self.low, high=self.high)
-            elif self.op in (Operation.ALWAYS, Operation.EVENT):
+            elif self.op in (Operation.ALWAYS, Operation.EVENT, 
+                             Operation.EALWAYS, Operation.EEVENT):
                 s = '({op}[{low}, {high}]{weight} {child})'.format(op=opname,
                       weight=op_weight, low=self.low, high=self.high,
                       child=self.child)
@@ -202,7 +220,7 @@ class WSTLAbstractSyntaxTreeExtractor(wstlVisitor):
         ret = None
         low = -1
         high = -1
-        if op in (Operation.AND, Operation.OR):
+        if op in (Operation.AND, Operation.EAND, Operation.OR, Operation.EOR):
             left = self.visit(ctx.left)
             right = self.visit(ctx.right)
             weight = self.getWeight(ctx)
@@ -224,7 +242,8 @@ class WSTLAbstractSyntaxTreeExtractor(wstlVisitor):
             weight = self.getWeight(ctx)
             ret = WSTLFormula(op, weight=weight, left=self.visit(ctx.left),
                              right=self.visit(ctx.right), low=low, high=high)
-        elif op in (Operation.ALWAYS, Operation.EVENT):
+        elif op in (Operation.ALWAYS, Operation.EVENT, Operation.EALWAYS,
+                    Operation.EEVENT):
             low = float(ctx.low.text)
             high = float(ctx.high.text)
             ret = WSTLFormula(op, weight=self.getWeight(ctx),
@@ -247,7 +266,7 @@ class WSTLAbstractSyntaxTreeExtractor(wstlVisitor):
         (wstl.WSTLFormula) AST of the WSTL formula.
         '''
         op = Operation.getCode(ctx.op.text)
-        assert op in (Operation.AND, Operation.OR)
+        assert op in (Operation.AND, Operation.EAND, Operation.OR, Operation.EOR)
         # extract child sub-formulae
         children = (self.visit(child) for child in ctx.getChildren())
         children = [child for child in children if child is not None]
@@ -297,8 +316,8 @@ class WSTLAbstractSyntaxTreeExtractor(wstlVisitor):
 
 
 if __name__ == '__main__':
-    lexer = wstlLexer(InputStream("!(x < 10) &&^p1 F[0, 2]^w1 y > 2"
-                                 " ||^p2 G[1, 3]^w2 z<=8"))
+    lexer = wstlLexer(InputStream("!(x < 10) |^p1 /F[0, 2]^w1 y > 2"
+                                 " ||^p2 /G[1, 3]^w2 z<=8"))
     tokens = CommonTokenStream(lexer)
 
     parser = wstlParser(tokens)

@@ -36,9 +36,13 @@ class pswstl2milp(object):
         self.__milp_call = {
             Operation.PRED : self.predicate,
             Operation.AND : self.conjunction,
+            Operation.EAND : self.conjunction,
             Operation.OR : self.disjunction,
+            Operation.EOR : self.disjunction,
             Operation.EVENT : self.eventually,
+            Operation.EEVENT : self.eventually,
             Operation.ALWAYS : self.globally,
+            Operation.EALWAYS : self.globally,
             # Operation.UNTIL : self.until
         }
         
@@ -47,14 +51,14 @@ class pswstl2milp(object):
         z = self.to_milp(self.formula)
         return z
 
-    def to_milp(self, formula, t=0, aux=None):
+    def to_milp(self, formula, t=0):
         '''Generates the MILP from the STL formula.'''
         z, added = self.add_formula_variable(formula, t)
         if added:
             self.__milp_call[formula.op](formula, z, t) 
         return z
 
-    def add_formula_variable(self, formula, t, aux= None): 
+    def add_formula_variable(self, formula, t): 
         '''Adds a variable for the `formula` at time `t`.'''
         if formula not in self.variables:               # checks if the variable previously existed
             self.variables[formula] = dict()
@@ -62,9 +66,7 @@ class pswstl2milp(object):
             opname = Operation.getString(formula.op)
             identifier = formula.identifier()
             name = 'z_{}_{}_{}'.format(opname, identifier, t)
-            if aux==True:
-                name = 'y_{}_{}_{}'.format(opname, identifier, t)
-            if formula.op == Operation.PRED:
+            if formula.op in (Operation.PRED, Operation.EAND, Operation.EALWAYS):
                 variable = self.model.addVar(vtype=grb.GRB.BINARY, name=name)
             else:
                 variable = self.model.addVar(vtype=grb.GRB.CONTINUOUS,
@@ -105,7 +107,7 @@ class pswstl2milp(object):
 
     def conjunction(self, formula, z, t):
         '''Adds a conjunction to the model.'''
-        assert formula.op == Operation.AND
+        assert formula.op in (Operation.AND, Operation.EAND)
         print(Operation.getString(formula.op), "HeREREERERERERERERR")
         z_children = [self.to_milp(f, t) for f in formula.children]
         weights = []
@@ -116,13 +118,15 @@ class pswstl2milp(object):
             weights.append(weight)
             vars_children.append(z_child * weight)
         self.model.addConstr(z == sum(vars_children) / sum(weights))
-
+        
+            
     def disjunction(self, formula, z, t):
         '''Adds a disjunction to the model.'''
-        assert formula.op == Operation.OR
+        assert formula.op in (Operation.OR, Operation.EOR)
         z_children = [self.to_milp(f, t) for f in formula.children]
         vars_children = []
         max_weights= max([formula.weight(k) for k in range(len(z_children))])
+        b_aux_vars=[]
         for k, (z_child) in enumerate(z_children):
             weight = formula.weight(k)
             name = 'y_dist_{}'.format(k) 
@@ -130,29 +134,44 @@ class pswstl2milp(object):
                                              name=name, lb=0, ub=1)
             self.model.addConstr(z_aux == z_child*weight/max_weights)
             vars_children.append(z_aux)
+            if formula.op == Operation.EOR:
+                name = 'b_aux_{}_{}'.format(k, z_child)
+                b_aux = self.model.addVar(vtype=grb.GRB.BINARY, name=name)    
+                self.model.addConstr(z_child <= b_aux)
+                b_aux_vars.append(b_aux)
+        if formula.op == Operation.EOR:
+            self.model.addConstr(sum(b_aux_vars) <= 1)                     
         self.model.addConstr(z == grb.max_(vars_children))
 
     def eventually(self, formula, z, t):
         '''Adds an eventually to the model.'''
-        assert formula.op == Operation.EVENT
+        assert formula.op in (Operation.EVENT, Operation.EEVENT)
         a, b = int(formula.low), int(formula.high)
         child = formula.child
         z_children = [self.to_milp(child, t + tau) for tau in range(a, b+1)]
         zip_children = zip(range(a, b+1), z_children)
         vars_children = []
         max_weights= max([formula.weight(tau) for tau in range(a, b+1)])
+        b_aux_vars = []
         for tau, z_child in zip_children:
             weight = formula.weight(tau)
             name = 'y_event_{}'.format(tau) 
             z_aux = self.model.addVar(vtype=grb.GRB.CONTINUOUS,
                                              name=name, lb=0, ub=1)
             self.model.addConstr(z_aux == z_child*weight/max_weights)
-            vars_children.append(z_aux)                                                
+            vars_children.append(z_aux)
+            if formula.op == Operation.EEVENT:
+                name = 'b_aux_{}_{}'.format(tau, z_child)
+                b_aux = self.model.addVar(vtype=grb.GRB.BINARY, name=name)    
+                self.model.addConstr(z_child <= b_aux)
+                b_aux_vars.append(b_aux)
+        if formula.op == Operation.EEVENT:
+            self.model.addConstr(sum(b_aux_vars) <= 1)                                                  
         self.model.addConstr(z == grb.max_(vars_children))
 
     def globally(self, formula, z, t):
         '''Adds a globally to the model.'''
-        assert formula.op == Operation.ALWAYS
+        assert formula.op in (Operation.ALWAYS, Operation.EALWAYS)
         a, b = int(formula.low), int(formula.high)
         child = formula.child
         z_children = [self.to_milp(child, t + tau) for tau in range(a, b+1)]

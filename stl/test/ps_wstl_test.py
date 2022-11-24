@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
     # Eventually
     # wstl_formula = "(G[0,2]^weight1  (x<=3))"
-    wstl_formula = " &&^weight2 ((x >= 5), (x<=1))"
+    wstl_formula = " &^weight2 ((x >= 5), (x<=1))"
     # wstl_formula = "(F[0,2]^weight1  (x<=3))"
     # wstl_formula = " ||^weight2 ((x >= 5), (x<=1))"
     # wstl_formula = "&&^weight2 ( F[0,2]^weight1  (x<=5), F[0,2]^weight3 (x<=2), F[0,4]^weight3 (x>=9) )"

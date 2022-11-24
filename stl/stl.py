@@ -18,12 +18,16 @@ from stlVisitor import stlVisitor
 
 class Operation(object):
     '''STL operations'''
-    NOP, NOT, OR, AND, IMPLIES, UNTIL, EVENT, ALWAYS, RELEASE, PRED, BOOL = range(11)
-    opnames = [None, '!', '||', '&&', '=>', 'U', 'F', 'G', 'R', 'predicate', 'bool']
+    NOP, NOT, OR, AND, IMPLIES, UNTIL, EVENT, ALWAYS, RELEASE, PRED, BOOL, EAND,\
+    EOR, EALWAYS, EEVENT = range(15)
+    opnames = [None, '!', '||', '&&', '=>', 'U', 'F', 'G', 'R', 'predicate', 
+               'bool', '&', '|', '/F', '/G']
     opcodes = {'!': NOT, '&&': AND, '||' : OR, '=>': IMPLIES,
-               'U': UNTIL, 'F': EVENT, 'G': ALWAYS, 'R': RELEASE}
+               'U': UNTIL, 'F': EVENT, 'G': ALWAYS, 'R': RELEASE, '&': EAND, 
+               '|': EOR, '/G':EALWAYS, '/F':EEVENT}
     # negation closure of operations
-    negop = (NOP, NOP, AND, OR, AND, NOP, ALWAYS, EVENT, NOP, PRED, BOOL)
+    negop = (NOP, NOP, AND, OR, AND, NOP, ALWAYS, EVENT, NOP, PRED, BOOL, EAND,
+            EOR, EALWAYS, EEVENT)
 
     @classmethod
     def getCode(cls, text):
@@ -68,14 +72,16 @@ class STLFormula(object):
             self.relation = kwargs['relation']
             self.variable = kwargs['variable']
             self.threshold = kwargs['threshold']
-        elif self.op in (Operation.AND, Operation.OR):
+        elif self.op in (Operation.AND, Operation.OR, Operation.EAND, 
+                            Operation.EOR):
             self.children = kwargs['children']
         elif self.op == Operation.IMPLIES:
             self.left = kwargs['left']
             self.right = kwargs['right']
         elif self.op == Operation.NOT:
             self.child = kwargs['child']
-        elif self.op in(Operation.ALWAYS, Operation.EVENT):
+        elif self.op in(Operation.ALWAYS, Operation.EVENT, Operation.EEVENT,
+                            Operation.EALWAYS):
             self.low = kwargs['low']
             self.high = kwargs['high']
             self.child = kwargs['child']
@@ -113,7 +119,13 @@ class STLFormula(object):
         elif self.op == Operation.AND:
             return min(child.robustness(s, t, max_robustness)
                                         for child in self.children)
+        elif self.op == Operation.EAND:
+            return min(child.robustness(s, t, max_robustness)
+                                        for child in self.children)
         elif self.op == Operation.OR:
+            return max(child.robustness(s, t, max_robustness)
+                                        for child in self.children)
+        elif self.op == Operation.EOR:
             return max(child.robustness(s, t, max_robustness)
                                         for child in self.children)
         elif self.op == Operation.IMPLIES:
@@ -137,7 +149,13 @@ class STLFormula(object):
         elif self.op == Operation.ALWAYS:
             return min( (self.child.robustness(s, t+tau, max_robustness)
                                 for tau in np.arange(self.low, self.high+1)))
+        elif self.op == Operation.EALWAYS:
+            return min( (self.child.robustness(s, t+tau, max_robustness)
+                                for tau in np.arange(self.low, self.high+1)))
         elif self.op == Operation.EVENT:
+            return max( (self.child.robustness(s, t+tau, max_robustness)
+                                for tau in np.arange(self.low, self.high+1)))
+        elif self.op == Operation.EEVENT:
             return max( (self.child.robustness(s, t+tau, max_robustness)
                                 for tau in np.arange(self.low, self.high+1)))
 
@@ -149,7 +167,8 @@ class STLFormula(object):
             self.value = not self.value
         elif self.op == Operation.PRED:
             self.relation = RelOperation.negop[self.relation]
-        elif self.op in (Operation.AND, Operation.OR):
+        elif self.op in (Operation.AND, Operation.OR, Operation.EAND, 
+                        Operation.EOR):
             [child.negate() for child in self.children]
         elif self.op == Operation.IMPLIES:
             self.right = self.right.negate()
@@ -157,7 +176,8 @@ class STLFormula(object):
             return self.child
         elif self.op == Operation.UNTIL:
             raise NotImplementedError
-        elif self.op in (Operation.ALWAYS, Operation.EVENT):
+        elif self.op in (Operation.ALWAYS, Operation.EVENT, Operation.EALWAYS,
+                         Operation.EEVENT):
             self.child = self.child.negate()
         self.op = Operation.negop[self.op]
         return self
@@ -185,7 +205,8 @@ class STLFormula(object):
                               variable='{variable}_neg'.format(self.variable),
                               threshold=-self.threshold)]
                 return STLFormula(Operation.OR, children=children)
-        elif self.op in (Operation.AND, Operation.OR):
+        elif self.op in (Operation.AND, Operation.OR, Operation.EAND, 
+                        Operation.EOR):
             self.children = [child.pnf() for child in self.children]
         elif self.op == Operation.IMPLIES:
             self.left = self.left.negate().pnf()
@@ -195,7 +216,8 @@ class STLFormula(object):
             return self.child.negate().pnf()
         elif self.op == Operation.UNTIL:
             raise NotImplementedError
-        elif self.op in (Operation.ALWAYS, Operation.EVENT):
+        elif self.op in (Operation.ALWAYS, Operation.EVENT, Operation.EALWAYS, 
+                        Operation.EEVENT):
             self.child = self.child.pnf()
         return self
 
@@ -203,7 +225,8 @@ class STLFormula(object):
         '''Computes the bound of the STL formula.'''
         if self.op in (Operation.BOOL, Operation.PRED):
             return 0
-        elif self.op in (Operation.AND, Operation.OR):
+        elif self.op in (Operation.AND, Operation.OR, Operation.EAND, 
+                        Operation.EOR):
             return max([ch.bound() for ch in self.children])
         elif self.op == Operation.IMPLIES:
             return max(self.left.bound(), self.right.bound())
@@ -211,7 +234,8 @@ class STLFormula(object):
             return self.child.bound()
         elif self.op == Operation.UNTIL:
             return self.high + max(self.left.bound(), self.right.bound())
-        elif self.op in (Operation.ALWAYS, Operation.EVENT):
+        elif self.op in (Operation.ALWAYS, Operation.EVENT, Operation.EALWAYS,
+                        Operation.EEVENT):
             return self.high + self.child.bound()
 
     def variables(self):
@@ -220,11 +244,12 @@ class STLFormula(object):
             return set()
         elif self.op == Operation.PRED:
             return {self.variable}
-        elif self.op in (Operation.AND, Operation.OR):
+        elif self.op in (Operation.AND, Operation.OR, Operation.EAND, Operation.EOR):
             return set.union(*[child.variables() for child in self.children])
         elif self.op in (Operation.IMPLIES, Operation.UNTIL):
             return self.left.variables() | self.right.variables()
-        elif self.op in (Operation.NOT, Operation.ALWAYS, Operation.EVENT):
+        elif self.op in (Operation.NOT, Operation.ALWAYS, Operation.EVENT, 
+                        Operation.EALWAYS, Operation.EEVENT):
             return self.child.variables()
 
     def identifier(self):
@@ -259,7 +284,7 @@ class STLFormula(object):
         elif self.op == Operation.IMPLIES:
             s = '{left} {op} {right}'.format(left=self.left, op=opname,
                                              right=self.right)
-        elif self.op in (Operation.AND, Operation.OR):
+        elif self.op in (Operation.AND, Operation.OR, Operation.EAND, Operation.EOR):
             children = [str(child) for child in self.children]
             s = '(' + ' {op} '.format(op=opname).join(children) + ')'
         elif self.op == Operation.NOT:
@@ -267,7 +292,8 @@ class STLFormula(object):
         elif self.op in (Operation.UNTIL, Operation.RELEASE):
             s = '({left} {op}[{low}, {high}] {right})'.format(op=opname,
                  left=self.left, right=self.right, low=self.low, high=self.high)
-        elif self.op in (Operation.ALWAYS, Operation.EVENT):
+        elif self.op in (Operation.ALWAYS, Operation.EVENT, Operation.EALWAYS, 
+                        Operation.EEVENT):
             s = '({op}[{low}, {high}] {child})'.format(op=opname,
                                  low=self.low, high=self.high, child=self.child)
         self.__string = s
@@ -282,7 +308,7 @@ class STLAbstractSyntaxTreeExtractor(stlVisitor):
         ret = None
         low = -1
         high = -1
-        if op in (Operation.AND, Operation.OR):
+        if op in (Operation.AND, Operation.OR, Operation.EAND, Operation.EOR):
             left = self.visit(ctx.left)
             right = self.visit(ctx.right)
             assert op != right.op
@@ -302,7 +328,8 @@ class STLAbstractSyntaxTreeExtractor(stlVisitor):
             high = float(ctx.high.text)
             ret = STLFormula(op, left=self.visit(ctx.left),
                              right=self.visit(ctx.right), low=low, high=high)
-        elif op in (Operation.ALWAYS, Operation.EVENT):
+        elif op in (Operation.ALWAYS, Operation.EVENT, Operation.EALWAYS, 
+                    Operation.EEVENT):
             low = float(ctx.low.text)
             high = float(ctx.high.text)
             ret = STLFormula(op, child=self.visit(ctx.child),
@@ -350,7 +377,7 @@ class Trace(object):
         raise NotImplementedError
 
 if __name__ == '__main__':
-    lexer = stlLexer(InputStream("!(x < 10) && F[0, 2] y > 2 || G[1, 3] z<=8"))
+    lexer = stlLexer(InputStream(" /G[0,1](y > 2) "))
     # lexer = stlLexer(InputStream("!(x < 10) && y > 2 && z<=8"))
     tokens = CommonTokenStream(lexer)
 
@@ -364,9 +391,9 @@ if __name__ == '__main__':
     varnames = ['x', 'y', 'z']
     data = [[8, 8, 11, 11, 11], [2, 3, 1, 2, 2], [3, 9, 8, 9, 9]]
     timepoints = [0, 1, 2, 3, 4]
-    s = Trace(varnames, timepoints, data)
+    # s = Trace(varnames, timepoints, data)
 
-    print('r:', ast.robustness(s, 0, 20))
+    # print('r:', ast.robustness(s, 0, 20))
 
-    pnf = ast.pnf()
-    print(pnf)
+    # pnf = ast.pnf()
+    # print(pnf)
