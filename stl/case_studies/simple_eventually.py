@@ -17,7 +17,7 @@ from wstlVisitor import wstlVisitor
 import math
 from wstl import WSTLAbstractSyntaxTreeExtractor
 from stl import STLAbstractSyntaxTreeExtractor
-from long_wstl2milp import long_wstl2milp
+# from long_wstl2milp import long_wstl2milp
 from short_wstl2milp import short_wstl2milp
 from pswstl2milp import pswstl2milp
 from stl2milp import stl2milp

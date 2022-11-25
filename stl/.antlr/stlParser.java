@@ -41,7 +41,7 @@ public class stlParser extends Parser {
 		return new String[] {
 			null, "'('", "')'", "'['", "','", "']'", "'-('", "'^'", "'*'", "'/'", 
 			"'+'", "'-'", "'<'", "'<='", "'='", "'>='", "'>'", null, "'&'", null, 
-			"'|'", "'=>'", null, "'F'", "'/F'", "'G'", "'/G'", "'U'"
+			"'|'", "'=>'", null, "'F'", "'E'", "'G'", "'A'", "'U'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();

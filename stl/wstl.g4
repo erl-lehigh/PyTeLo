@@ -15,16 +15,28 @@ wstlProperty:
     |    op=NOT child=wstlProperty #formula
     |    op=EVENT '[' low=RATIONAL ',' high=RATIONAL ']' ('^' weight=VARIABLE)?
          child=wstlProperty #formula
+    |    op=EEVENT '[' low=RATIONAL ',' high=RATIONAL ']' ('^' weight=VARIABLE)?
+         child=wstlProperty #formula
     |    op=ALWAYS '[' low=RATIONAL ',' high=RATIONAL ']' ('^' weight=VARIABLE)?
+         child=wstlProperty #formula
+    |    op=EALWAYS '[' low=RATIONAL ',' high=RATIONAL ']' ('^' weight=VARIABLE)?
          child=wstlProperty #formula
     |    left=wstlProperty op=IMPLIES right=wstlProperty #formula
     |    left=wstlProperty op=AND ('^' weight=VARIABLE)?
          right=wstlProperty #formula
     |    op=AND ('^' weight=VARIABLE)?
          '(' wstlProperty (',' wstlProperty)+ ')' #longFormula
+    |    left=wstlProperty op=EAND ('^' weight=VARIABLE)?
+         right=wstlProperty #formula
+    |    op=EAND ('^' weight=VARIABLE)?
+         '(' wstlProperty (',' wstlProperty)+ ')' #longFormula
     |    left=wstlProperty op=OR ('^' weight=VARIABLE)?
          right=wstlProperty #formula
     |    op=OR ('^' weight=VARIABLE)?
+         '(' wstlProperty (',' wstlProperty)+ ')' #longFormula
+    |    left=wstlProperty op=EOR ('^' weight=VARIABLE)?
+         right=wstlProperty #formula
+    |    op=EOR ('^' weight=VARIABLE)?
          '(' wstlProperty (',' wstlProperty)+ ')' #longFormula
     |    left=wstlProperty op=UNTIL '[' low=RATIONAL ',' high=RATIONAL ']'
          ('^' weight=VARIABLE)? right=wstlProperty #formula
@@ -44,12 +56,16 @@ booleanExpr:
          left=expr op=( '<' | '<=' | '=' | '>=' | '>' ) right=expr
     |    op=BOOLEAN
     ;
-AND : '&' | '&&' | '/\\' ;
-OR : '|' | '||' | '\\/' ;
+AND : '&&' | '/\\' ;
+EAND: '&' ;
+OR : '||' | '\\/' ;
+EOR: '|' ;
 IMPLIES : '=>' ;
 NOT : '!' | '~' ;
 EVENT : 'F' | '<>' ;
+EEVENT :  'E';
 ALWAYS : 'G' | '[]' ;
+EALWAYS : 'A' ;
 UNTIL : 'U' ;
 RELEASE : 'R' ;
 BOOLEAN : 'true' | 'True' | 'false' | 'False' ;

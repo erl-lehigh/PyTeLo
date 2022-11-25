@@ -16,8 +16,9 @@ from wstlVisitor import wstlVisitor
 import math
 from wstl import WSTLAbstractSyntaxTreeExtractor
 from stl import STLAbstractSyntaxTreeExtractor
-from long_wstl2milp import long_wstl2milp
+# from long_wstl2milp import long_wstl2milp
 from short_wstl2milp import short_wstl2milp
+from pswstl2milp import pswstl2milp
 from stl2milp import stl2milp
 from gurobipy import *
 from stlLexer import stlLexer
@@ -35,10 +36,10 @@ def wstl_solve(wstl_formula, weights, type='short', varname='x', end_time=15):
     if type == 'long':
         wstl_milp = long_wstl2milp(ast)
     elif type == 'short':
-        wstl_milp = short_wstl2milp(ast)
+        wstl_milp = pswstl2milp(ast)
     else:
         raise NotImplementedError
-    z_formula, rho_formula = wstl_milp.translate()
+    rho_formula = wstl_milp.translate()
     wstl_milp.model.update()
 
     print(rho_formula, 'AQUI')
@@ -119,11 +120,11 @@ if __name__ == '__main__':
     for t in range(0,T):
 
         if t <= 5:
-            wstl_formula = " F[0,5]^weight1 (&&^weight2 ((x<= 12), (x>=3)))"
+            wstl_formula = " /F[0,5]^weight1 (&^weight2 ((x<= 12), (x>=3)))"
         elif (t > 5 & t <= 10):
-            wstl_formula = " F[6,10]^weight1 (&&^weight2 ((x<= 9), (x>=2)))"
+            wstl_formula = " /F[6,10]^weight1 (&^weight2 ((x<= 9), (x>=2)))"
         else:
-            wstl_formula = " F[10,15]^weight1 (&&^weight2 ((x<= 12), (x>=2)))"
+            wstl_formula = " /F[10,15]^weight1 (&^weight2 ((x<= 12), (x>=2)))"
 
         gamma = (x_ref[t] - df.y2[t]) / (df.y2[t] - df.y1[t])
         weights = {'weight1': lambda x: 0.9,

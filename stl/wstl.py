@@ -316,8 +316,8 @@ class WSTLAbstractSyntaxTreeExtractor(wstlVisitor):
 
 
 if __name__ == '__main__':
-    lexer = wstlLexer(InputStream("!(x < 10) |^p1 /F[0, 2]^w1 y > 2"
-                                 " ||^p2 /G[1, 3]^w2 z<=8"))
+    lexer = wstlLexer(InputStream("!(x < 10) |^p1 E[0, 2]^w1 y > 2"
+                                 " ||^p2 A[1, 3]^w2 z<=8"))
     tokens = CommonTokenStream(lexer)
 
     parser = wstlParser(tokens)

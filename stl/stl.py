@@ -21,10 +21,10 @@ class Operation(object):
     NOP, NOT, OR, AND, IMPLIES, UNTIL, EVENT, ALWAYS, RELEASE, PRED, BOOL, EAND,\
     EOR, EALWAYS, EEVENT = range(15)
     opnames = [None, '!', '||', '&&', '=>', 'U', 'F', 'G', 'R', 'predicate', 
-               'bool', '&', '|', '/F', '/G']
+               'bool', '&', '|', 'E', 'A']
     opcodes = {'!': NOT, '&&': AND, '||' : OR, '=>': IMPLIES,
                'U': UNTIL, 'F': EVENT, 'G': ALWAYS, 'R': RELEASE, '&': EAND, 
-               '|': EOR, '/G':EALWAYS, '/F':EEVENT}
+               '|': EOR, 'A':EALWAYS, 'E':EEVENT}
     # negation closure of operations
     negop = (NOP, NOP, AND, OR, AND, NOP, ALWAYS, EVENT, NOP, PRED, BOOL, EAND,
             EOR, EALWAYS, EEVENT)
@@ -350,7 +350,7 @@ class STLAbstractSyntaxTreeExtractor(stlVisitor):
             variable=ctx.left.getText(), threshold=float(ctx.right.getText()))
 
     def visitParprop(self, ctx):
-        return self.visit(ctx.child);
+        return self.visit(ctx.child)
 
 
 class Trace(object):
@@ -377,7 +377,7 @@ class Trace(object):
         raise NotImplementedError
 
 if __name__ == '__main__':
-    lexer = stlLexer(InputStream(" /G[0,1](y > 2) "))
+    lexer = stlLexer(InputStream(" A[0,1](y > 2) "))
     # lexer = stlLexer(InputStream("!(x < 10) && y > 2 && z<=8"))
     tokens = CommonTokenStream(lexer)
 

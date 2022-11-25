@@ -11,7 +11,9 @@ from wstlVisitor import wstlVisitor
 import gurobipy as grb
 from wstl import WSTLAbstractSyntaxTreeExtractor
 from stl import STLAbstractSyntaxTreeExtractor
-from short_wstl2milp import short_wstl2milp
+# from short_wstl2milp import short_wstl2milp
+from pstl2milp import pstl2milp
+from pswstl2milp import pswstl2milp
 from stl2milp import stl2milp
 from stlLexer import stlLexer
 from stlParser import stlParser
@@ -20,16 +22,17 @@ from stl import STLAbstractSyntaxTreeExtractor
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter1d
 
-def stl_synthesis_control(formula, vars_ub=10, vars_lb=-10):
+def stl_synthesis_control(formula, vars_ub=10, vars_lb=-10, type='stl'):
     
     lexer = stlLexer(InputStream(formula))
     tokens = CommonTokenStream(lexer)
     parser = stlParser(tokens)
     t = parser.stlProperty()
     ast = STLAbstractSyntaxTreeExtractor().visit(t)
-
-    stl_milp = stl2milp(ast, robust=True)
-    
+    if type=='stl':
+        stl_milp = stl2milp(ast, robust=True)
+    elif type == 'pstl':
+        stl_milp = pstl2milp(ast)
     time_bound = int(ast.bound()) + 1
     x = dict()
     y = dict()
@@ -73,10 +76,19 @@ def stl_synthesis_control(formula, vars_ub=10, vars_lb=-10):
     stl_milp.model.addConstr(u[0] == 0)
     stl_milp.model.addConstr(v[0] == 0)
     stl_milp.model.addConstr(w[0] == 0)
-    # add the specification (STL) constraints
-    stl_milp.translate(satisfaction=True)
-    # Solve the problem with gurobi 
-    stl_milp.model.optimize()
+
+    if type=='stl':
+        # add the specification (STL) constraints
+        stl_milp.translate(satisfaction=True)
+        # Solve the problem with gurobi 
+        stl_milp.model.optimize()
+    elif type=='pstl':
+        z = stl_milp.translate()
+        # Solve the problem with gurobi
+        stl_milp.model.setObjective(z, grb.GRB.MAXIMIZE)
+        stl_milp.model.update()
+        stl_milp.model.optimize()
+        stl_milp.model.write('model_test.lp')
     return stl_milp
 
 def wstl_synthesis_control(wstl_formula, weights, vars_ub=10, vars_lb=-10, 
@@ -87,9 +99,13 @@ def wstl_synthesis_control(wstl_formula, weights, vars_ub=10, vars_lb=-10,
     t = parser.wstlProperty()
     ast = WSTLAbstractSyntaxTreeExtractor(weights).visit(t)
     if type == 'long':
-        wstl_milp = long_wstl2milp(ast)
+        pass
+        # wstl_milp = long_wstl2milp(ast)
     elif type == 'short':
-        wstl_milp = short_wstl2milp(ast)
+        pass
+        # wstl_milp = short_wstl2milp(ast)
+    elif type == 'partial':
+        wstl_milp = pswstl2milp(ast)
     else:
         raise NotImplementedError
 
@@ -137,7 +153,7 @@ def wstl_synthesis_control(wstl_formula, weights, vars_ub=10, vars_lb=-10,
     wstl_milp.model.addConstr(v[0] == 0)
     wstl_milp.model.addConstr(w[0] == 0)
 
-    z_formula, rho_formula = wstl_milp.translate(satisfaction=True)
+    rho_formula = wstl_milp.translate()
     wstl_milp.model.setObjective(rho_formula, grb.GRB.MAXIMIZE)
     wstl_milp.model.update()
 
@@ -167,8 +183,8 @@ if __name__ == '__main__':
     stl_specification = ('(G[0,1] {}{}{})').format(vars[-1], comp_op[-1], aux)
     wstl_specification = ('&&^weight0 (G[0,1]^weight0({}{}{})').format(vars[-1], 
                                                            comp_op[-1], aux)+')'
-    wstl_specification2= ('&&^weight1 (G[0,1]^weight1({}{}{})').format(vars[-1], 
-                                                           comp_op[-1], aux)+')'
+    # wstl_specification2= ('&&^weight1 (G[0,1]^weight1({}{}{})').format(vars[-1], 
+                                                        #    comp_op[-1], aux)+')'
     n_ = 4 + 200
     randomseeds = 1
     stl_time = np.zeros((randomseeds, n_))
@@ -196,24 +212,24 @@ if __name__ == '__main__':
             stl_specification += (' && ('+T+'[{},{}] ('+s1+op1+pi1+' '+L2+' '+
                                     s2+op2+pi2+'))').format(lb,ub)
             wstl_specification = wstl_specification[:-1]
-            wstl_specification2 = wstl_specification2[:-1]
+            # wstl_specification2 = wstl_specification2[:-1]
             wstl_specification += (', ('+T+'[{},{}]^weight0 ( '+L2+'^weight0('
                                 +s1+op1+pi1+','+s2+op2+pi2+'))))').format(lb,ub)
-            wstl_specification2 += (', ('+T+'[{},{}]^weight1 ( '+L2+'^weight1('
-                                +s1+op1+pi1+','+s2+op2+pi2+'))))').format(lb,ub)
+            # wstl_specification2 += (', ('+T+'[{},{}]^weight1 ( '+L2+'^weight1('
+                                # +s1+op1+pi1+','+s2+op2+pi2+'))))').format(lb,ub)
 
             stl_start = time.time()
-            obj_1 = stl_synthesis_control(stl_specification)
+            obj_1 = stl_synthesis_control(stl_specification, type='stl')
             stl_end = time.time()
             stl_time[i][n] = stl_end-stl_start
 
             wstl_start = time.time()
-            obj_2 = wstl_synthesis_control(wstl_specification, weights)
+            obj_2 = stl_synthesis_control(stl_specification, type='pstl')
             wstl_end = time.time()
             wstl_time[i][n] = wstl_end-wstl_start
 
             wstl_start2 = time.time()
-            obj_2 = wstl_synthesis_control(wstl_specification, weights)
+            obj_2 = wstl_synthesis_control(wstl_specification, weights, type='partial')
             wstl_end2 = time.time()
             wstl_time2[i][n] = wstl_end2-wstl_start2
 
@@ -231,20 +247,22 @@ if __name__ == '__main__':
     wstl2_av = np.mean(wstl_time2, axis=0)
 
     print(stl_max)
+    print(wstl_max)
+    print(wstl2_max)
     print('done')
     plt.figure()
     plt.grid()
-    plt.plot(range(n_), gaussian_filter1d(stl_max, sigma=2), '-b', linewidth=4, label='stl')
-    # plt.plot(range(n_), stl_av,  '-b',linewidth=4, label='stl_av')
-    # plt.plot(range(n_), stl_min, '-b',linewidth=4, label='stl_min')
-    plt.plot(range(n_), gaussian_filter1d(wstl_max, sigma=2), '--r',  linewidth=4, label='wstl_1')
-    # plt.plot(range(n_), wstl_av, '--r',  linewidth=4, label='wstl_av')
-    # plt.plot(range(n_), wstl_min, '--r',  linewidth=4, label='wstl_min')
-    plt.plot(range(n_), gaussian_filter1d(wstl2_max, sigma=2), 'g', linewidth=4, label='wstl2_rand')
-    # plt.plot(range(n_), wstl2_av, 'g', linewidth=4, label='wstl2_av')
-    # plt.plot(range(n_), wstl2_min, 'g', linewidth=4, label='wstl2_min')
+    plt.plot(range(n_), gaussian_filter1d(stl_max, sigma=2), 'r', linewidth=4, label='STL')
+    # plt.plot(range(n_), gaussian_filter1d(stl_av, sigma=2),  '-b',linewidth=4, label='stl_av')
+    # plt.plot(range(n_), gaussian_filter1d(stl_min, sigma=2), '-b',linewidth=4, label='stl_min')
+    plt.plot(range(n_), gaussian_filter1d(wstl_max, sigma=2), 'b',  linewidth=4, label='PS-STL')
+    # plt.plot(range(n_), gaussian_filter1d(wstl_av, sigma=2), '--r',  linewidth=4, label='wstl_av')
+    # plt.plot(range(n_), gaussian_filter1d(wstl_min, sigma=2), '--r',  linewidth=4, label='wstl_min')
+    plt.plot(range(n_), gaussian_filter1d(wstl2_min, sigma=2), 'g', linewidth=4, label='PS-wSTL+')
+    # plt.plot(range(n_), gaussian_filter1d(wstl2_av, sigma=2), 'g', linewidth=4, label='wstl2_av')
+    # plt.plot(range(n_), gaussian_filter1d(wstl2_min, sigma=2), 'g', linewidth=4, label='wstl2_min')
     
-    plt.legend()
+    plt.legend(fontsize=34)
     plt.xticks(fontsize=44)
     plt.yticks(fontsize=44)
     plt.ylabel('time', fontsize=50)

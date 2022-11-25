@@ -13,7 +13,7 @@ from wstlVisitor import wstlVisitor
 
 from wstl import WSTLAbstractSyntaxTreeExtractor
 from stl import STLAbstractSyntaxTreeExtractor
-from long_wstl2milp import long_wstl2milp
+# from long_wstl2milp import long_wstl2milp
 from short_wstl2milp import short_wstl2milp
 from pswstl2milp import pswstl2milp
 from stl2milp import stl2milp
@@ -126,9 +126,9 @@ if __name__ == '__main__':
 
     # Eventually
     # wstl_formula = "(G[0,2]^weight1  (x<=3))"
-    wstl_formula = " &^weight2 ((x >= 5), (x<=1))"
-    # wstl_formula = "(F[0,2]^weight1  (x<=3))"
-    # wstl_formula = " ||^weight2 ((x >= 5), (x<=1))"
+    # wstl_formula = " &^weight2 ((x >= 5), (x<=1))"
+    # wstl_formula = "(A[0,2]^weight1  (x<=3))"
+    wstl_formula = " |^weight2 ((x >= 5), (x<=1))"
     # wstl_formula = "&&^weight2 ( F[0,2]^weight1  (x<=5), F[0,2]^weight3 (x<=2), F[0,4]^weight3 (x>=9) )"
 
     #Always
@@ -152,7 +152,7 @@ if __name__ == '__main__':
     # Get AST from parse tree
     # end_time = 15
 
-    weights = {'weight1': lambda x: 0.2, 'weight2': lambda k: [0.5, 0.1, 0.1, 0.1, 0.1][k], 'weight3': lambda x: .9}
+    weights = {'weight1': lambda x: 1, 'weight2': lambda k: [0.1, 0.5, 0.1, 0.1, 0.1][k], 'weight3': lambda x: .9}
 
     # Translate WSTL to MILP and retrieve integer variable for the formula
     # x1=wstl_solve(wstl_formula, weights, type='long')

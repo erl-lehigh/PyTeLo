@@ -13,9 +13,11 @@ from wstlVisitor import wstlVisitor
 
 from wstl import WSTLAbstractSyntaxTreeExtractor
 from stl import STLAbstractSyntaxTreeExtractor
-from long_wstl2milp import long_wstl2milp
+# from long_wstl2milp import long_wstl2milp
 from short_wstl2milp import short_wstl2milp
 from stl2milp import stl2milp
+from pstl2milp import pstl2milp
+from pswstl2milp import pswstl2milp
 # from gurobipy import *
 from stlLexer import stlLexer
 from stlParser import stlParser
@@ -24,15 +26,17 @@ from stl import STLAbstractSyntaxTreeExtractor
 from environment import environment, stl_zone, wstl_zone, environment_comp
 
 def stl_synthesis_control(formula, A, B, vars_ub, vars_lb, control_ub, 
-                          control_lb):
+                          control_lb, type='stl'):
     
     lexer = stlLexer(InputStream(formula))
     tokens = CommonTokenStream(lexer)
     parser = stlParser(tokens)
     t = parser.stlProperty()
     ast = STLAbstractSyntaxTreeExtractor().visit(t)
-
-    stl_milp = stl2milp(ast, robust=True)
+    if type == 'stl':
+        stl_milp = stl2milp(ast, robust=True)
+    elif type == 'pstl':
+        stl_milp = pstl2milp(ast)
     
     time_bound = int(ast.bound()) + 1
     x = dict()
@@ -92,22 +96,31 @@ def stl_synthesis_control(formula, A, B, vars_ub, vars_lb, control_ub,
     stl_milp.model.addConstr(v[0] == 0)
     stl_milp.model.addConstr(w[0] == 0)
     # add the specification (STL) constraints
-    stl_milp.translate(satisfaction=True)
+    if type == 'stl':
+        stl_milp.translate(satisfaction=True)
+    elif type == 'pstl':
+        stl_milp.translate()
+        stl_milp.method_1()
+        # stl_milp.model.setObjective(z, grb.GRB.MAXIMIZE)
+        # stl_milp.model.update()
     # Solve the problem with gurobi 
     stl_milp.model.optimize()
     return stl_milp
 
 def wstl_synthesis_control(wstl_formula, weights, A, B, vars_ub, vars_lb, 
-                           control_ub, control_lb, type='short'):
+                           control_ub, control_lb, type='partial'):
     lexer = wstlLexer(InputStream(wstl_formula))
     tokens = CommonTokenStream(lexer)
     parser = wstlParser(tokens)
     t = parser.wstlProperty()
     ast = WSTLAbstractSyntaxTreeExtractor(weights).visit(t)
     if type == 'long':
-        wstl_milp = long_wstl2milp(ast)
+        pass
+        # wstl_milp = long_wstl2milp(ast)
     elif type == 'short':
         wstl_milp = short_wstl2milp(ast)
+    elif type == 'partial':
+        wstl_milp = pswstl2milp(ast)
     else:
         raise NotImplementedError
 
@@ -170,7 +183,7 @@ def wstl_synthesis_control(wstl_formula, weights, A, B, vars_ub, vars_lb,
     wstl_milp.model.addConstr(v[0] == 0)
     wstl_milp.model.addConstr(w[0] == 0)
 
-    z_formula, rho_formula = wstl_milp.translate(satisfaction=True)
+    rho_formula = wstl_milp.translate()
     wstl_milp.model.setObjective(rho_formula, grb.GRB.MAXIMIZE)
     wstl_milp.model.update()
 
@@ -185,7 +198,7 @@ def wstl_synthesis_control(wstl_formula, weights, A, B, vars_ub, vars_lb,
 
 def visualize(stl_milp, wstl_milp, wstl_milp_b, wstl_milp_d):
     t = stl_milp.variables['x'].keys()
-    t2 = wstl_milp.variables['x'].keys()
+    t2 = wstl_milp_b.variables['x'].keys()
 
     stl_x = [var.x for var in stl_milp.variables['x'].values()]
     stl_y = [var.x for var in stl_milp.variables['y'].values()]
@@ -209,24 +222,24 @@ def visualize(stl_milp, wstl_milp, wstl_milp_b, wstl_milp_d):
     fig, axs = plt.subplots(2, 2)
     # fig.suptitle('STL-Control Synthesis')
 
-    axs[0][0].plot(t, stl_x, '-r', label='STL', linewidth=3, marker='s', 
-                    markersize=13)
-    axs[0][0].plot(t2, wstl_x, '--b', label='WSTL', linewidth=3, 
-                    linestyle='dashed', marker='s', markersize=13)
-    axs[0][0].set_title('x vs t')
-    axs[0][0].grid()
-    axs[0][0].legend(prop={'size': 18})
-    axs[0][0].xaxis.set_tick_params(labelsize=7)
-    axs[0][0].tick_params(labelsize=18)
+    # axs[0][0].plot(t, stl_x, '-r', label='STL', linewidth=3, marker='s', 
+    #                 markersize=13)
+    # axs[0][0].plot(t, wstl_x, '--b', label='WSTL', linewidth=3, 
+    #                 linestyle='dashed', marker='s', markersize=13)
+    # axs[0][0].set_title('x vs t')
+    # axs[0][0].grid()
+    # axs[0][0].legend(prop={'size': 18})
+    # axs[0][0].xaxis.set_tick_params(labelsize=7)
+    # axs[0][0].tick_params(labelsize=18)
 
-    axs[1][0].plot(t, stl_y, '-r', label='STL', linewidth=3,
-                    marker='s', markersize=13)
-    axs[1][0].plot(t2, wstl_y, '--b', label='WSTL', linewidth=3, 
-                    linestyle='dashed', marker='s', markersize=13)
-    axs[1][0].set_title('y vs t')
-    axs[1][0].grid()
-    axs[1][0].legend(prop={'size': 18})
-    axs[1][0].tick_params(labelsize=18)
+    # axs[1][0].plot(t, stl_y, '-r', label='STL', linewidth=3,
+    #                 marker='s', markersize=13)
+    # axs[1][0].plot(t2, wstl_y, '--b', label='WSTL', linewidth=3, 
+    #                 linestyle='dashed', marker='s', markersize=13)
+    # axs[1][0].set_title('y vs t')
+    # axs[1][0].grid()
+    # axs[1][0].legend(prop={'size': 18})
+    # axs[1][0].tick_params(labelsize=18)
     
 
     # axs[2][0].plot(t, stl_z, '-r', label='STL', linewidth=3, linestyle='dashed',
@@ -237,33 +250,33 @@ def visualize(stl_milp, wstl_milp, wstl_milp_b, wstl_milp_d):
     # axs[2][0].grid()
     # axs[2][0].legend()
 
-    axs[0][1].plot(t, stl_u, '-r', label='STL', linewidth=3, 
-                    marker='s', markersize=13)
-    axs[0][1].plot(t2, wstl_u, '--b', label='WSTL', linewidth=3, 
-                    linestyle='dashed', marker='s', markersize=13)
-    axs[0][1].set_title('u vs t')
-    axs[0][1].grid()
-    axs[0][1].legend(prop={'size': 18})
-    axs[0][1].tick_params(labelsize=18)
+    # axs[0][1].plot(t, stl_u, '-r', label='STL', linewidth=3, 
+    #                 marker='s', markersize=13)
+    # axs[0][1].plot(t2, wstl_u, '--b', label='WSTL', linewidth=3, 
+    #                 linestyle='dashed', marker='s', markersize=13)
+    # axs[0][1].set_title('u vs t')
+    # axs[0][1].grid()
+    # axs[0][1].legend(prop={'size': 18})
+    # axs[0][1].tick_params(labelsize=18)
 
 
-    axs[1][1].plot(t, stl_v, '-r', label='STL', linewidth=3, 
-                    marker='s', markersize=13)
-    axs[1][1].plot(t2, wstl_v, '--b', label='WSTL', linewidth=3,
-                        linestyle='dashed', marker='s', markersize=13)
-    axs[1][1].set_title('v vs t')
-    axs[1][1].grid()
-    axs[1][1].legend(prop={'size': 18},loc=1)
-    axs[1][1].tick_params(labelsize=18)
+    # axs[1][1].plot(t, stl_v, '-r', label='STL', linewidth=3, 
+    #                 marker='s', markersize=13)
+    # axs[1][1].plot(t2, wstl_v, '--b', label='WSTL', linewidth=3,
+    #                     linestyle='dashed', marker='s', markersize=13)
+    # axs[1][1].set_title('v vs t')
+    # axs[1][1].grid()
+    # axs[1][1].legend(prop={'size': 18},loc=1)
+    # axs[1][1].tick_params(labelsize=18)
     # axs[2][1].plot(t, stl_w, '-r', label='STL')
     # axs[2][1].plot(t2, wstl_w, '--b', label='WSTL')
     # axs[2][1].set_title('w vs t')
     # axs[2][1].grid()
     # axs[2][1].legend()
-    fig.tight_layout()
+    # fig.tight_layout()
     # plt.xticks(fontsize=20)
     # plt.yticks(fontsize=20)
-    plt.show()
+    # plt.show()
     environment_comp(stl_x, stl_y, wstl_x, wstl_y, wstl_x_b, wstl_y_b, wstl_x_d, 
                 wstl_y_d)
 
@@ -274,15 +287,19 @@ if __name__ == '__main__':
     # wstl_formula = "&&^weight2 ( G[5,10]^weight0  (x>=3),G[5,10]^weight3 \
     #                 (y<=-2), G[5,10]^weight3 (z>=1) )"
     # obstacle = "&&" + stl_zone("O", "G", 0, 10, "x", "y")
-    formula = '(' + stl_zone("B", "G", 8, 10, "x", "y") + ' && '+\
-                  stl_zone("D", "G", 8, 10, "x", "y") + ' && '+ \
+    formula = '(' + stl_zone("B", "G", 5, 10, "x", "y") + ' && '+\
+                  stl_zone("D", "G", 5, 10, "x", "y") + ' && '+ \
                     stl_zone("A", "G", 0, 1, "x", "y") +')'
 
     # formula = '(' + stl_zone("C", "F", 5, 6, "x", "y") + obstacle + ')'
     # wstl_formula= 
     # wstl_obs = wstl_zone("O", "G", 0, 10, "x", "y")
     wstl_formula = '&&^weight2 ('+wstl_zone("B", "G", 8, 10, "x", "y")+ \
-                    ','+wstl_zone("D", "G", 8, 10, "x", "y")+ \
+                    ','+wstl_zone("D", "G", 5, 10, "x", "y")+ \
+                    ','+wstl_zone("A", "G", 0, 1, "x", "y")+')'
+
+    wstl_formula2 = '|^weight2 ('+wstl_zone("B", "G", 8, 10, "x", "y")+ \
+                    ','+wstl_zone("D", "G", 5, 10, "x", "y")+ \
                     ','+wstl_zone("A", "G", 0, 1, "x", "y")+')'
 
     # wstl_formula = '&&^weight2 ('+','+wstl_zone("C", "F", 5, 6, "x", "y")+','+wstl_obs+')'
@@ -298,7 +315,7 @@ if __name__ == '__main__':
 
     # NOTE: case where there is higher weight to avoiding the obstacle
     weights = {'weight0': lambda x: 1, 'weight1': lambda x:10, 
-               'weight2': lambda k:[1, 1, 1, 1][k], 'weight3': lambda x: 1}
+               'weight2': lambda k:[.1, 1, 1, 1][k], 'weight3': lambda x: 1}
 
     weights_b = {'weight0': lambda x: 1, 'weight1': lambda x:10, 
                'weight2': lambda k:[20, 1, 1, 1][k], 'weight3': lambda x: 1}
@@ -322,12 +339,12 @@ if __name__ == '__main__':
     stl_time = stl_end - stl_start
 
     wstl_start = time.time()
-    wstl_milp = wstl_synthesis_control(wstl_formula, weights, A, B, vars_ub, 
-                                       vars_lb, control_ub, control_lb)
+    wstl_milp = stl_synthesis_control(formula, A, B, vars_ub, 
+                                       vars_lb, control_ub, control_lb, type='pstl')
     wstl_end = time.time()
-    wstl_milp_b = wstl_synthesis_control(wstl_formula, weights_b, A, B, vars_ub, 
+    wstl_milp_b = wstl_synthesis_control(wstl_formula, weights, A, B, vars_ub, 
                                        vars_lb, control_ub, control_lb)
-    wstl_milp_d = wstl_synthesis_control(wstl_formula, weights_d, A, B, vars_ub, 
+    wstl_milp_d = wstl_synthesis_control(wstl_formula2, weights, A, B, vars_ub, 
                                        vars_lb, control_ub, control_lb)
     wstl_time = wstl_end - wstl_start
 
