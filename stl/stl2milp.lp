@@ -191,16 +191,18 @@ Bounds
  -3 <= u_10 <= 2
  -2 <= v_10 <= 3
  -3 <= w_10 <= 3
+ &&_2dx395c7d4d8c9136da_0 <= 1
+ G_2bx36d55f653b5f6fb7_0 <= 1
+ G_2bx53bdb62ba6d5f51b_0 <= 1
+ G_2bx72ac03a180647dbb_0 <= 1
 Binaries
- &&_2dx395c7d4d8c9136da_0 G_2bx36d55f653b5f6fb7_0
  predicate_2dx22dd95ed78b4d217_4 predicate_2dx22dd95ed78b4d217_5
  predicate_2dx22dd95ed78b4d217_6 predicate_2dx22dd95ed78b4d217_7
  predicate_2dx22dd95ed78b4d217_8 predicate_2dx22dd95ed78b4d217_9
- predicate_2dx22dd95ed78b4d217_10 G_2bx53bdb62ba6d5f51b_0
- predicate_2bx1735b9f08705a189_4 predicate_2bx1735b9f08705a189_5
- predicate_2bx1735b9f08705a189_6 predicate_2bx1735b9f08705a189_7
- predicate_2bx1735b9f08705a189_8 predicate_2bx1735b9f08705a189_9
- predicate_2bx1735b9f08705a189_10 G_2bx72ac03a180647dbb_0
+ predicate_2dx22dd95ed78b4d217_10 predicate_2bx1735b9f08705a189_4
+ predicate_2bx1735b9f08705a189_5 predicate_2bx1735b9f08705a189_6
+ predicate_2bx1735b9f08705a189_7 predicate_2bx1735b9f08705a189_8
+ predicate_2bx1735b9f08705a189_9 predicate_2bx1735b9f08705a189_10
  predicate_2dx33b18e258c171243_4 predicate_2dx33b18e258c171243_5
  predicate_2dx33b18e258c171243_6 predicate_2dx33b18e258c171243_7
  predicate_2dx33b18e258c171243_8 predicate_2dx33b18e258c171243_9
