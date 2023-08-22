@@ -62,7 +62,7 @@ class stl2milp(object):
             self.__milp_call[formula.op](formula, z, t)
         return z
 
-    def add_formula_variable(self, formula, t, vtype=grb.GRB.BINARY):
+    def add_formula_variable(self, formula, t):
         '''Adds a variable for the `formula` at time `t`.'''
         if formula not in self.variables:
             self.variables[formula] = dict()
@@ -70,10 +70,14 @@ class stl2milp(object):
             opname = Operation.getName(formula.op)
             identifier = formula.identifier()
             name = '{}_{}_{}'.format(opname, identifier, t)
-            self.variables[formula][t] = self.model.addVar(vtype=vtype,
-                                                           name=name)
-            self.model.update() #TODO: not sure if this is needed (NEEDED!)
-            return self.variables[formula][t], True
+            if formula.op == Operation.PRED:
+                variable = self.model.addVar(vtype=grb.GRB.BINARY, name=name)
+            else:
+                variable = self.model.addVar(vtype=grb.GRB.CONTINUOUS,
+                                             name=name, lb=0, ub=1)
+            self.variables[formula][t] = variable
+            self.model.update()
+            return variable, True
         return self.variables[formula][t], False
 
     def add_state(self, state, t):
@@ -86,7 +90,6 @@ class stl2milp(object):
             name='{}_{}'.format(state, t)
             v = self.model.addVar(vtype=vtype, lb=low, ub=high, name=name)
             self.variables[state][t] = v
-            print 'Added state:', state, 'time:', t
             self.model.update()
         return self.variables[state][t]
 
