@@ -1,4 +1,4 @@
-# Signal Temporal Logic
+# Python Temporal Logic (PyTeLo)
 
 Setup
 -----
@@ -43,7 +43,7 @@ cd <clone-dir>
 antlr4 -Dlanguage=Python2 stl.g4
 ```
 
-**NOTE:** At the moment the implementation only supports python2. However, you
+**NOTE:** At the moment the implementation only supports python2 and python3. However, you
 can generate lexers, parsers, listners, and visitors for other target languages,
-such as Java (default), C++, Python3, C#, Go, JavaScript, and Swift.
+such as Java (default), C++, C#, Go, JavaScript, and Swift.
 See http://www.antlr.org/download.html for more details.
