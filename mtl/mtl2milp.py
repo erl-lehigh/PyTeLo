@@ -1,43 +1,25 @@
-'''
- Copyright (C) 2018-2020 Cristian Ioan Vasile <cvasile@lehigh.edu>
- Hybrid and Networked Systems (HyNeSs) Group, BU Robotics Lab, Boston University
- Explainable Robotics Lab, Lehigh University
+"""
+Copyright (c) 2023, Explainable Robotics Lab (ERL)
  See license.txt file for license information.
-'''
+ @author: Gustavo A. Cardona, Cristian-Ioan Vasile
+"""
 
 import gurobipy as grb
 
-from stl import Operation, RelOperation, STLFormula
+from mtl import Operation, MTLFormula
 
 
-class stl2milp(object):
-    '''Translate an STL formula to an MILP.'''
+class mtl2milp(object):
+    '''Translate an MTL formula to an MILP.'''
 
-    def __init__(self, formula, ranges, vtypes=None, model=None, robust=False):
+    def __init__(self, formula, model=None):
         self.formula = formula
-
-        self.M = 1000
-        self.ranges = ranges
-        assert set(self.formula.variables()) <= set(self.ranges)
-        if robust and 'rho' not in self.ranges:
-            self.ranges['rho'] = (-grb.GRB.INFINITY, self.M - 1)
-
-        self.vtypes = vtypes
-        if vtypes is None:
-            self.vtypes = {v: grb.GRB.CONTINUOUS for v in self.ranges}
 
         self.model = model
         if model is None:
-            self.model = grb.Model('STL formula: {}'.format(formula))
+            self.model = grb.Model('MTL formula: {}'.format(formula))
 
         self.variables = dict()
-
-        if robust:
-            rho_min, rho_max = self.ranges['rho']
-            self.rho = self.model.addVar(vtype=self.vtypes['rho'], name='rho',
-                                         lb=rho_min, ub=rho_max, obj=-1)
-        else:
-            self.rho = 0
 
         self.__milp_call = {
             Operation.PRED : self.predicate,
@@ -49,14 +31,14 @@ class stl2milp(object):
         }
 
     def translate(self, satisfaction=True):
-        '''Translates the STL formula to MILP from time 0.'''
+        '''Translates the MTL formula to MILP from time 0.'''
         z = self.to_milp(self.formula)
         if satisfaction:
             self.model.addConstr(z == 1, 'formula_satisfaction')
         return z
 
     def to_milp(self, formula, t=0):
-        '''Generates the MILP from the STL formula.'''
+        '''Generates the MILP from the MTL formula.'''
         z, added = self.add_formula_variable(formula, t)
         if added:
             self.__milp_call[formula.op](formula, z, t)
@@ -72,37 +54,25 @@ class stl2milp(object):
             name = '{}_{}_{}'.format(opname, identifier, t)
             self.variables[formula][t] = self.model.addVar(vtype=vtype,
                                                            name=name)
-            self.model.update() #TODO: not sure if this is needed (NEEDED!)
+            self.model.update()
             return self.variables[formula][t], True
         return self.variables[formula][t], False
 
-    def add_state(self, state, t):
-        '''Adds the `state` at time `t` as a variable.'''
+    def add_state(self, state, t, z):
+        '''Sets the `state` at time `t` as a variable.'''
         if state not in self.variables:
             self.variables[state] = dict()
         if t not in self.variables[state]:
-            low, high = self.ranges[state]
-            vtype = self.vtypes[state]
             name='{}_{}'.format(state, t)
-            v = self.model.addVar(vtype=vtype, lb=low, ub=high, name=name)
-            self.variables[state][t] = v
-            print 'Added state:', state, 'time:', t
+            self.variables[state][t] = z
+            print ('Added state:', state, 'time:', t)
             self.model.update()
         return self.variables[state][t]
 
     def predicate(self, pred, z, t):
         '''Adds a predicate to the model.'''
         assert pred.op == Operation.PRED
-        v = self.add_state(pred.variable, t)
-        if pred.relation in (RelOperation.GE, RelOperation.GT):
-            self.model.addConstr(v - self.M * z <= pred.threshold + self.rho)
-            self.model.addConstr(v + self.M * (1 - z) >= pred.threshold + self.rho)
-        elif pred.relation in (RelOperation.LE, RelOperation.LT):
-            self.model.addConstr(v + self.M * z >= pred.threshold - self.rho)
-            self.model.addConstr(v - self.M * (1 - z) <= pred.threshold - self.rho)
-#            raise NotImplementedError
-        else:
-            raise NotImplementedError
+        self.add_state(pred.variable, t, z)
 
     def conjunction(self, formula, z, t):
         '''Adds a conjunction to the model.'''
@@ -153,18 +123,18 @@ class stl2milp(object):
         z_aux = []
         phi_alw = None
         if a > 0:
-            phi_alw = STLFormula(Operation.ALWAYS, child=formula.left,
+            phi_alw = MTLFormula(Operation.ALWAYS, child=formula.left,
                                  low=t, high=t+a-1)
         for tau in range(t+a, t+b+1):
             if tau > t+a:
-                phi_alw_u = STLFormula(Operation.ALWAYS, child=formula.left,
+                phi_alw_u = MTLFormula(Operation.ALWAYS, child=formula.left,
                                        low=t+a, high=tau)
             else:
                 phi_alw_u = formula.left
             children = [formula.right, phi_alw_u]
             if phi_alw is not None:
                 children.append(phi_alw)
-            phi = STLFormula(Operation.AND, children=children)
+            phi = MTLFormula(Operation.AND, children=children)
             z_aux.append(self.add_formula_variable(phi, t)[0])
 
         for k, z_right in enumerate(z_children_right):

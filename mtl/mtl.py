@@ -1,10 +1,8 @@
-'''
- Copyright (C) 2015-2022 Cristian Ioan Vasile <cvasile@lehigh.edu>
-                         Gustavo A. Cardona <gcardona@lehigh.edu>
- Hybrid and Networked Systems (HyNeSs) Group, BU Robotics Lab, Boston University
- Explainable Robotics Lab, Lehigh University
+"""
+Copyright (c) 2023, Explainable Robotics Lab (ERL)
  See license.txt file for license information.
-'''
+ @author: Gustavo A. Cardona, Cristian-Ioan Vasile
+"""
 
 import itertools as it
 

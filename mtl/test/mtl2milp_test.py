@@ -1,12 +1,7 @@
-#!/usr/bin/env python3
-
 """
- Copyright (C) 2015-2020 Cristian Ioan Vasile <cvasile@lehigh.edu>
- Hybrid and Networked Systems (HyNeSs) Group, BU Robotics Lab, Boston University
- Explainable Robotics Lab, Lehigh University
+Copyright (c) 2023, Explainable Robotics Lab (ERL)
  See license.txt file for license information.
-
- @author: Sadra Sadradinni, Cristian-Ioan Vasile
+ @author: Gustavo A. Cardona, Cristian-Ioan Vasile
 """
 from antlr4 import InputStream, CommonTokenStream
 
@@ -20,7 +15,7 @@ from mtlVisitor import mtlVisitor
 from collections import OrderedDict, namedtuple
 from mtl import MTLAbstractSyntaxTreeExtractor
 
-from mtl2milp import mtl2milp
+# from erl.PyTeLo.mtl.mtl2milp import mtl2milp
 
 # formula = "(x > 10) && F[0, 2] y > 2 || G[1, 6] z > 8"
 # formula = "G[2,4] F[1,3](x>=3)"
@@ -34,9 +29,6 @@ t = parser.mtlProperty()
 ast = MTLAbstractSyntaxTreeExtractor().visit(t)
 print('type: ', type(ast))
 nvar = ast.variables() 
-
-
-print("HERE:", nvar)
 
 mtl_milp = mtl2milp(ast)
 mtl_milp.translate(satisfaction=True)
