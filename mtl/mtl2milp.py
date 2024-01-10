@@ -65,7 +65,6 @@ class mtl2milp(object):
         if t not in self.variables[state]:
             name='{}_{}'.format(state, t)
             self.variables[state][t] = z
-            print ('Added state:', state, 'time:', t)
             self.model.update()
         return self.variables[state][t]
 

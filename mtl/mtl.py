@@ -73,26 +73,26 @@ class MTLFormula(object):
         self.__hash = None
 
     
-    # def negate(self):
-    #     '''Computes the negation of the MTL formula by propagating the negation
-    #     towards predicates.
-    #     '''
-    #     if self.op == Operation.BOOL:
-    #         self.value = not self.value
-    #     elif self.op == Operation.PRED:
-    #         self.relation = not self.variable
-    #     elif self.op in (Operation.AND, Operation.OR):
-    #         [child.negate() for child in self.children]
-    #     elif self.op == Operation.IMPLIES:
-    #         self.right = self.right.negate()
-    #     elif self.op == Operation.NOT:
-    #         return self.child
-    #     elif self.op == Operation.UNTIL:
-    #         raise NotImplementedError
-    #     elif self.op in (Operation.ALWAYS, Operation.EVENT):
-    #         self.child = self.child.negate()
-    #     self.op = Operation.negop[self.op]
-    #     return self
+    def negate(self):
+        '''Computes the negation of the MTL formula by propagating the negation
+        towards predicates.
+        '''
+        if self.op == Operation.BOOL:
+            self.value = not self.value
+        elif self.op == Operation.PRED:
+            self.relation = not self.variable
+        elif self.op in (Operation.AND, Operation.OR):
+            [child.negate() for child in self.children]
+        elif self.op == Operation.IMPLIES:
+            self.right = self.right.negate()
+        elif self.op == Operation.NOT:
+            return self.child
+        elif self.op == Operation.UNTIL:
+            raise NotImplementedError
+        elif self.op in (Operation.ALWAYS, Operation.EVENT):
+            self.child = self.child.negate()
+        self.op = Operation.negop[self.op]
+        return self
 
     # def pnf(self):
     #     '''Computes the Positive Normal Form of the STL formula, potentially

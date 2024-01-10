@@ -15,7 +15,7 @@ from mtlVisitor import mtlVisitor
 from collections import OrderedDict, namedtuple
 from mtl import MTLAbstractSyntaxTreeExtractor
 
-# from erl.PyTeLo.mtl.mtl2milp import mtl2milp
+from mtl2milp import mtl2milp
 
 # formula = "(x > 10) && F[0, 2] y > 2 || G[1, 6] z > 8"
 # formula = "G[2,4] F[1,3](x>=3)"
