@@ -17,7 +17,7 @@ class long_wstl2milp(object):
 
         self.ranges = ranges
         if ranges is None:
-            self.ranges = {v: (0, 10) for v in self.formula.variables()}
+            self.ranges = {v: (-9, 9) for v in self.formula.variables()}
 
         self.vtypes = vtypes
         if vtypes is None:

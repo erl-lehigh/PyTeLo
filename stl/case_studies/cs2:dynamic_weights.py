@@ -16,7 +16,7 @@ import math
 from wstl import WSTLAbstractSyntaxTreeExtractor
 from stl import STLAbstractSyntaxTreeExtractor
 from long_wstl2milp import long_wstl2milp
-from short_wstl2milp import short_wstl2milp
+from wstl2milp import wstl2milp
 from stl2milp import stl2milp
 from gurobipy import *
 from stlLexer import stlLexer
@@ -34,7 +34,7 @@ def wstl_solve(wstl_formula, weights, type='short', varname='x', end_time=15):
     if type == 'long':
         wstl_milp = long_wstl2milp(ast)
     elif type == 'short':
-        wstl_milp = short_wstl2milp(ast)
+        wstl_milp = wstl2milp(ast)
     else:
         raise NotImplementedError
     z_formula, rho_formula = wstl_milp.translate()

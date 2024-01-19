@@ -9,7 +9,7 @@ import gurobipy as grb
 from stl import Operation, RelOperation, STLFormula
 
 
-class short_wstl2milp(object):
+class wstl2milp(object):
     '''Translate an WSTL formula to an MILP.'''
 
     def __init__(self, formula, ranges=None, vtypes=None, model=None):
@@ -147,7 +147,6 @@ class short_wstl2milp(object):
             weight = formula.weight(k)
             self.model.addConstr(rho <= weight * rho_child)
             self.model.addConstr(z <= z_child)
-            # self.model.addConstr(z <)
         z_children, _ = zip(*vars_children)
         self.model.addConstr(z >= 1 - len(z_children) + sum(z_children))
 

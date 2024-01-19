@@ -11,7 +11,7 @@ from wstlVisitor import wstlVisitor
 import gurobipy as grb
 from wstl import WSTLAbstractSyntaxTreeExtractor
 from stl import STLAbstractSyntaxTreeExtractor
-from short_wstl2milp import short_wstl2milp
+from wstl2milp import wstl2milp
 from stl2milp import stl2milp
 from stlLexer import stlLexer
 from stlParser import stlParser
@@ -89,7 +89,7 @@ def wstl_synthesis_control(wstl_formula, weights, vars_ub=10, vars_lb=-10,
     if type == 'long':
         wstl_milp = long_wstl2milp(ast)
     elif type == 'short':
-        wstl_milp = short_wstl2milp(ast)
+        wstl_milp = wstl2milp(ast)
     else:
         raise NotImplementedError
 

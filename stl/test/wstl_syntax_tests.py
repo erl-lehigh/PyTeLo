@@ -9,7 +9,7 @@ from StringIO import StringIO
 from antlr4 import InputStream, CommonTokenStream
 
 import sys
-sys.path.append('/home/gustavo/lehigh/erl/python-stl/stl')
+sys.path.append('../')
 
 from wstlLexer import wstlLexer
 from wstlParser import wstlParser
