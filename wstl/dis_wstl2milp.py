@@ -10,7 +10,7 @@ import gurobipy as grb
 from stl import Operation, RelOperation, STLFormula
 
 
-class wstl2milp(object):
+class dis_wstl2milp(object):
     '''Translate an WSTL formula to an MILP.'''
 
     def __init__(self, formula, ranges=None, vtypes=None, model=None):
@@ -31,6 +31,7 @@ class wstl2milp(object):
         self.M = 1000
         self.variables = dict()
         self.hat_variables = dict()
+        self.xi_variables = dict()
 
         self.__milp_call = {
             Operation.PRED : self.predicate,
@@ -104,6 +105,20 @@ class wstl2milp(object):
             return self.hat_variables[parent][formula][t], True
         return self.hat_variables[parent][formula][t], False
 
+    def add_xi_variables(self, formula, t, n_children):
+        if formula not in self.xi_variables:
+            self.xi_variables[formula] = dict()
+        if t not in self.xi_variables[formula]:
+            self.xi_variables[formula][t] = dict()
+            opname = Operation.getString(formula.op)
+            identifier = formula.identifier()
+            for child in range(n_children):
+                xi_name = 'xi_{}_{}_{}_{}'.format(opname, identifier, t, child)
+                self.xi_variables[formula][t][child] = self.model.addVar(
+                                vtype=grb.GRB.BINARY, name=xi_name)
+            self.model.update()
+
+
     def add_state(self, state, t):
         '''Adds the `state` at time `t` as a variable.'''
         if state not in self.variables:
@@ -125,10 +140,17 @@ class wstl2milp(object):
         if pred.relation in (RelOperation.GE, RelOperation.GT):
             self.model.addConstr(v + self.M * (1 - z) >= pred.threshold + rho)
             self.model.addConstr(v - self.M * z <= pred.threshold + rho)
+            # self.model.addConstr(rho == v - pred.threshold)
+            # self.model.addConstr(rho >= -self.M * (1 - z))
+            # self.model.addConstr(rho <= self.M * z)
 
         elif pred.relation in (RelOperation.LE, RelOperation.LT):
+            ## from STL
             self.model.addConstr(v - self.M * (1 - z) <= pred.threshold - rho)
             self.model.addConstr(v + self.M * z >= pred.threshold - rho)
+            # self.model.addConstr(rho == pred.threshold - v)
+            # self.model.addConstr(rho >= -self.M * (1 - z))
+            # self.model.addConstr(rho <= self.M * z)
         else:
             raise NotImplementedError
 
@@ -149,29 +171,28 @@ class wstl2milp(object):
         assert formula.op == Operation.OR
         z_children, rho_children = zip(*[self.to_milp(f, t)
                                          for f in formula.children])
-        
-        # z_hat_children, _ = zip(*[self.add_hat_variable(f, formula, t)
-        #                          for f in formula.children])
-        # vars_children = zip(z_children, z_hat_children, rho_children)
-        # for k, (z_child, z_hat_child, rho_child) in enumerate(vars_children):
-        #     weight = formula.weight(k)
-        #     self.model.addConstr(
-        #         rho <= weight * rho_child + self.M * (1 - z_hat_child))
-        #     self.model.addConstr(z >= z_child)
-        #     self.model.addConstr(z_hat_child <= z_child)
-        # self.model.addConstr(z <= sum(z_children))
-        # self.model.addConstr(sum(z_hat_children) >= z)
-
-
-        vars_children = zip(z_children, rho_children)
-        for k, (z_child, rho_child) in enumerate(vars_children):
+        z_hat_children, _ = zip(*[self.add_hat_variable(f, formula, t)
+                                 for f in formula.children])
+        vars_children = zip(z_children, z_hat_children, rho_children)
+        for k, (z_child, z_hat_child, rho_child) in enumerate(vars_children):
             weight = formula.weight(k)
             self.model.addConstr(
-                rho <= weight * rho_child + self.M * (1 - z_child))
-            self.model.addConstr(z >= z_child)
-        self.model.addConstr(z <= sum(z_children))
-
+                rho <= weight * rho_child + self.M * (1 - z_hat_child))
+            self.model.addConstr(z_hat_child <= z_child)
+        self.model.addConstr(sum(z_hat_children) >= z)
+        self.add_xi_variables(formula, t, 2)
         
+        xi_1 = self.xi_variables[formula][t][0]
+        xi_2 = self.xi_variables[formula][t][1]
+        
+        self.model.addConstr((1-z) + z_children[0] <= xi_1)
+        self.model.addConstr((1-z) + z_children[1] <= xi_2)
+        self.model.addConstr(z_children[1] + z_children[2] <= 1-xi_1)
+        self.model.addConstr(z_children[0] + z_children[2] <= 1-xi_2)
+            # self.model.addConstr(z >= z_child)
+        # self.model.addConstr(z <= sum(z_children))
+        
+
 
     def globally(self, formula, z, rho, t):
         '''Adds a globally to the model.'''
