@@ -23,7 +23,7 @@ from dstl2milp import dstl2milp
 # lexer = stlLexer(InputStream("G[2,4](x>=3)"))
 # lexer = stlLexer(InputStream("(x <= 2) || x > 3 "))
 
-lexer = stlLexer(InputStream("(G[0,200]x<=2 && G[3, 400]y>3) || (G[0,200]x>3 && G[3, 400]y<=2)"))
+lexer = stlLexer(InputStream("(G[0,2000]x<=2 && G[3, 4000]y>3) || (G[0,2000]x>3 && G[3, 4000]y<=2)"))
 tokens = CommonTokenStream(lexer)
 parser = stlParser(tokens)
 t = parser.stlProperty()
@@ -39,8 +39,8 @@ z=dstl_milp.translate()
 # MILP.model.addConstr(z==1)
 dstl_milp.model.optimize()
 dstl_milp.model.write('dstl2milp_milp.lp')
-x_vals = [var.x for var in dstl_milp.variables['x'].values()]
-y_vals = [var.x for var in dstl_milp.variables['y'].values()]
-print(x_vals, y_vals)
+# x_vals = [var.x for var in dstl_milp.variables['x'].values()]
+# y_vals = [var.x for var in dstl_milp.variables['y'].values()]
+# print(x_vals, y_vals)
 # print(x_vals)
 

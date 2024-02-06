@@ -22,7 +22,7 @@ from stl2milp import stl2milp
 #lexer = stlLexer(InputStream("(x > 10) && F[0, 2] y > 2 || G[1, 6] z > 8"))
 #lexer = stlLexer(InputStream("G[2,4]F[1,3](x>=3)"))
 # lexer = stlLexer(InputStream("(x <= 10) && F[0, 2] y > 2 && G[1, 6] (z < 8) && G[1,6] (z > 3)"))
-lexer = stlLexer(InputStream("(G[0,200]x<=2 && G[3, 400]y>3) || (G[0,200]x>3 && G[3, 400]y<=2)"))
+lexer = stlLexer(InputStream("(G[0,2000]x<=2 && G[3, 4000]y>3) || (G[0,2000]x>3 && G[3, 4000]y<=2)"))
 tokens = CommonTokenStream(lexer)
 parser = stlParser(tokens)
 t = parser.stlProperty()
@@ -38,7 +38,7 @@ stl_milp.translate()
 # stl_milp.model.addConstr(z==1)
 stl_milp.model.optimize()
 stl_milp.model.write('stl2milp_milp.lp')
-x_vals = [var.x for var in stl_milp.variables['x'].values()]
-y_vals = [var.x for var in stl_milp.variables['y'].values()]
-print(x_vals, y_vals)
+# x_vals = [var.x for var in stl_milp.variables['x'].values()]
+# y_vals = [var.x for var in stl_milp.variables['y'].values()]
+# print(x_vals, y_vals)
 
