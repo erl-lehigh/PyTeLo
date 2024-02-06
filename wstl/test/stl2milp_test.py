@@ -9,7 +9,7 @@ from antlr4 import InputStream, CommonTokenStream
 
 import sys
 sys.path.append('../')
-
+import time
 from stl import Operation, RelOperation, STLFormula
 from stlLexer import stlLexer
 from stlParser import stlParser
@@ -33,10 +33,13 @@ print ("AST:", ast)
 stl_milp=stl2milp(ast, ranges={'x': [-10, 10], 'y':[-10, 10], 'z':[10,10]}, 
               robust=True)
 
-
+stl_start = time.time()
 stl_milp.translate()
 # stl_milp.model.addConstr(z==1)
 stl_milp.model.optimize()
+stl_end = time.time()
+stl_time= stl_end-stl_start
+print("TIME: ", stl_time)
 stl_milp.model.write('stl2milp_milp.lp')
 # x_vals = [var.x for var in stl_milp.variables['x'].values()]
 # y_vals = [var.x for var in stl_milp.variables['y'].values()]
