@@ -17,11 +17,12 @@ from stlVisitor import stlVisitor
 
 from stl import STLAbstractSyntaxTreeExtractor
 
-from stl2milp import stl2milp
+from dstl2milp import dstl2milp
 
 #lexer = stlLexer(InputStream("(x > 10) && F[0, 2] y > 2 || G[1, 6] z > 8"))
-#lexer = stlLexer(InputStream("G[2,4]F[1,3](x>=3)"))
-# lexer = stlLexer(InputStream("(x <= 10) && F[0, 2] y > 2 && G[1, 6] (z < 8) && G[1,6] (z > 3)"))
+# lexer = stlLexer(InputStream("G[2,4](x>=3)"))
+# lexer = stlLexer(InputStream("(x <= 2) || x > 3 "))
+
 lexer = stlLexer(InputStream("(G[0,200]x<=2 && G[3, 400]y>3) || (G[0,200]x>3 && G[3, 400]y<=2)"))
 tokens = CommonTokenStream(lexer)
 parser = stlParser(tokens)
@@ -30,15 +31,16 @@ print(t.toStringTree())
 ast = STLAbstractSyntaxTreeExtractor().visit(t)
 print ("AST:", ast)
 
-stl_milp=stl2milp(ast, ranges={'x': [-10, 10], 'y':[-10, 10], 'z':[10,10]}, 
+dstl_milp=dstl2milp(ast, ranges={'x': [-10, 10], 'y':[-10, 10], 'z':[10,10]}, 
               robust=True)
 
 
-stl_milp.translate()
-# stl_milp.model.addConstr(z==1)
-stl_milp.model.optimize()
-stl_milp.model.write('stl2milp_milp.lp')
-x_vals = [var.x for var in stl_milp.variables['x'].values()]
-y_vals = [var.x for var in stl_milp.variables['y'].values()]
+z=dstl_milp.translate()
+# MILP.model.addConstr(z==1)
+dstl_milp.model.optimize()
+dstl_milp.model.write('dstl2milp_milp.lp')
+x_vals = [var.x for var in dstl_milp.variables['x'].values()]
+y_vals = [var.x for var in dstl_milp.variables['y'].values()]
 print(x_vals, y_vals)
+# print(x_vals)
 
