@@ -77,19 +77,17 @@ class dwstl2milp(object):
         if formula not in self.variables:
             self.variables[formula] = dict()
         if t not in self.variables[formula]:
-            op_set={Operation.PRED, Operation.AND, Operation.ALWAYS}
-            if parent.op in op_set and root==False:
+            if parent.op in {Operation.AND, Operation.ALWAYS} and root==False:
                 if parent.op == Operation.AND:
                     k = parent.children.index(formula)
                     weight = parent.weight(k)
-                    temp = list(self.variables[parent][t_parent])
-                    temp[1] *= weight
-                    self.variables[parent][t_parent] = tuple(temp)
                 elif parent.op == Operation.ALWAYS:
                     weight=parent.weight(t)
-                    temp = list(self.variables[parent][t_parent])
-                    temp[1] *= weight
-                    self.variables[parent][t_parent] = tuple(temp)
+                temp = list(self.variables[parent][t_parent])
+                temp[1] *= weight
+                variable = tuple(temp)
+                
+            elif parent.op == Operation.PRED:
                 variable = self.variables[parent][t_parent]
 
             elif parent.op in {Operation.OR, Operation.EVENT} or root==True:
