@@ -134,4 +134,8 @@ def main():
     plt.show()
 
 if __name__ =='__main__':
-    main()
+    # main()
+    x = ('a', 'b')
+    print(x[1])
+    for i, j in enumerate(range(1,4)):
+        print(i,j)
