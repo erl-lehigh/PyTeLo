@@ -79,7 +79,19 @@ class dwstl2milp(object):
         if t not in self.variables[formula]:
             op_set={Operation.PRED, Operation.AND, Operation.ALWAYS}
             if parent.op in op_set and root==False:
+                if parent.op == Operation.AND:
+                    k = parent.children.index(formula)
+                    weight = parent.weight(k)
+                    temp = list(self.variables[parent][t_parent])
+                    temp[1] *= weight
+                    self.variables[parent][t_parent] = tuple(temp)
+                elif parent.op == Operation.ALWAYS:
+                    weight=parent.weight(t)
+                    temp = list(self.variables[parent][t_parent])
+                    temp[1] *= weight
+                    self.variables[parent][t_parent] = tuple(temp)
                 variable = self.variables[parent][t_parent]
+
             elif parent.op in {Operation.OR, Operation.EVENT} or root==True:
                 opname = Operation.getString(formula.op)
                 identifier = formula.identifier()
@@ -88,7 +100,7 @@ class dwstl2milp(object):
 
                 rho_name = 'rho_{}_{}_{}'.format(opname, identifier, t)
                 rho = self.model.addVar(vtype=grb.GRB.CONTINUOUS, name=rho_name,
-                                    lb=-grb.GRB.INFINITY, ub=grb.GRB.INFINITY)
+                                    lb=-grb.GRB.INFINITY, ub=grb.GRB.INFINITY)                
                 variable = (z, rho) 
             else:
                 raise NotImplementedError
@@ -154,11 +166,10 @@ class dwstl2milp(object):
     def conjunction(self, formula, z, rho, t):
         '''Adds a conjunction to the model.'''
         assert formula.op == Operation.AND
-        for k, child in enumerate(formula.children):
-            z_child, rho_child=self.to_milp(child, formula, t, t_parent=t)
-            weight = formula.weight(k)
-            self.variables[child][t] = (z_child, rho_child*weight)
-            
+        for child in formula.children:
+            self.to_milp(child, formula, t, t_parent=t)
+
+
     def disjunction(self, formula, z, rho, t):
         '''Adds a disjunction to the model.'''
         assert formula.op == Operation.OR
@@ -202,10 +213,9 @@ class dwstl2milp(object):
         assert formula.op == Operation.ALWAYS
         a, b = int(formula.low), int(formula.high)
         child = formula.child
-        for k, tau in enumerate(range(a, b+1)):
+        for tau in range(a, b+1):
             self.to_milp(child, formula, t + tau, t_parent=t) 
-            weight = formula.weight(k)
-            self.variables[child][t][1] *= weight
+            
 
     def until(self, formula, z, rho, t):
         '''Adds an until to the model.'''

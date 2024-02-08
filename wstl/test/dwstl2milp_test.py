@@ -25,14 +25,16 @@ from gurobipy import *
 #lexer = stlLexer(InputStream("(x > 10) && F[0, 2] y > 2 || G[1, 6] z > 8"))
 # lexer = stlLexer(InputStream("G[2,4](x>=3)"))
 # lexer = stlLexer(InputStream("(x <= 2) || x > 3 "))
-lexer = wstlLexer(InputStream("||^weight2 ((x<=6), (x>=2))"))
+# lexer = wstlLexer(InputStream("&&^weight2 ((x<=1), (x>=2))"))
+lexer = wstlLexer(InputStream("(G[0,2]^weight1  (x>=3))"))
+
 # wstl_formula = " &&^weight2 (&&^weight1 ( (x<=3), (x>=6)) , (x>=2))"
 # lexer = stlLexer(InputStream("(G[0,2000]x<=2 && G[3, 4000]y>3) || (G[0,2000]x>3 && G[3, 4000]y<=2)"))
 tokens = CommonTokenStream(lexer)
 parser = wstlParser(tokens)
 t = parser.wstlProperty()
 print(t.toStringTree())
-weights = {'weight1': lambda x: 5, 'weight2': lambda k: [1, 4][k], 
+weights = {'weight1': lambda x: 5, 'weight2': lambda k: [3, 10][k], 
            'weight3': lambda x: 5}
 ast = WSTLAbstractSyntaxTreeExtractor(weights).visit(t)
 print ("AST:", ast)
