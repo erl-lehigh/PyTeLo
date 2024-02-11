@@ -10,7 +10,7 @@ import gurobipy as grb
 from stl import Operation, RelOperation, STLFormula
 
 
-class stl2milp(object):
+class dstl2milp(object):
     '''Translate an STL formula to an MILP.'''
 
     def __init__(self, formula, ranges=None, vtypes=None, model=None, robust=False):
@@ -58,31 +58,33 @@ class stl2milp(object):
 
     def translate(self, satisfaction=True):
         '''Translates the STL formula to MILP from time 0.'''
-        z = self.to_milp(self.formula)
+        z = self.to_milp(self.formula, self.formula, root=True)
         if satisfaction:
             self.model.addConstr(z == 1, 'formula_satisfaction')
         return z
 
-    def to_milp(self, formula, t=0):
+    def to_milp(self, formula, parent, t=0, root=False, t_parent=None):
         '''Generates the MILP from the STL formula.'''
-        z, added = self.add_formula_variable(formula, t)
+        z, added = self.add_formula_variable(formula, parent, t, root, t_parent)
         if added:
             self.__milp_call[formula.op](formula, z, t)
         return z
 
-    def add_formula_variable(self, formula, t):
-        '''Adds a variable for the `formula` at time `t`.'''
+    def add_formula_variable(self, formula, parent, t, root, t_parent):
+        ''' Adds a variable for the `formula` at time `t`.'''
         if formula not in self.variables:
             self.variables[formula] = dict()
         if t not in self.variables[formula]:
-            opname = Operation.getString(formula.op)
-            identifier = formula.identifier()
-            name = '{}_{}_{}'.format(opname, identifier, t)
-            if formula.op == Operation.PRED:
-                variable = self.model.addVar(vtype=grb.GRB.BINARY, name=name)
+            op_set={Operation.PRED, Operation.AND, Operation.ALWAYS}
+            if parent.op in op_set and root==False:
+                variable = self.variables[parent][t_parent]
+            elif parent.op in {Operation.OR, Operation.EVENT} or root==True:
+                opname = Operation.getString(formula.op)
+                identifier = formula.identifier()
+                name = '{}_{}_{}'.format(opname, identifier, t)
+                variable = self.model.addVar(vtype=grb.GRB.BINARY, name=name) 
             else:
-                variable = self.model.addVar(vtype=grb.GRB.CONTINUOUS,
-                                             name=name, lb=0, ub=1)
+                raise NotImplementedError
             self.variables[formula][t] = variable
             self.model.update()
             return variable, True
@@ -98,7 +100,6 @@ class stl2milp(object):
             name='{}_{}'.format(state, t)
             v = self.model.addVar(vtype=vtype, lb=low, ub=high, name=name)
             self.variables[state][t] = v
-            # print ('Added state:', state, 'time:', t)
             self.model.update()
         return self.variables[state][t]
 
@@ -119,15 +120,14 @@ class stl2milp(object):
     def conjunction(self, formula, z, t):
         '''Adds a conjunction to the model.'''
         assert formula.op == Operation.AND
-        z_children = [self.to_milp(f, t) for f in formula.children]
-        for z_child in z_children:
-            self.model.addConstr(z <= z_child)
-        self.model.addConstr(z >= 1 - len(z_children) + sum(z_children))
+        for child in formula.children:
+            self.to_milp(child, formula, t, t_parent=t)
 
     def disjunction(self, formula, z, t):
         '''Adds a disjunction to the model.'''
         assert formula.op == Operation.OR
-        z_children = [self.to_milp(f, t) for f in formula.children]
+        z_children = [self.to_milp(child, formula, t, t_parent=t) 
+                      for child in formula.children]
         for z_child in z_children:
             self.model.addConstr(z >= z_child)
         self.model.addConstr(z <= sum(z_children))
@@ -137,7 +137,8 @@ class stl2milp(object):
         assert formula.op == Operation.EVENT
         a, b = int(formula.low), int(formula.high)
         child = formula.child
-        z_children = [self.to_milp(child, t + tau) for tau in range(a, b+1)]
+        z_children = [self.to_milp(child, formula, t + tau, t_parent=t) 
+                      for tau in range(a, b+1)]
         for z_child in z_children:
             self.model.addConstr(z >= z_child)
         self.model.addConstr(z <= sum(z_children))
@@ -147,46 +148,44 @@ class stl2milp(object):
         assert formula.op == Operation.ALWAYS
         a, b = int(formula.low), int(formula.high)
         child = formula.child
-        z_children = [self.to_milp(child, t + tau) for tau in range(a, b+1)]
-        for z_child in z_children:
-            self.model.addConstr(z <= z_child)
-        self.model.addConstr(z >= 1 - len(z_children) + sum(z_children))
+        for tau in range(a, b+1):
+            self.to_milp(child, formula, t + tau, t_parent=t) 
 
     def until(self, formula, z, t):
         '''Adds an until to the model.'''
         assert formula.op == Operation.UNTIL
+        raise NotImplementedError
+        # a, b = int(formula.low), int(formula.high)
+        # z_children_left = [self.to_milp(formula.left, tau)
+        #                                          for tau in range(t, t+b+1)]
+        # z_children_right = [self.to_milp(formula.right, tau)
+        #                                        for tau in range(t+a, t+b+1)]
 
-        a, b = int(formula.low), int(formula.high)
-        z_children_left = [self.to_milp(formula.left, tau)
-                                                 for tau in range(t, t+b+1)]
-        z_children_right = [self.to_milp(formula.right, tau)
-                                               for tau in range(t+a, t+b+1)]
+        # z_aux = []
+        # phi_alw = None
+        # if a > 0:
+        #     phi_alw = STLFormula(Operation.ALWAYS, child=formula.left,
+        #                          low=t, high=t+a-1)
+        # for tau in range(t+a, t+b+1):
+        #     if tau > t+a:
+        #         phi_alw_u = STLFormula(Operation.ALWAYS, child=formula.left,
+        #                                low=t+a, high=tau)
+        #     else:
+        #         phi_alw_u = formula.left
+        #     children = [formula.right, phi_alw_u]
+        #     if phi_alw is not None:
+        #         children.append(phi_alw)
+        #     phi = STLFormula(Operation.AND, children=children)
+        #     z_aux.append(self.add_formula_variable(phi, t)[0])
 
-        z_aux = []
-        phi_alw = None
-        if a > 0:
-            phi_alw = STLFormula(Operation.ALWAYS, child=formula.left,
-                                 low=t, high=t+a-1)
-        for tau in range(t+a, t+b+1):
-            if tau > t+a:
-                phi_alw_u = STLFormula(Operation.ALWAYS, child=formula.left,
-                                       low=t+a, high=tau)
-            else:
-                phi_alw_u = formula.left
-            children = [formula.right, phi_alw_u]
-            if phi_alw is not None:
-                children.append(phi_alw)
-            phi = STLFormula(Operation.AND, children=children)
-            z_aux.append(self.add_formula_variable(phi, t)[0])
+        # for k, z_right in enumerate(z_children_right):
+        #     z_conj = z_aux[k]
+        #     self.model.addConstr(z_conj <= z_right)
+        #     for z_left in z_children_left[:t+a+k+1]:
+        #         self.model.addConstr(z_conj <= z_left)
+        #     m = 1 + (t + a + k + 1)
+        #     self.model.addConstr(z_conj >= 1-m + z_right
+        #                          + sum(z_children_left[:t+a+k+1]))
 
-        for k, z_right in enumerate(z_children_right):
-            z_conj = z_aux[k]
-            self.model.addConstr(z_conj <= z_right)
-            for z_left in z_children_left[:t+a+k+1]:
-                self.model.addConstr(z_conj <= z_left)
-            m = 1 + (t + a + k + 1)
-            self.model.addConstr(z_conj >= 1-m + z_right
-                                 + sum(z_children_left[:t+a+k+1]))
-
-            self.model.addConstr(z <= z_conj)
-        self.model.addConstr(z <= sum(z_aux))
+        #     self.model.addConstr(z <= z_conj)
+        # self.model.addConstr(z <= sum(z_aux))

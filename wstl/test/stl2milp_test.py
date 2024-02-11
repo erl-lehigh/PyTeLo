@@ -8,8 +8,8 @@ Created on Mon Oct 22 17:07:07 2018
 from antlr4 import InputStream, CommonTokenStream
 
 import sys
-sys.path.append('/home/gustavo/lehigh/erl/python-stl/stl')
-
+sys.path.append('../')
+import time
 from stl import Operation, RelOperation, STLFormula
 from stlLexer import stlLexer
 from stlParser import stlParser
@@ -21,7 +21,8 @@ from stl2milp import stl2milp
 
 #lexer = stlLexer(InputStream("(x > 10) && F[0, 2] y > 2 || G[1, 6] z > 8"))
 #lexer = stlLexer(InputStream("G[2,4]F[1,3](x>=3)"))
-lexer = stlLexer(InputStream("(x <= 10) && F[0, 2] y > 2 && G[1, 6] (z < 8) && G[1,6] (z > 3)"))
+# lexer = stlLexer(InputStream("(x <= 10) && F[0, 2] y > 2 && G[1, 6] (z < 8) && G[1,6] (z > 3)"))
+lexer = stlLexer(InputStream("(G[0,2000]x<=2 && G[3, 4000]y>3) || (G[0,2000]x>3 && G[3, 4000]y<=2)"))
 tokens = CommonTokenStream(lexer)
 parser = stlParser(tokens)
 t = parser.stlProperty()
@@ -29,13 +30,18 @@ print(t.toStringTree())
 ast = STLAbstractSyntaxTreeExtractor().visit(t)
 print ("AST:", ast)
 
-MILP=stl2milp(ast, ranges={'x': [-10, 10], 'y':[-10, 10], 'z':[10,10]}, 
+stl_milp=stl2milp(ast, ranges={'x': [-10, 10], 'y':[-10, 10], 'z':[10,10]}, 
               robust=True)
 
+stl_start = time.time()
+stl_milp.translate()
+# stl_milp.model.addConstr(z==1)
+stl_milp.model.optimize()
+stl_end = time.time()
+stl_time= stl_end-stl_start
+print("TIME: ", stl_time)
+stl_milp.model.write('stl2milp_milp.lp')
+# x_vals = [var.x for var in stl_milp.variables['x'].values()]
+# y_vals = [var.x for var in stl_milp.variables['y'].values()]
+# print(x_vals, y_vals)
 
-z=MILP.to_milp(ast,t=0)
-MILP.model.addConstr(z==1)
-MILP.model.optimize()
-
-#from stl import STLFormula
-#phi=STLFormula(ast)
