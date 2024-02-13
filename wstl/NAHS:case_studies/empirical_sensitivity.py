@@ -5,6 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import gurobipy as grb
 import sys
+import pandas as pd
+
 
 sys.path.append('../')
 
@@ -223,8 +225,8 @@ if __name__ == '__main__':
                 obstacle1 + obstacle2 + ')'
     # wstl_formula=
     wstl_obs_1 = wstl_zone("E", "G", 0, 20, "x", "y")
-    wstl_obs_2 = wstl_zone("H", "G", 0, 20, "x", "y")
-    wstl_obs_3 = wstl_zone("O", "G", 0, 20, "x", "y")
+    wstl_obs_2 = wstl_zone("O", "G", 0, 20, "x", "y")
+    wstl_obs_3 = wstl_zone("H", "G", 0, 20, "x", "y")
     # wstl_formula = '&&^weight2 ('+wstl_zone("C", "G", 10, 15, "x", "y")+ \
     #                 ','+wstl_zone("D", "G", 25, 30, "x", "y")+ \
     #                 ','+wstl_zone("A", "G", 0, 1, "x", "y")+','+wstl_obs+')'
@@ -247,6 +249,7 @@ if __name__ == '__main__':
     control_lb = -3
 
     rho_values = []
+    traj = []
 
     for i in range(10):
 
@@ -256,7 +259,8 @@ if __name__ == '__main__':
                    'weight2': lambda k: [.1, .1, .1, .1, 1][k], 'weight3': lambda x: 1}
 
         weights2 = {'weight0': lambda x: 1, 'weight1': lambda x: 10,
-               'weight2': lambda k: [1 - (i/10), .5 , .5, .5, .5][k], 'weight3': lambda x: 1}
+               'weight2': lambda k: [ .5 , 1-(i/10), .5 , .5][k], 'weight3': lambda x: 1}
+                                    ## C | E | H | O
 
         # Translate WSTL to MILP and retrieve integer variable for the formula
         stl_start = time.time()
@@ -284,8 +288,13 @@ if __name__ == '__main__':
         visualize(stl_milp, wstl_milp, wstl_milp_b, wstl_milp_d, wstl_milp_e, case)
         rho_values.append(wstl_milp_e.model.objVal)
         # visualize(stl_milp, wstl_milp)
+        traj.append([round(var.x,4) for var in wstl_milp.variables['x'].values()])
 
+    print(traj)
+    data = pd.DataFrame(traj)
+    data.to_csv('traj.csv', index = False)
     print(rho_values)
+
 
 
 

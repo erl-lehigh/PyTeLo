@@ -367,13 +367,14 @@ def environment_trajec(x, y, x2, y2, x3, y3, x4, y4, x5, y5,spec):
 
     pathpatch = PathPatch(path, facecolor='NONE', edgecolor='k', linewidth='8')
 
+    ax.figure.set_size_inches(12, 12)
     # ax.text(-9, -9, 'A', fontsize=90)
-    ax.text(6, 6, 'C', fontsize=90)
+    ax.text(6, 6, 'G', fontsize=50)
     # ax.text(-9, 6, 'D', fontsize=90)
     # ax.text(6, -9, 'B', fontsize=90)
-    ax.text(-1.2, -1.2, 'O', fontsize=70)
-    ax.text(-6.5, 4.5, 'E', fontsize=70)
-    ax.text(4.5, -6.7, 'H', fontsize=70)
+    ax.text(-1.2, -1.2, r'$O_2$', fontsize=50)
+    ax.text(-6.5, 4.5, r'$O_1$', fontsize=50)
+    ax.text(4.5, -6.7, r'$O_3$', fontsize=50)
     # ax.add_patch(lpathpatch1)
     # ax.add_patch(lpathpatch2)
     ax.add_patch(lpathpatch3)
@@ -402,8 +403,8 @@ def environment_trajec(x, y, x2, y2, x3, y3, x4, y4, x5, y5,spec):
     plt.ylim([-11, 11])
     plt.axis('equal')
     plt.draw()
-    plt.pause(1)
-    plt.savefig('data/traj_{}.png'.format(spec))
+    plt.pause(.5)
+    plt.savefig('sensitivity_data/traj_{}.png'.format(spec))
     ax.cla()
 
 

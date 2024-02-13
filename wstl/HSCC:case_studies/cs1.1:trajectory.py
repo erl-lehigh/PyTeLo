@@ -208,9 +208,11 @@ if __name__ == '__main__':
     # wstl_formula = "&&^weight2 ( G[5,10]^weight0  (x>=3),G[5,10]^weight3 \
     #                 (y<=-2), G[5,10]^weight3 (z>=1) )"
     obstacle = "&&" + stl_zone("O", "G", 0, 30, "x", "y")
-    formula = '(' + stl_zone("C", "G", 10, 15, "x", "y") + ' && '+\
-                  stl_zone("D", "G", 25, 30, "x", "y") + ' && '+ \
-                    stl_zone("A", "G", 0, 1, "x", "y") + obstacle + ')'
+    # formula = '(' + stl_zone("C", "G", 10, 15, "x", "y") + ' && '+\
+    #               stl_zone("D", "G", 25, 30, "x", "y") + ' && '+ \
+    #                 stl_zone("A", "G", 0, 1, "x", "y") + obstacle + ')'
+
+    formula = '(' + stl_zone("C", "G", 8, 18, "x", "y") + obstacle + ')'
 
     # formula = '(' + stl_zone("C", "F", 5, 6, "x", "y") + obstacle + ')'
     # wstl_formula= 
