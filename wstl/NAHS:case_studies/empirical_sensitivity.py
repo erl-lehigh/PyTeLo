@@ -189,7 +189,7 @@ def wstl_synthesis_control(wstl_formula, weights, A, B, vars_ub, vars_lb,
     return wstl_milp
 
 
-def visualize(stl_milp, wstl_milp, wstl_milp_b, wstl_milp_d, wstl_milp_e, wstl_spec):
+def visualize(stl_milp, wstl_milp, wstl_milp_b, wstl_milp_d, wstl_milp_e, wstl_spec, analysis = False):
     t = stl_milp.variables['x'].keys()
     t2 = wstl_milp.variables['x'].keys()
 
@@ -203,8 +203,11 @@ def visualize(stl_milp, wstl_milp, wstl_milp_b, wstl_milp_d, wstl_milp_e, wstl_s
     wstl_y_d = [var.x for var in wstl_milp_d.variables['y'].values()]
     wstl_x_e = [var.x for var in wstl_milp_e.variables['x'].values()]
     wstl_y_e = [var.x for var in wstl_milp_e.variables['y'].values()]
+
+
+    print('ws1', wstl_x)
     environment_trajec(stl_x, stl_y, wstl_x, wstl_y, wstl_x_b, wstl_y_b, wstl_x_d,
-                       wstl_y_d, wstl_x_e, wstl_y_e, wstl_spec)
+                       wstl_y_d, wstl_x_e, wstl_y_e, wstl_spec, analysis)
 
 
 if __name__ == '__main__':
@@ -251,16 +254,18 @@ if __name__ == '__main__':
     rho_values = []
     traj = []
 
-    for i in range(10):
 
-        case = ('E', i/10)
+    N = 20
+    for i in range(N):
+
+        case = ('C', i/10)
 
         weights = {'weight0': lambda x: 1, 'weight1': lambda x: 10,
                    'weight2': lambda k: [.1, .1, .1, .1, 1][k], 'weight3': lambda x: 1}
 
         weights2 = {'weight0': lambda x: 1, 'weight1': lambda x: 10,
-               'weight2': lambda k: [ .5 , 1-(i/10), .5 , .5][k], 'weight3': lambda x: 1}
-                                    ## C | E | H | O
+               'weight2': lambda k: [ .5 ,  1-(i/N), .5 ,.5][k], 'weight3': lambda x: 1}
+                                    ## C | E | O | H
 
         # Translate WSTL to MILP and retrieve integer variable for the formula
         stl_start = time.time()
@@ -290,10 +295,12 @@ if __name__ == '__main__':
         # visualize(stl_milp, wstl_milp)
         traj.append([round(var.x,4) for var in wstl_milp.variables['x'].values()])
 
-    print(traj)
+        print("===============================================")
+        print("weight:", [ .5 ,  1-(i/N), .5 ,.5])
+    # print(traj)
     data = pd.DataFrame(traj)
     data.to_csv('traj.csv', index = False)
-    print(rho_values)
+    # print(rho_values)
 
 
 

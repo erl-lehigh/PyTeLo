@@ -1,3 +1,4 @@
+from __future__ import division
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch
 import matplotlib.pyplot as plt
@@ -5,6 +6,7 @@ import numpy as np
 import time
 
 fig, ax = plt.subplots()
+counter = 0
 
 
 def stl_zone(ap, T, l, u, a, b):
@@ -299,7 +301,7 @@ def environment_comp(x, y, x2, y2, x3, y3, x4, y4):
     plt.show()
 
 
-def environment_trajec(x, y, x2, y2, x3, y3, x4, y4, x5, y5,spec):
+def environment_trajec(x, y, x2, y2, x3, y3, x4, y4, x5, y5,spec, analysis = False):
     # Desired locations
     lvertices1 = []
     lcodes1 = []
@@ -367,47 +369,115 @@ def environment_trajec(x, y, x2, y2, x3, y3, x4, y4, x5, y5,spec):
 
     pathpatch = PathPatch(path, facecolor='NONE', edgecolor='k', linewidth='8')
 
-    ax.figure.set_size_inches(12, 12)
-    # ax.text(-9, -9, 'A', fontsize=90)
-    ax.text(6, 6, 'G', fontsize=50)
-    # ax.text(-9, 6, 'D', fontsize=90)
-    # ax.text(6, -9, 'B', fontsize=90)
-    ax.text(-1.2, -1.2, r'$O_2$', fontsize=50)
-    ax.text(-6.5, 4.5, r'$O_1$', fontsize=50)
-    ax.text(4.5, -6.7, r'$O_3$', fontsize=50)
-    # ax.add_patch(lpathpatch1)
-    # ax.add_patch(lpathpatch2)
-    ax.add_patch(lpathpatch3)
-    # ax.add_patch(lpathpatch4)
-    ax.add_patch(pathpatch)
-    ax.add_patch(opathpatch)
-    ax.plot(x, y, 'cyan', linewidth=5.5, label="wSTL-1")
-    ax.plot(x[0], y[0], 'cyan', marker='*', markersize=28)
-    ax.plot(x[-1], y[-1], 'cyan', marker='s', markersize=20)
-    ax.plot(x2, y2, '--b', linewidth=5.5, label="wSTL-2")
-    ax.plot(x2[0], y2[0], 'b', marker='*', markersize=28)
-    ax.plot(x2[-1], y2[-1], 'b', marker='s', markersize=20)
-    ax.plot(x3, y3, 'cornflowerblue', linewidth=5.5, label="wSTL-3")
-    ax.plot(x3[0], y3[0], 'cornflowerblue', marker='*', markersize=28)
-    ax.plot(x3[-1], y3[-1], 'cornflowerblue', marker='s', markersize=20)
-    ax.plot(x4, y4, 'steelblue', linewidth=5.5, label="wSTL-4")
-    ax.plot(x4[0], y4[0], 'steelblue', marker='*', markersize=28)
-    ax.plot(x4[-1], y4[-1], 'steelblue', marker='s', markersize=20)
-    ax.plot(x5, y5, 'lightblue', linewidth=5.5, label="wSTL-5")
-    ax.plot(x5[0], y5[0], 'lightblue', marker='*', markersize=28)
-    ax.plot(x5[-1], y5[-1], 'lightblue', marker='s', markersize=20)
-    ax.legend(fontsize='xx-large')
-    plt.xticks(fontsize=20)
-    plt.yticks(fontsize=20)
-    plt.xlim([-11, 11])
-    plt.ylim([-11, 11])
-    plt.axis('equal')
-    plt.draw()
-    plt.pause(.5)
-    plt.savefig('sensitivity_data/traj_{}.png'.format(spec))
-    ax.cla()
+    if analysis:
+        global counter
+        prev_data = np.zeros((len(x),2))
+        ax.figure.set_size_inches(12, 12)
+        # ax.text(-9, -9, 'A', fontsize=90)
+        ax.text(6, 6, 'G', fontsize=50)
+        # ax.text(-9, 6, 'D', fontsize=90)
+        # ax.text(6, -9, 'B', fontsize=90)
+        ax.text(-1.2, -1.2, r'$O_2$', fontsize=50)
+        ax.text(-6.5, 4.5, r'$O_1$', fontsize=50)
+        ax.text(4.5, -6.7, r'$O_3$', fontsize=50)
+        # ax.add_patch(lpathpatch1)
+        # ax.add_patch(lpathpatch2)
+        ax.add_patch(lpathpatch3)
+        # ax.add_patch(lpathpatch4)
+        ax.add_patch(pathpatch)
+        ax.add_patch(opathpatch)
+        # ax.plot(x, y, 'cyan', linewidth=5.5, label="wSTL-1")
+        # ax.plot(x[0], y[0], 'cyan', marker='*', markersize=28)
+        # ax.plot(x[-1], y[-1], 'cyan', marker='s', markersize=20)
+
+        # print("x2, y2:", x2, y2)
+        # data = (x2[:len(x)//2], y2[:len(x)//2])
+        # print("data:", data[0])
+        # if any(t<= -8 for t in data[0]):
+        #     index = np.where(data[0] <= -8)
+        #     if any(data[1][index] <= -8):
+        #         ax.plot(x2, y2, '-y', linewidth=2, label="wSTL")
+
+        # elif any( -8 <= t <= -4 for t in data[0]):
+        #     if any( 9>= t >= 6 for t in data[1]):
+        #         ax.plot(x2, y2, '-b', linewidth=2, label="wSTL")
+
+        # elif any(t<= -8 for t in data[0]):
+        #     if any(t>= 8 for t in data[1]):
+        #         ax.plot(x2, y2, '-g', linewidth=2, label="wSTL")
+        #
+        # else:
+        #     ax.plot(x2, y2, '-r', linewidth=2, label="wSTL")
 
 
+        ####################################################
+        if counter == 0:
+            ax.plot(x2, y2, '--r', linewidth=3, label="w=0")
+        elif 1 <= counter <= 15:
+            ax.plot(x2, y2, '--g', linewidth=3, label=r"w\in{}".format(1/30, 15/30))
+        elif 16 <= counter <= 28:
+            ax.plot(x2, y2, '--b', linewidth=3, label=r"w\in{}".format(16/30, 28/30))
+        else:
+            ax.plot(x2, y2, '--y', linewidth=3, label=r"w\in{}".format(29/30, 30/30))
+
+
+        # ax.plot(x2, y2, '--b', linewidth=2, label="wSTL")
+        ax.plot(x2[0], y2[0], 'deepskyblue', marker='*', markersize=35)
+        ax.plot(x2[-1], y2[-1], 'deepskyblue', marker='s', markersize=20)
+
+        # ax.legend(fontsize='xx-large')
+        plt.xticks(fontsize=20)
+        plt.yticks(fontsize=20)
+        plt.xlim([-11, 11])
+        plt.ylim([-11, 11])
+        plt.axis('equal')
+        plt.draw()
+        plt.pause(.5)
+        counter +=  1
+        # prev_data = data
+
+    else:
+        ax.figure.set_size_inches(12, 12)
+        # ax.text(-9, -9, 'A', fontsize=90)
+        ax.text(6, 6, 'G', fontsize=50)
+        # ax.text(-9, 6, 'D', fontsize=90)
+        # ax.text(6, -9, 'B', fontsize=90)
+        ax.text(-1.2, -1.2, r'$O_2$', fontsize=50)
+        ax.text(-6.5, 4.5, r'$O_1$', fontsize=50)
+        ax.text(4.5, -6.7, r'$O_3$', fontsize=50)
+        # ax.add_patch(lpathpatch1)
+        # ax.add_patch(lpathpatch2)
+        ax.add_patch(lpathpatch3)
+        # ax.add_patch(lpathpatch4)
+        ax.add_patch(pathpatch)
+        ax.add_patch(opathpatch)
+        # ax.plot(x, y, 'cyan', linewidth=5.5, label="wSTL-1")
+        # ax.plot(x[0], y[0], 'cyan', marker='*', markersize=28)
+        # ax.plot(x[-1], y[-1], 'cyan', marker='s', markersize=20)
+        ax.plot(x2, y2, '--b', linewidth=5.5, label="wSTL-2")
+        ax.plot(x2[0], y2[0], 'b', marker='*', markersize=28)
+        ax.plot(x2[-1], y2[-1], 'b', marker='s', markersize=20)
+        ax.plot(x3, y3, 'cornflowerblue', linewidth=5.5, label="wSTL-3")
+        ax.plot(x3[0], y3[0], 'cornflowerblue', marker='*', markersize=28)
+        ax.plot(x3[-1], y3[-1], 'cornflowerblue', marker='s', markersize=20)
+        ax.plot(x4, y4, 'steelblue', linewidth=5.5, label="wSTL-4")
+        ax.plot(x4[0], y4[0], 'steelblue', marker='*', markersize=28)
+        ax.plot(x4[-1], y4[-1], 'steelblue', marker='s', markersize=20)
+        ax.plot(x5, y5, 'lightblue', linewidth=5.5, label="wSTL-5")
+        ax.plot(x5[0], y5[0], 'lightblue', marker='*', markersize=28)
+        ax.plot(x5[-1], y5[-1], 'lightblue', marker='s', markersize=20)
+        # ax.legend(fontsize='xx-large')
+        plt.xticks(fontsize=20)
+        plt.yticks(fontsize=20)
+        plt.xlim([-11, 11])
+        plt.ylim([-11, 11])
+        plt.axis('equal')
+        plt.draw()
+        plt.pause(.5)
+    # plt.savefig('sensitivity_data/traj_{}.png'.format(spec))
+    # ax.cla()
+
+    # plt.savefig('sensitivity_data/all_traj.png')
 
 if __name__ == '__main__':
     x = range(20)
