@@ -7,21 +7,22 @@ import sys
 sys.path.append('../')
 
 from stl import Operation, RelOperation, STLFormula
-from wstlLexer import wstlLexer
-from wstlParser import wstlParser
-from wstlVisitor import wstlVisitor
+# from wstlLexer import wstlLexer
+# from wstlParser import wstlParser
+# from wstlVisitor import wstlVisitor
 
-from wstl import WSTLAbstractSyntaxTreeExtractor
+# from wstl import WSTLAbstractSyntaxTreeExtractor
 from stl import STLAbstractSyntaxTreeExtractor
-from long_wstl2milp import long_wstl2milp
-from wstl2milp import wstl2milp
+# from long_wstl2milp import long_wstl2milp
+# from wstl2milp import wstl2milp
 from stl2milp import stl2milp
+from dstl2milp import dstl2milp
 # from gurobipy import *
 from stlLexer import stlLexer
 from stlParser import stlParser
 from stlVisitor import stlVisitor
 from stl import STLAbstractSyntaxTreeExtractor
-from environment import environment, stl_zone, wstl_zone
+# from environment import environment, stl_zone, wstl_zone
 
 def stl_synthesis_control(formula, A, B, vars_ub, vars_lb, control_ub, 
                           control_lb, alpha=0.1, beta=0.1):
@@ -31,9 +32,9 @@ def stl_synthesis_control(formula, A, B, vars_ub, vars_lb, control_ub,
     parser = stlParser(tokens)
     t = parser.stlProperty()
     ast = STLAbstractSyntaxTreeExtractor().visit(t)
-
+  
     stl_milp = stl2milp(ast, robust=True)
-    
+   
     time_bound = int(ast.bound()) + 1
     x = dict()
     y = dict()
@@ -109,6 +110,92 @@ def stl_synthesis_control(formula, A, B, vars_ub, vars_lb, control_ub,
     stl_milp.model.optimize()
     return stl_milp
 
+def dstl_synthesis_control(formula, A, B, vars_ub, vars_lb, control_ub, 
+                          control_lb, alpha=0.1, beta=0.1):
+    
+    lexer = stlLexer(InputStream(formula))
+    tokens = CommonTokenStream(lexer)
+    parser = stlParser(tokens)
+    t = parser.stlProperty()
+    ast = STLAbstractSyntaxTreeExtractor().visit(t)
+  
+    dstl_milp = dstl2milp(ast, robust=True)
+   
+    time_bound = int(ast.bound()) + 1
+    x = dict()
+    y = dict()
+    u = dict()
+    v = dict()
+    x_aux = dict()
+    y_aux =dict()
+    u_aux = dict()
+    v_aux =dict() 
+    #creating the Gurobi Variables 
+    for k in range(time_bound):
+        name = "x_{}".format(k) 
+        x[k] = dstl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)                             
+        name = "y_{}".format(k)
+        y[k] = dstl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "u_{}".format(k)
+        u[k] = dstl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=control_lb, 
+                                     ub=control_ub, name=name)
+        name = "v_{}".format(k)
+        v[k] = dstl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=control_lb, 
+                                     ub=control_ub, name=name)
+        name = "x_aux_{}".format(k) 
+        x_aux[k] = dstl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=0, 
+                                     ub=vars_ub, name=name)
+        name = "y_aux_{}".format(k)                                      
+        y_aux[k] = dstl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=0, 
+                                     ub=vars_ub, name=name)
+        name = "u_aux_{}".format(k) 
+        u_aux[k] = dstl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=0, 
+                                     ub=vars_ub, name=name)
+        name = "v_aux_{}".format(k)                                      
+        v_aux[k] = dstl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=0, 
+                                     ub=vars_ub, name=name)
+
+    # use system variables in STL spec encoding
+    dstl_milp.variables['x'] = x
+    dstl_milp.variables['y'] = y
+    dstl_milp.variables['u'] = u
+    dstl_milp.variables['v'] = v
+
+    # system constraints x[k+1] = A X[k]+ B U[k]
+    for k in range(time_bound-1):
+        dstl_milp.model.addConstr(x[k+1] == A[0][0] * x[k] + A[0][1] * y[k] +
+                                           B[0][0] * u[k])
+
+        dstl_milp.model.addConstr(y[k+1] == A[1][0] * x[k] + A[1][1] * y[k] +
+                                           B[0][1] * v[k])
+    
+    #initial conditions
+    dstl_milp.model.addConstr(x[0] == 0)
+    dstl_milp.model.addConstr(y[0] == 0)
+    dstl_milp.model.addConstr(u[0] == 0)
+    dstl_milp.model.addConstr(v[0] == 0)
+
+    # add the specification (STL) constraints
+    dstl_milp.translate(satisfaction=True)
+
+    
+    # add objective function
+    dstl_milp.model.addConstrs(x_aux[k] == grb.abs_(x[k]) for k in range(time_bound))
+    dstl_milp.model.addConstrs(y_aux[k] == grb.abs_(y[k]) for k in range(time_bound))
+    state_cost = sum(x_aux[k] + y_aux[k] for k in range(time_bound))
+
+    dstl_milp.model.addConstrs(u_aux[k] == grb.abs_(u[k]) for k in range(time_bound))
+    dstl_milp.model.addConstrs(v_aux[k] == grb.abs_(v[k]) for k in range(time_bound))
+    control_cost = sum(u_aux[k] + v_aux[k] for k in range(time_bound))
+
+    dstl_milp.model.setObjectiveN(state_cost, 2, weight=alpha, name='state_cost')
+    dstl_milp.model.setObjectiveN(control_cost, 3, weight=beta, name='control_cost')
+    # Solve the problem with gurobi 
+    dstl_milp.model.optimize()
+    return dstl_milp
+
 
 def visualize(stl_milp, stl_milp2):
     t = stl_milp.variables['x'].keys()
@@ -170,7 +257,7 @@ def visualize(stl_milp, stl_milp2):
 
 if __name__ == '__main__':
     #Formulas
-    formula = '(G[3,5] (x >= 3)) && (G[9,10] (y >= 2))'    
+    formula = '(G[3,5] (x >= 3)) && (G[9,10] (y >= 2) || G[9,10] (y <= -4))'    
     # wstl_formula = "&&^weight2 ( G[5,10]^weight0  (x>=3),G[5,10]^weight3 \
     #                 (y<=-2), G[5,10]^weight3 (z>=1) )"
     # obstacle = "&&" + stl_zone("O", "G", 0, 30, "x", "y")
@@ -191,6 +278,10 @@ if __name__ == '__main__':
     stl_milp = stl_synthesis_control(formula, A, B, vars_ub, vars_lb, control_ub,
                                     control_lb, alpha=0, beta=0)
     stl_milp2 = stl_synthesis_control(formula, A, B, vars_ub, vars_lb, control_ub,
+                                    control_lb, alpha=0.1, beta=0.1)
+    dstl_milp = stl_synthesis_control(formula, A, B, vars_ub, vars_lb, control_ub,
+                                    control_lb, alpha=0, beta=0)
+    dstl_milp2 = stl_synthesis_control(formula, A, B, vars_ub, vars_lb, control_ub,
                                     control_lb, alpha=0.1, beta=0.1)                                
     stl_end = time.time()
     stl_time = stl_end - stl_start
