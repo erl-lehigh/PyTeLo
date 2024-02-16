@@ -5,7 +5,19 @@ from pprint import pprint
 import warnings
 warnings.filterwarnings("ignore")
 import skgstat as skg
+import plotly
+from plotly.subplots import make_subplots
 
+
+
+plt.rcParams['lines.linewidth'] = 3
+plt.rcParams['lines.markersize'] = 15
+plt.rcParams['lines.marker'] = '*'
+font = {'family' : 'normal',
+
+        'size'   : 18}
+
+plt.rc('font', **font)
 # src = skg.data.meuse()
 # print(src.get('origin'))
 #
@@ -28,6 +40,9 @@ import skgstat as skg
 # pprint(V.describe())
 # print(V)
 
+
+
+
 data = pd.read_csv('traj.csv')
 mean_traj = data.mean(axis=0)
 print(len(mean_traj))
@@ -41,10 +56,36 @@ fig, ax = plt.subplots(1, 1, figsize=(9, 9))
 Corrdinates = ax.scatter(weights, mean_traj, s=50,  cmap='plasma')
 plt.colorbar(Corrdinates)
 plt.show()
-
+#
 V = skg.Variogram(mean_traj, weights, maxlag='median',  normalize=True)
-fig = V.plot()
+fig1 = V.plot(hist=False, show=False, grid=False)
 plt.show()
+
+
+
+obj = [0.75, 0.7500000001750001, 0.75, 0.7500000001750002, 0.7500000001750001, 0.7500014998280093, 0.75, 0.7500004998266776, 0.5999999999999999, 0.29999999999999993]
+
+obj = np.round(obj, 3)
+weights = np.linspace(0, 1, len(obj))
+
+W = skg.Variogram(obj, weights,    normalize=False)
+# fig = W.plot(hist=False, show=False)
+# plt.show()
+
+fig = make_subplots(rows=1, cols=1)
+fig.update_layout(
+    width=800,
+    height=200,
+    template='seaborn',
+    showlegend=False,
+    margin=dict(l=0, r=0, b=0, t=0)
+ )
+
+W.plot( hist=False, show=False, grid=False)
+fig
+plt.show()
+
+
 
 # weights = np.arange(0, 1, 0.1)
 # t = np.arange(0, len(mean_traj))
