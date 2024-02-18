@@ -314,32 +314,32 @@ if __name__ == '__main__':
             pi2 = str(pi(-8,8))
             lb = n
             ub = n + 5
-            stl_specification += (' && ('+T+'[{},{}] ('+s1+op1+pi1+' '+L2+' '+
-                                    s2+op2+pi2+'))').format(lb,ub)
+            # stl_specification += (' && ('+T+'[{},{}] ('+s1+op1+pi1+' '+L2+' '+
+            #                         s2+op2+pi2+'))').format(lb,ub)
             wstl_specification = wstl_specification[:-1]
             wstl_specification2 = wstl_specification2[:-1]
-            wstl_specification += (', ('+T+'[{},{}]^weight0 ( '+L2+'^weight0('
+            wstl_specification += (', ('+T+'[{},{}]^weight1 ( '+L2+'^weight1('
                                 +s1+op1+pi1+','+s2+op2+pi2+'))))').format(lb,ub)
             wstl_specification2 += (', ('+T+'[{},{}]^weight0 ( '+L2+'^weight0('
                                 +s1+op1+pi1+','+s2+op2+pi2+'))))').format(lb,ub)
 
             stl_start = time.time()
-            obj_1 = stl_synthesis_control(stl_specification)
+            obj_1 = wstl_synthesis_control(wstl_specification, weights)
             stl_end = time.time()
             stl_time[i][n] = stl_end-stl_start
 
             dstl_start = time.time()
-            dobj_1 = dstl_synthesis_control(stl_specification)
+            dobj_1 = dwstl_synthesis_control(wstl_specification, weights)
             dstl_end = time.time()
             dstl_time[i][n] = dstl_end-dstl_start
 
             wstl_start = time.time()
-            obj_2 = wstl_synthesis_control(wstl_specification, weights)
+            obj_2 = wstl_synthesis_control(wstl_specification2, weights)
             wstl_end = time.time()
             wstl_time[i][n] = wstl_end-wstl_start
 
             dwstl_start = time.time()
-            dobj_2 = dwstl_synthesis_control(wstl_specification, weights)
+            dobj_2 = dwstl_synthesis_control(wstl_specification2, weights)
             dwstl_end = time.time()
             dwstl_time[i][n] = dwstl_end-dwstl_start
 
@@ -363,14 +363,14 @@ if __name__ == '__main__':
     print('done')
     plt.figure()
     plt.grid()
-    plt.plot(range(n_), gaussian_filter1d(stl_max, sigma=2), '-b', linewidth=4, label='stl')
-    plt.plot(range(n_), gaussian_filter1d(dstl_max, sigma=2), '-c', linewidth=4, label='d-stl')
+    plt.plot(range(n_), gaussian_filter1d(stl_max, sigma=2), '-b', linewidth=4, label='wstl-fixed')
+    plt.plot(range(n_), gaussian_filter1d(dstl_max, sigma=2), '-c', linewidth=4, label='d-wstl-fixed')
     # plt.plot(range(n_), stl_av,  '-b',linewidth=4, label='stl_av')
     # plt.plot(range(n_), stl_min, '-b',linewidth=4, label='stl_min')
-    plt.plot(range(n_), gaussian_filter1d(wstl_max, sigma=2), '--r',  linewidth=4, label='wstl')
+    plt.plot(range(n_), gaussian_filter1d(wstl_max, sigma=2), '--r',  linewidth=4, label='wstl-random')
     # plt.plot(range(n_), wstl_av, '--r',  linewidth=4, label='wstl_av')
     # plt.plot(range(n_), wstl_min, '--r',  linewidth=4, label='wstl_min')
-    plt.plot(range(n_), gaussian_filter1d(dwstl_max, sigma=2), 'g', linewidth=4, label='d-wstl')
+    plt.plot(range(n_), gaussian_filter1d(dwstl_max, sigma=2), 'g', linewidth=4, label='d-wstl-random')
     # plt.plot(range(n_), wstl2_av, 'g', linewidth=4, label='wstl2_av')
     # plt.plot(range(n_), wstl2_min, 'g', linewidth=4, label='wstl2_min')
     

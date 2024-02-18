@@ -322,7 +322,7 @@ if __name__ == '__main__':
             op2 = random.choice(comp_op)
             pi1 = str(pi(-8,8))
             pi2 = str(pi(-8,8))
-            lb = n
+            lb = 1
             ub = n + 5
             stl_specification = ("G[1,{}] ((x<= 9) && (x>=3)) && G[1,{}] ((y<= 9) && \
                         (y>=2)) && G[1,{}] ((z<= 9) && (z>=3)) && \
@@ -390,6 +390,6 @@ if __name__ == '__main__':
     plt.xticks(fontsize=44)
     plt.yticks(fontsize=44)
     plt.ylabel('time', fontsize=50)
-    plt.xlabel('n', fontsize=50)
+    plt.xlabel(r'$\tau$', fontsize=50)
     plt.show() 
     
