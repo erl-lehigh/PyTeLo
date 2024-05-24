@@ -8,7 +8,7 @@ git clone git@github.com:erl-lehigh/PyTeLo.git pytelo
 mkdir -p pytelo/lib
 cd pytelo/lib
 wget 'https://www.antlr.org/download/antlr-4.13.0-complete.jar'
-pip install antlr4-python2-runtime==4.13.0
+pip install antlr4-python3-runtime==4.13.0
 pip install scipy
 ```
 
