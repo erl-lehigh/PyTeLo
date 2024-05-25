@@ -39,8 +39,10 @@ Run
 ---
 
 ```bash
-cd <clone-dir>/src
+cd <clone-dir>/stl
 antlr4 -Dlanguage=Python3 stl.g4
+cd <clone-dir>/mtl
+antlr4 -Dlanguage=Python3 mtl.g4
 ```
 
 **NOTE:** At the moment the implementation only supports python2 and python3. However, you
