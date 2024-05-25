@@ -20,7 +20,7 @@ class Operation(object):
     opstrnames = [None, 'not', 'or', 'and', 'imply', 'until', 'event', 'always',
                   'predicate', 'bool']
     # negation closure of operations
-    negop = (NOP, NOP, AND, OR, AND, NOP, ALWAYS, EVENT, PRED, BOOL)
+    negop = (NOP, NOP, AND, OR, AND, NOP, ALWAYS, EVENT, NOP, BOOL)
 
     @classmethod
     def getCode(cls, text):
@@ -76,7 +76,7 @@ class MTLFormula(object):
         if self.op == Operation.BOOL:
             self.value = not self.value
         elif self.op == Operation.PRED:
-            self.relation = not self.variable
+            return MTLFormula(Operation.NOT, child=self)
         elif self.op in (Operation.AND, Operation.OR):
             [child.negate() for child in self.children]
         elif self.op == Operation.IMPLIES:
@@ -90,42 +90,25 @@ class MTLFormula(object):
         self.op = Operation.negop[self.op]
         return self
 
-    # def pnf(self):
-    #     '''Computes the Positive Normal Form of the STL formula, potentially
-    #     adding new variables.
+    def pnf(self):
+        '''Computes the Positive Normal Form of the MTL formula.
 
-    #     Note: The tree structure is modified in-place.
-    #     '''
-    #     if self.op == Operation.PRED:
-    #         if self.relation in (RelOperation.LE, RelOperation.LT):
-    #             self.variable = '{variable}_neg'.format(variable=self.variable)
-    #         elif self.relation == RelOperation.EQ:
-    #             children = [MTLFormula(Operation.PRED, relation=RelOperation.GE,
-    #                           variable=self.variable, threshold=self.threshold),
-    #                         MTLFormula(Operation.PRED, relation=RelOperation.GE,
-    #                           variable='{variable}_neg'.format(self.variable),
-    #                           threshold=-self.threshold)]
-    #             return MTLFormula(Operation.AND, children=children)
-    #         elif self.relation == RelOperation.NQ:
-    #             children = [MTLFormula(Operation.PRED, relation=RelOperation.GT,
-    #                           variable=self.variable, threshold=self.threshold),
-    #                         MTLFormula(Operation.PRED, relation=RelOperation.GT,
-    #                           variable='{variable}_neg'.format(self.variable),
-    #                           threshold=-self.threshold)]
-    #             return MTLFormula(Operation.OR, children=children)
-    #     elif self.op in (Operation.AND, Operation.OR):
-    #         self.children = [child.pnf() for child in self.children]
-    #     elif self.op == Operation.IMPLIES:
-    #         self.left = self.left.negate().pnf()
-    #         self.right = self.right.pnf()
-    #         self.op = Operation.OR
-    #     elif self.op == Operation.NOT:
-    #         return self.child.negate().pnf()
-    #     elif self.op == Operation.UNTIL:
-    #         raise NotImplementedError
-    #     elif self.op in (Operation.ALWAYS, Operation.EVENT):
-    #         self.child = self.child.pnf()
-    #     return self
+        Note: The tree structure is modified in-place.
+        '''
+        if self.op in (Operation.AND, Operation.OR):
+            self.children = [child.pnf() for child in self.children]
+        elif self.op == Operation.IMPLIES:
+            self.left = self.left.negate().pnf()
+            self.right = self.right.pnf()
+            self.op = Operation.OR
+        elif self.op == Operation.NOT:
+            if self.child.op != Operation.PRED:
+                return self.child.negate().pnf()
+        elif self.op == Operation.UNTIL:
+            raise NotImplementedError
+        elif self.op in (Operation.ALWAYS, Operation.EVENT):
+            self.child = self.child.pnf()
+        return self
 
     def bound(self):
         '''Computes the bound of the MTL formula.'''
@@ -143,7 +126,7 @@ class MTLFormula(object):
             return self.high + self.child.bound()
 
     def variables(self):
-        '''Computes the set of variables involved in the STL formula.'''
+        '''Computes the set of variables involved in the MTL formula.'''
         if self.op == Operation.BOOL:
             return set()
         elif self.op == Operation.PRED:
@@ -249,6 +232,7 @@ class MTLAbstractSyntaxTreeExtractor(mtlVisitor):
 
     def visitParprop(self, ctx):
         return self.visit(ctx.child)
+
 
 if __name__ == '__main__':
     lexer = mtlLexer(InputStream("!x && F[0, 2] y || G[1, 3] z"))
