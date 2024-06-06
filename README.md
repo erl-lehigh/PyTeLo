@@ -1,5 +1,7 @@
 # Python Temporal Logic (PyTeLo)
 
+## Paper description [PDF](https://arxiv.org/pdf/2310.08714)
+
 Setup
 -----
 
