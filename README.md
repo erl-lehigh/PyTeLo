@@ -16,8 +16,8 @@ For permanent settings use:
 
 ```bash
 cd <clone-dir>
-echo "export CLASSPATH=\".:$PWD/lib/antlr-4.13.0-complete.jar:$CLASSPATH\"" >> ~/.bashrc
-echo "alias antlr4=\"java -jar $PWD/lib/antlr-4.13.0-complete.jar -visitor\"" >> ~/.bashrc
+echo "export CLASSPATH=\".:$PWD/pytelo/lib/antlr-4.13.0-complete.jar:$CLASSPATH\"" >> ~/.bashrc
+echo "alias antlr4=\"java -jar $PWD/pytelo/lib/antlr-4.13.0-complete.jar -visitor\"" >> ~/.bashrc
 echo "alias grun=\"java org.antlr.v4.gui.TestRig\"" >> ~/.bashrc
 ```
 
@@ -25,12 +25,12 @@ Otherwise
 
 ```bash
 cd <clone-dir>
-export CLASSPATH=".:$PWD/lib/antlr-4.13.0-complete.jar:$CLASSPATH"
-alias antlr4="java -jar $PWD/lib/antlr-4.13.0-complete.jar -visitor"
+export CLASSPATH=".:$PWD/pytelo/lib/antlr-4.13.0-complete.jar:$CLASSPATH"
+alias antlr4="java -jar $PWD/pytelo/lib/antlr-4.13.0-complete.jar -visitor"
 alias grun="java org.antlr.v4.gui.TestRig"
 ```
 
-where `<clone-dir>` is the directory where you cloned the `pytelo` repository.
+where `<clone-dir>` is the directory where you cloned the `PyTeLo` repository.
 
 Install *Gurobi* with *gurobipy* for python3.
 
@@ -44,6 +44,17 @@ antlr4 -Dlanguage=Python3 stl.g4
 cd <clone-dir>/mtl
 antlr4 -Dlanguage=Python3 mtl.g4
 ```
+## How To Cite
+Cardona, G.A., Leahy, K., Mann, M. and Vasile, C.I., 2023. A Flexible and Efficient Temporal Logic Tool for Python: PyTeLo. arXiv preprint arXiv:2310.08714.
+BibTeX:
+'''
+@article{cardona2023flexible,
+  title={A Flexible and Efficient Temporal Logic Tool for Python: PyTeLo},
+  author={Cardona, Gustavo A and Leahy, Kevin and Mann, Makai and Vasile, Cristian-Ioan},
+  journal={arXiv preprint arXiv:2310.08714},
+  year={2023}
+}
+'''
 
 **NOTE:** At the moment the implementation only supports python2 and python3. However, you
 can generate lexers, parsers, listners, and visitors for other target languages,
