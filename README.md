@@ -46,15 +46,16 @@ antlr4 -Dlanguage=Python3 mtl.g4
 ```
 ## How To Cite
 Cardona, G.A., Leahy, K., Mann, M. and Vasile, C.I., 2023. A Flexible and Efficient Temporal Logic Tool for Python: PyTeLo. arXiv preprint arXiv:2310.08714.
+
 BibTeX:
-'''
+```
 @article{cardona2023flexible,
   title={A Flexible and Efficient Temporal Logic Tool for Python: PyTeLo},
   author={Cardona, Gustavo A and Leahy, Kevin and Mann, Makai and Vasile, Cristian-Ioan},
   journal={arXiv preprint arXiv:2310.08714},
   year={2023}
 }
-'''
+```
 
 **NOTE:** At the moment the implementation only supports python2 and python3. However, you
 can generate lexers, parsers, listners, and visitors for other target languages,
