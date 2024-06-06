@@ -18,8 +18,8 @@ For permanent settings use:
 
 ```bash
 cd <clone-dir>
-echo "export CLASSPATH=\".:$PWD/pytelo/lib/antlr-4.13.0-complete.jar:$CLASSPATH\"" >> ~/.bashrc
-echo "alias antlr4=\"java -jar $PWD/pytelo/lib/antlr-4.13.0-complete.jar -visitor\"" >> ~/.bashrc
+echo "export CLASSPATH=\".:$PWD/lib/antlr-4.13.0-complete.jar:$CLASSPATH\"" >> ~/.bashrc
+echo "alias antlr4=\"java -jar $PWD/lib/antlr-4.13.0-complete.jar -visitor\"" >> ~/.bashrc
 echo "alias grun=\"java org.antlr.v4.gui.TestRig\"" >> ~/.bashrc
 ```
 
@@ -27,8 +27,8 @@ Otherwise
 
 ```bash
 cd <clone-dir>
-export CLASSPATH=".:$PWD/pytelo/lib/antlr-4.13.0-complete.jar:$CLASSPATH"
-alias antlr4="java -jar $PWD/pytelo/lib/antlr-4.13.0-complete.jar -visitor"
+export CLASSPATH=".:$PWD/lib/antlr-4.13.0-complete.jar:$CLASSPATH"
+alias antlr4="java -jar $PWD/lib/antlr-4.13.0-complete.jar -visitor"
 alias grun="java org.antlr.v4.gui.TestRig"
 ```
 
