@@ -34,6 +34,7 @@ where `<clone-dir>` is the directory where you cloned the `pytelo` repository.
 
 Install *Gurobi* with *gurobipy* for python3.
 
+Pip install with `pip install pytelo/` from one directory level above. This will let other packages import pytelo functions without including pytelo in their directory structure or referencing the associated files by location.
 
 Run
 ---
