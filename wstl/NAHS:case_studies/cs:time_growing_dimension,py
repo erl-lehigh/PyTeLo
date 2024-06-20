@@ -1,0 +1,248 @@
+import sys
+import time 
+import random
+import matplotlib.pyplot as plt
+sys.path.append('../')
+from antlr4 import InputStream, CommonTokenStream
+from stl import Operation, RelOperation, STLFormula
+from wstlLexer import wstlLexer
+from wstlParser import wstlParser
+from wstlVisitor import wstlVisitor
+import gurobipy as grb
+from wstl import WSTLAbstractSyntaxTreeExtractor
+from stl import STLAbstractSyntaxTreeExtractor
+from wstl2milp import wstl2milp
+from stl2milp import stl2milp
+from dstl2milp import dstl2milp
+from dwstl2milp import dwstl2milp
+from stlLexer import stlLexer
+from stlParser import stlParser
+from stlVisitor import stlVisitor
+from stl import STLAbstractSyntaxTreeExtractor
+import numpy as np
+from scipy.ndimage.filters import gaussian_filter1d
+
+def stl_synthesis_control(formula, vars_ub=10, vars_lb=-10):
+    
+    lexer = stlLexer(InputStream(formula))
+    tokens = CommonTokenStream(lexer)
+    parser = stlParser(tokens)
+    t = parser.stlProperty()
+    ast = STLAbstractSyntaxTreeExtractor().visit(t)
+
+    stl_milp = dstl2milp(ast, robust=True)
+
+    A = [[1, 1], [0, 1]] 
+    B = [[1,  1]] 
+    C = [[1, 1], [1, 1]]
+    time_bound = int(ast.bound()) + 1
+    x = dict()
+    y = dict()
+    z = dict()
+    u = dict()
+    v = dict()
+    w = dict()
+    o1 = dict()
+    o2 = dict()
+    #creating the Gurobi Variables 
+    for k in range(time_bound):
+        name = "x_{}".format(k) 
+        x[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "y_{}".format(k)
+        y[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "z_{}".format(k) 
+        z[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "u_{}".format(k)
+        u[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "v_{}".format(k)
+        v[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "w_{}".format(k)
+        w[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "o1_{}".format(k)
+        o1[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "02_{}".format(k)
+        o2[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+            # use system variables in STL spec encoding
+    stl_milp.variables['x'] = x
+    stl_milp.variables['y'] = y
+    stl_milp.variables['z'] = z
+    stl_milp.variables['u'] = u
+    stl_milp.variables['v'] = v
+    stl_milp.variables['w'] = w
+    stl_milp.variables['o1'] = o1
+    stl_milp.variables['o2'] = o2
+    
+    
+    for k in range(time_bound-1):
+        stl_milp.model.addConstr(x[k+1] == A[0][0] * x[k] + A[0][1] * y[k] +
+                                           B[0][0] * u[k])
+
+        stl_milp.model.addConstr(y[k+1] == A[1][0] * x[k] + A[1][1] * y[k] +
+                                           B[0][1] * v[k])
+        stl_milp.model.addConstr(o1[k+1] == C[0][0] * x[k] + C[0][1] * y[k])
+        stl_milp.model.addConstr(o2[k+1] == C[1][0] * x[k] + C[1][1] * y[k])
+
+    #initial conditions
+    stl_milp.model.addConstr(x[0] == -9)
+    stl_milp.model.addConstr(y[0] == -9)
+    stl_milp.model.addConstr(z[0] == 0)
+    stl_milp.model.addConstr(u[0] == 0)
+    stl_milp.model.addConstr(v[0] == 0)
+    stl_milp.model.addConstr(w[0] == 0)
+    # add the specification (STL) constraints
+    stl_milp.translate(satisfaction=True)
+    # Solve the problem with gurobi 
+    stl_milp.model.optimize()
+    return stl_milp
+
+def stl_synthesis_control4d(formula, vars_ub=10, vars_lb=-10):
+    
+    lexer = stlLexer(InputStream(formula))
+    tokens = CommonTokenStream(lexer)
+    parser = stlParser(tokens)
+    t = parser.stlProperty()
+    ast = STLAbstractSyntaxTreeExtractor().visit(t)
+
+    stl_milp = dstl2milp(ast, robust=True)
+
+    A = [[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1], [1, 0, 0, 1]] 
+    B = [[1,  1, 1, 1]] 
+    C = [[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1], [1, 0, 0, 1]]
+    time_bound = int(ast.bound()) + 1
+    x = dict()
+    y = dict()
+    z = dict()
+    x1 = dict()
+    u = dict()
+    v = dict()
+    w = dict()
+    u1= dict()
+    o1 = dict()
+    o2 = dict()
+    o3 = dict()
+    o4 = dict()
+    #creating the Gurobi Variables 
+    for k in range(time_bound):
+        name = "x_{}".format(k) 
+        x[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "x1_{}".format(k) 
+        x1[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "y_{}".format(k)
+        y[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "z_{}".format(k) 
+        z[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "u_{}".format(k)
+        u[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "u1_{}".format(k)
+        u1[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "v_{}".format(k)
+        v[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "w_{}".format(k)
+        w[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "o1_{}".format(k)
+        o1[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "02_{}".format(k)
+        o2[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "o1_{}".format(k)
+        o3[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+        name = "02_{}".format(k)
+        o4[k] = stl_milp.model.addVar(vtype=grb.GRB.CONTINUOUS, lb=vars_lb, 
+                                     ub=vars_ub, name=name)
+            # use system variables in STL spec encoding
+    stl_milp.variables['x'] = x
+    stl_milp.variables['x1'] = x1
+    stl_milp.variables['y'] = y
+    stl_milp.variables['z'] = z
+    stl_milp.variables['u1'] = u1
+    stl_milp.variables['u'] = u
+    stl_milp.variables['v'] = v
+    stl_milp.variables['w'] = w
+    stl_milp.variables['o1'] = o1
+    stl_milp.variables['o2'] = o2
+    stl_milp.variables['o1'] = o3
+    stl_milp.variables['o2'] = o4
+    
+    
+    for k in range(time_bound-1):
+        stl_milp.model.addConstr(x[k+1] == A[0][0] * x[k] + A[0][1] * y[k] +
+                                           A[0][2] * x1[k] + A[0][3] * z[k] +
+                                           B[0][0] * u[k])
+        stl_milp.model.addConstr(x1[k+1] == A[1][0] * x[k] + A[1][1] * y[k] +
+                                           A[1][2] * x1[k] + A[1][3] * z[k] +
+                                           B[0][1] * v[k])
+
+        stl_milp.model.addConstr(y[k+1] == A[2][0] * x[k] + A[2][1] * y[k] +
+                                           A[2][2] * x1[k] + A[2][3] * z[k] +
+                                           B[0][1] * w[k])
+        stl_milp.model.addConstr(z[k+1] == A[3][0] * x[k] + A[3][1] * y[k] +
+                                           A[3][2] * x1[k] + A[3][3] * z[k] +
+                                           B[0][1] * w[k])
+        stl_milp.model.addConstr(o1[k+1] == C[0][0] * x[k] + C[0][1] * y[k])
+        stl_milp.model.addConstr(o2[k+1] == C[1][0] * z[k] + C[1][1] * x1[k])
+        
+    #initial conditions
+    stl_milp.model.addConstr(x[0] == -9)
+    stl_milp.model.addConstr(y[0] == -9)
+    stl_milp.model.addConstr(z[0] == 0)
+    stl_milp.model.addConstr(u[0] == 0)
+    stl_milp.model.addConstr(v[0] == 0)
+    stl_milp.model.addConstr(w[0] == 0)
+    # add the specification (STL) constraints
+    stl_milp.translate(satisfaction=True)
+    # Solve the problem with gurobi 
+    stl_milp.model.optimize()
+    return stl_milp
+
+if __name__ == '__main__':
+    formula = '(G[3,5] (o1 >= 3)) && (G[9,10] (o2 >= 2) || G[9,10] (o1 <= -4))'    
+    # wstl_formula = "&&^weight2 ( G[5,10]^weight0  (x>=3),G[5,10]^weight3 \
+    #                 (y<=-2), G[5,10]^weight3 (z>=1) )"
+    # obstacle = "&&" + stl_zone("O", "G", 0, 30, "x", "y")
+    # formula = '(' + stl_zone("C", "G", 10, 15, "x", "y") + ' && '+\
+    #               stl_zone("D", "G", 25, 30, "x", "y") + ' && '+ \
+    #                 stl_zone("A", "G", 0, 1, "x", "y") + obstacle + ')'
+
+    # Define the matrixes that used for linear system 
+    vars_ub = 9
+    vars_lb = -9
+    control_ub = 5
+    control_lb = -5
+
+    # Translate WSTL to MILP and retrieve integer variable for the formula
+    stl_start4 = time.time()
+    stl_milp = stl_synthesis_control4d(formula)
+    stl_end4 = time.time()
+
+    stl_start2 = time.time()
+    stl_milp2 = stl_synthesis_control(formula)
+    stl_end2 = time.time()
+    # dstl_milp = stl_synthesis_control(formula, A, B, vars_ub, vars_lb, control_ub,
+    #                                 control_lb, alpha=0, beta=0)
+    # dstl_milp2 = stl_synthesis_control(formula, A, B, vars_ub, vars_lb, control_ub,
+    #                                 control_lb, alpha=0.1, beta=0.1)                                
+   
+    stl_time4 = stl_end4 - stl_start4
+    stl_time2 = stl_end2 - stl_start2
+
+    print(formula, 'Time needed 2d:', stl_time2, 'Time needed 4d:', stl_time4)
+    
+    # visualize(stl_milp, stl_milp2)
