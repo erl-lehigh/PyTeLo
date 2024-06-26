@@ -245,13 +245,7 @@ def to_ast(formula):
 
 
 if __name__ == '__main__':
-    lexer = mtlLexer(InputStream("!x && F[0, 2] y || G[1, 3] z"))
-    # lexer = mtlLexer(InputStream("x"))
-    tokens = CommonTokenStream(lexer)
+    formula = "!x && F[0, 2] y || G[1, 3] z"
 
-    parser = mtlParser(tokens)
-    t = parser.mtlProperty()
-    print(t.toStringTree())
-
-    ast = MTLAbstractSyntaxTreeExtractor().visit(t)
+    ast = to_ast(formula)
     print('AST:', str(ast))
