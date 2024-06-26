@@ -394,6 +394,16 @@ class TraceBatch(object):
         raise NotImplementedError
 
 
+def to_ast(formula):
+    '''Transforms a formula string to an Abstract Syntax Tree.'''
+    lexer = stlLexer(InputStream(formula))
+    tokens = CommonTokenStream(lexer)
+    parser = stlParser(tokens)
+    t = parser.stlProperty()
+    ast = STLAbstractSyntaxTreeExtractor().visit(t)
+    return ast
+
+
 if __name__ == '__main__':
     lexer = stlLexer(InputStream("!(x > 10) && F[0, 2] y > 2 && G[1, 3] z<=8"))
     # lexer = stlLexer(InputStream("!(x < 10) && y > 2 && z<=8"))
