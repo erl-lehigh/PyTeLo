@@ -50,6 +50,7 @@ class RelOperation(object):
     opcodes = {'<': LT, '<=': LE, '>' : GT, '>=': GE, '=': EQ, '!=': NQ}
     # negation closure of operations
     negop = (NOP, GE, GT, LE, LT, NQ, EQ)
+    invop = (NOP, GT, GE, LT, LE, EQ, NQ)
 
     @classmethod
     def getCode(cls, text):
@@ -154,6 +155,7 @@ class STLFormula(object):
         '''Computes the negation of the STL formula by propagating the negation
         towards predicates.
         '''
+        self.__string = None
         if self.op == Operation.BOOL:
             self.value = not self.value
         elif self.op == Operation.PRED:
@@ -177,21 +179,24 @@ class STLFormula(object):
 
         Note: The tree structure is modified in-place.
         '''
+        self.__string = None
         if self.op == Operation.PRED:
             if self.relation in (RelOperation.LE, RelOperation.LT):
-                self.variable = '{variable}_neg'.format(variable=self.variable)
+                self.relation = RelOperation.invop[self.relation]
+                self.variable = f'{self.variable}_neg'
+                self.threshold = -self.threshold
             elif self.relation == RelOperation.EQ:
                 children = [STLFormula(Operation.PRED, relation=RelOperation.GE,
                               variable=self.variable, threshold=self.threshold),
                             STLFormula(Operation.PRED, relation=RelOperation.GE,
-                              variable='{variable}_neg'.format(self.variable),
+                              variable=f'{self.variable}_neg',
                               threshold=-self.threshold)]
                 return STLFormula(Operation.AND, children=children)
             elif self.relation == RelOperation.NQ:
                 children = [STLFormula(Operation.PRED, relation=RelOperation.GT,
                               variable=self.variable, threshold=self.threshold),
                             STLFormula(Operation.PRED, relation=RelOperation.GT,
-                              variable='{variable}_neg'.format(self.variable),
+                              variable=f'{self.variable}_neg',
                               threshold=-self.threshold)]
                 return STLFormula(Operation.OR, children=children)
         elif self.op in (Operation.AND, Operation.OR):
