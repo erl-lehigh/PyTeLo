@@ -173,44 +173,58 @@ class STLFormula(object):
         self.op = Operation.negop[self.op]
         return self
 
-    def pnf(self):
+    def pnf(self, insert_inverse_variables=False):
         '''Computes the Positive Normal Form of the STL formula, potentially
         adding new variables.
 
         Note: The tree structure is modified in-place.
         '''
         self.__string = None
+        flag = insert_inverse_variables
         if self.op == Operation.PRED:
             if self.relation in (RelOperation.LE, RelOperation.LT):
-                self.relation = RelOperation.invop[self.relation]
-                self.variable = f'{self.variable}_neg'
-                self.threshold = -self.threshold
-            elif self.relation == RelOperation.EQ:
-                children = [STLFormula(Operation.PRED, relation=RelOperation.GE,
+                if insert_inverse_variables:
+                    self.relation = RelOperation.invop[self.relation]
+                    self.variable = f'{self.variable}_neg'
+                    self.threshold = -self.threshold
+            elif self.relation in (RelOperation.EQ, RelOperation.NQ):
+                if self.relation == RelOperation.EQ:
+                    op = Operation.AND
+                    rel1 = RelOperation.GE
+                else: # self.relation == RelOperation.NQ
+                    op = Operation.OR
+                    rel1 = RelOperation.GT
+                if insert_inverse_variables:
+                    if self.relation == RelOperation.EQ:
+                        rel2 = RelOperation.GE
+                    else: # self.relation == RelOperation.NQ
+                        rel2 = RelOperation.GT
+                    var_neg = f'{self.variable}_neg'
+                    thr = -self.threshold
+                else:
+                    if self.relation == RelOperation.EQ:
+                        rel2 = RelOperation.LE
+                    else: # self.relation == RelOperation.NQ
+                        rel2 = RelOperation.LT
+                    var_neg = self.variable
+                    thr = self.threshold
+                children = [STLFormula(Operation.PRED, relation=rel1,
                               variable=self.variable, threshold=self.threshold),
-                            STLFormula(Operation.PRED, relation=RelOperation.GE,
-                              variable=f'{self.variable}_neg',
-                              threshold=-self.threshold)]
-                return STLFormula(Operation.AND, children=children)
-            elif self.relation == RelOperation.NQ:
-                children = [STLFormula(Operation.PRED, relation=RelOperation.GT,
-                              variable=self.variable, threshold=self.threshold),
-                            STLFormula(Operation.PRED, relation=RelOperation.GT,
-                              variable=f'{self.variable}_neg',
-                              threshold=-self.threshold)]
-                return STLFormula(Operation.OR, children=children)
+                            STLFormula(Operation.PRED, relation=rel2,
+                              variable=var_neg, threshold=thr)]
+                return STLFormula(op, children=children)
         elif self.op in (Operation.AND, Operation.OR):
-            self.children = [child.pnf() for child in self.children]
+            self.children = [child.pnf(flag) for child in self.children]
         elif self.op == Operation.IMPLIES:
-            self.left = self.left.negate().pnf()
-            self.right = self.right.pnf()
+            self.left = self.left.negate().pnf(flag)
+            self.right = self.right.pnf(flag)
             self.op = Operation.OR
         elif self.op == Operation.NOT:
-            return self.child.negate().pnf()
+            return self.child.negate().pnf(flag)
         elif self.op == Operation.UNTIL:
             raise NotImplementedError
         elif self.op in (Operation.ALWAYS, Operation.EVENT):
-            self.child = self.child.pnf()
+            self.child = self.child.pnf(flag)
         return self
 
     def bound(self):
