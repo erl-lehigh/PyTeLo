@@ -68,11 +68,12 @@ class MTLFormula(object):
 
         self.__string = None
         self.__hash = None
-    
+
     def negate(self):
         '''Computes the negation of the MTL formula by propagating the negation
         towards predicates.
         '''
+        self.__string = None
         if self.op == Operation.BOOL:
             self.value = not self.value
         elif self.op == Operation.PRED:
@@ -90,11 +91,12 @@ class MTLFormula(object):
         self.op = Operation.negop[self.op]
         return self
 
-    def pnf(self):
+    def pnf(self, insert_negation_variables=False):
         '''Computes the Positive Normal Form of the MTL formula.
 
         Note: The tree structure is modified in-place.
         '''
+        self.__string = None
         if self.op in (Operation.AND, Operation.OR):
             self.children = [child.pnf() for child in self.children]
         elif self.op == Operation.IMPLIES:
@@ -104,6 +106,9 @@ class MTLFormula(object):
         elif self.op == Operation.NOT:
             if self.child.op != Operation.PRED:
                 return self.child.negate().pnf()
+            elif insert_negation_variables:
+                self.child.variable = f'{self.child.variable}_neg'
+                return self.child
         elif self.op == Operation.UNTIL:
             raise NotImplementedError
         elif self.op in (Operation.ALWAYS, Operation.EVENT):
@@ -245,4 +250,3 @@ if __name__ == '__main__':
 
     ast = MTLAbstractSyntaxTreeExtractor().visit(t)
     print('AST:', str(ast))
-    
