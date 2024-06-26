@@ -68,7 +68,7 @@ class MTLFormula(object):
 
         self.__string = None
         self.__hash = None
-    
+
     def negate(self):
         '''Computes the negation of the MTL formula by propagating the negation
         towards predicates.
@@ -234,6 +234,16 @@ class MTLAbstractSyntaxTreeExtractor(mtlVisitor):
         return self.visit(ctx.child)
 
 
+def to_ast(formula):
+    '''Transforms a formula string to an Abstract Syntax Tree.'''
+    lexer = mtlLexer(InputStream(formula))
+    tokens = CommonTokenStream(lexer)
+    parser = mtlParser(tokens)
+    t = parser.mtlProperty()
+    ast = MTLAbstractSyntaxTreeExtractor().visit(t)
+    return ast
+
+
 if __name__ == '__main__':
     lexer = mtlLexer(InputStream("!x && F[0, 2] y || G[1, 3] z"))
     # lexer = mtlLexer(InputStream("x"))
@@ -245,4 +255,3 @@ if __name__ == '__main__':
 
     ast = MTLAbstractSyntaxTreeExtractor().visit(t)
     print('AST:', str(ast))
-    
