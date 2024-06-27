@@ -86,7 +86,6 @@ class stl2milp(object):
             name='{}_{}'.format(state, t)
             v = self.model.addVar(vtype=vtype, lb=low, ub=high, name=name)
             self.variables[state][t] = v
-            print 'Added state:', state, 'time:', t
             self.model.update()
         return self.variables[state][t]
 
@@ -100,7 +99,6 @@ class stl2milp(object):
         elif pred.relation in (RelOperation.LE, RelOperation.LT):
             self.model.addConstr(v + self.M * z >= pred.threshold - self.rho)
             self.model.addConstr(v - self.M * (1 - z) <= pred.threshold - self.rho)
-#            raise NotImplementedError
         else:
             raise NotImplementedError
 
