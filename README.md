@@ -36,7 +36,6 @@ where `<clone-dir>` is the directory where you cloned the `PyTeLo` repository.
 
 Install *Gurobi* with *gurobipy* for python3.
 
-
 Run
 ---
 
@@ -58,6 +57,17 @@ BibTeX:
   year={2023}
 }
 ```
+
+Install as Package
+---
+After running `antlr4` above, from one directory level above `pytelo/`
+
+```bash
+pip install pytelo/
+```
+
+This will let other packages import pytelo functions without including pytelo in their directory structure or referencing the associated files by location.
+
 
 **NOTE:** At the moment the implementation only supports python2 and python3. However, you
 can generate lexers, parsers, listners, and visitors for other target languages,

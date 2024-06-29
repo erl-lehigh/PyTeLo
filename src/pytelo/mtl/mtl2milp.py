@@ -6,7 +6,7 @@
 
 import gurobipy as grb
 
-from mtl import Operation, MTLFormula
+from .mtl import Operation, MTLFormula
 
 
 class mtl2milp(object):
