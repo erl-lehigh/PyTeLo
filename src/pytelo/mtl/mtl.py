@@ -6,9 +6,9 @@
 
 from antlr4 import InputStream, CommonTokenStream
 
-from mtlLexer import mtlLexer
-from mtlParser import mtlParser
-from mtlVisitor import mtlVisitor
+from .mtlLexer import mtlLexer
+from .mtlParser import mtlParser
+from .mtlVisitor import mtlVisitor
 
 
 class Operation(object):

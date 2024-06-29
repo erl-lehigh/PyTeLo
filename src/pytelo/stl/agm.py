@@ -9,8 +9,8 @@ from __future__ import print_function
 import numpy as np
 from antlr4 import InputStream, CommonTokenStream
 
-from stlLexer import stlLexer
-from stlParser import stlParser
+from .stlLexer import stlLexer
+from .stlParser import stlParser
 
 from stl import Operation, RelOperation, STLAbstractSyntaxTreeExtractor, Trace
 
