@@ -50,6 +50,7 @@ class RelOperation(object):
     opcodes = {'<': LT, '<=': LE, '>' : GT, '>=': GE, '=': EQ, '!=': NQ}
     # negation closure of operations
     negop = (NOP, GE, GT, LE, LT, NQ, EQ)
+    invop = (NOP, GT, GE, LT, LE, EQ, NQ)
 
     @classmethod
     def getCode(cls, text):
@@ -154,6 +155,7 @@ class STLFormula(object):
         '''Computes the negation of the STL formula by propagating the negation
         towards predicates.
         '''
+        self.__string = None
         if self.op == Operation.BOOL:
             self.value = not self.value
         elif self.op == Operation.PRED:
@@ -171,41 +173,58 @@ class STLFormula(object):
         self.op = Operation.negop[self.op]
         return self
 
-    def pnf(self):
+    def pnf(self, insert_inverse_variables=False):
         '''Computes the Positive Normal Form of the STL formula, potentially
         adding new variables.
 
         Note: The tree structure is modified in-place.
         '''
+        self.__string = None
+        flag = insert_inverse_variables
         if self.op == Operation.PRED:
             if self.relation in (RelOperation.LE, RelOperation.LT):
-                self.variable = '{variable}_neg'.format(variable=self.variable)
-            elif self.relation == RelOperation.EQ:
-                children = [STLFormula(Operation.PRED, relation=RelOperation.GE,
+                if insert_inverse_variables:
+                    self.relation = RelOperation.invop[self.relation]
+                    self.variable = f'{self.variable}_neg'
+                    self.threshold = -self.threshold
+            elif self.relation in (RelOperation.EQ, RelOperation.NQ):
+                if self.relation == RelOperation.EQ:
+                    op = Operation.AND
+                    rel1 = RelOperation.GE
+                else: # self.relation == RelOperation.NQ
+                    op = Operation.OR
+                    rel1 = RelOperation.GT
+                if insert_inverse_variables:
+                    if self.relation == RelOperation.EQ:
+                        rel2 = RelOperation.GE
+                    else: # self.relation == RelOperation.NQ
+                        rel2 = RelOperation.GT
+                    var_neg = f'{self.variable}_neg'
+                    thr = -self.threshold
+                else:
+                    if self.relation == RelOperation.EQ:
+                        rel2 = RelOperation.LE
+                    else: # self.relation == RelOperation.NQ
+                        rel2 = RelOperation.LT
+                    var_neg = self.variable
+                    thr = self.threshold
+                children = [STLFormula(Operation.PRED, relation=rel1,
                               variable=self.variable, threshold=self.threshold),
-                            STLFormula(Operation.PRED, relation=RelOperation.GE,
-                              variable='{variable}_neg'.format(self.variable),
-                              threshold=-self.threshold)]
-                return STLFormula(Operation.AND, children=children)
-            elif self.relation == RelOperation.NQ:
-                children = [STLFormula(Operation.PRED, relation=RelOperation.GT,
-                              variable=self.variable, threshold=self.threshold),
-                            STLFormula(Operation.PRED, relation=RelOperation.GT,
-                              variable='{variable}_neg'.format(self.variable),
-                              threshold=-self.threshold)]
-                return STLFormula(Operation.OR, children=children)
+                            STLFormula(Operation.PRED, relation=rel2,
+                              variable=var_neg, threshold=thr)]
+                return STLFormula(op, children=children)
         elif self.op in (Operation.AND, Operation.OR):
-            self.children = [child.pnf() for child in self.children]
+            self.children = [child.pnf(flag) for child in self.children]
         elif self.op == Operation.IMPLIES:
-            self.left = self.left.negate().pnf()
-            self.right = self.right.pnf()
+            self.left = self.left.negate().pnf(flag)
+            self.right = self.right.pnf(flag)
             self.op = Operation.OR
         elif self.op == Operation.NOT:
-            return self.child.negate().pnf()
+            return self.child.negate().pnf(flag)
         elif self.op == Operation.UNTIL:
             raise NotImplementedError
         elif self.op in (Operation.ALWAYS, Operation.EVENT):
-            self.child = self.child.pnf()
+            self.child = self.child.pnf(flag)
         return self
 
     def bound(self):
@@ -340,10 +359,6 @@ class Trace(object):
 
     def __init__(self, variables, timePoints, data, kind='nearest'):
         '''Constructor'''
-        # self.timePoints = list(timePoints)
-        # self.data = np.array(data)
-        # for variable, var_data in zip(variables, data):
-        #     print(variable, var_data, timePoints)
         self.data = {variable : interp1d(timePoints, var_data, kind=kind)
                             for variable, var_data in zip(variables, data)}
 
@@ -393,7 +408,6 @@ class TraceBatch(object):
     def __str__(self):
         raise NotImplementedError
 
-
 def to_ast(formula):
     '''Transforms a formula string to an Abstract Syntax Tree.'''
     lexer = stlLexer(InputStream(formula))
@@ -403,11 +417,9 @@ def to_ast(formula):
     ast = STLAbstractSyntaxTreeExtractor().visit(t)
     return ast
 
-
 if __name__ == '__main__':
-    formula = "!(x > 10) && F[0, 2] y > 2 && G[1, 3] z<=8"
-    # formula = "!(x < 10) && y > 2 && z<=8"
-    # formula = "!(x < 10) U[1,3] (y > 2 && z<=8)"
+    
+    formula = ("!(x > 10) && F[0, 2] y > 2 && G[1, 3] z<=8")
 
     ast = to_ast(formula)
     print('AST:', str(ast))
