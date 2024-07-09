@@ -3,7 +3,7 @@
  See license.txt file for license information.
  @author: Gustavo Cardona, Cristian-Ioan Vasile
 """
-from ps_stl2milp import pstl2milp
+from pstl2milp import pstl2milp
 import sys
 sys.path.append('..')
 from stl import to_ast
