@@ -205,3 +205,28 @@ class pswmtl2milp(object):
         self.model.update()
         self.model.optimize()
         self.model.write('model_test.lp')
+    
+    def satis_score(self, formula, t=0):
+
+        if formula.op == Operation.PRED:
+            return self.variables[formula][t].x
+        
+        if formula.op == Operation.AND:
+            children_score = [self.satis_score(f, t) for f in formula.children]
+            return sum(children_score) / len(formula.children)
+        
+        if formula.op == Operation.OR:
+            children_score = [self.satis_score(f, t) for f in formula.children]
+            return max(children_score)
+        
+        if formula.op == Operation.ALWAYS:
+            f = formula.child
+            interval = range(int(formula.low), int(formula.high+1))
+            children_score = [self.satis_score(f,t) for t in interval]
+            return sum(children_score) / len(interval)
+        
+        if formula.op == Operation.EVENT:
+            f = formula.child
+            interval = range(int(formula.low), int(formula.high+1))
+            children_score = [self.satis_score(f,t) for t in interval]
+            return  max(children_score)
