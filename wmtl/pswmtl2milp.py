@@ -221,12 +221,12 @@ class pswmtl2milp(object):
         
         if formula.op == Operation.ALWAYS:
             f = formula.child
-            interval = range(int(formula.low), int(formula.high+1))
+            interval = range(int(formula.low)+t, int(formula.high+1)+t)
             children_score = [self.satis_score(f,t) for t in interval]
             return sum(children_score) / len(interval)
         
         if formula.op == Operation.EVENT:
             f = formula.child
-            interval = range(int(formula.low), int(formula.high+1))
+            interval = range(int(formula.low)+t, int(formula.high+1)+t)
             children_score = [self.satis_score(f,t) for t in interval]
             return  max(children_score)

@@ -10,7 +10,7 @@ sys.path.append('..')
 from wmtl import to_ast
 from pswmtl2milp import pswmtl2milp
 
-formula = "||^w2 (F[0,1]^w3 (a), F[0,1]^w2 (b))"
+formula = "&&^w1 (F[2,3]^w1 (a), F[2,3]^w1 (b))"
 # formula = "F[0, 1]^w3 (y)"
 weights = {
         'p1': lambda i: i+1,
@@ -27,9 +27,9 @@ mtl_milp = pswmtl2milp(ast)
 z = mtl_milp.translate()
 
 # creating the need of partial satisfaction
-mtl_milp.model.addConstr(mtl_milp.variables['a'][0] == 0)
-mtl_milp.model.addConstr(mtl_milp.variables['b'][0] == 0)
-mtl_milp.model.addConstr(mtl_milp.variables['b'][1] == 0)
+# mtl_milp.model.addConstr(mtl_milp.variables['a'][0] == 0)
+# mtl_milp.model.addConstr(mtl_milp.variables['b'][0] == 0)
+mtl_milp.model.addConstr(mtl_milp.variables['b'][2] == 0)
 
 '''
     we have implemented three different methods to capture partial satisfaction
