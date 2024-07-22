@@ -1,40 +1,20 @@
-from antlr4 import InputStream, CommonTokenStream
 import time
-import numpy as np
 import matplotlib.pyplot as plt
 import gurobipy as grb
 import sys
 sys.path.append('../')
 
-from stl import Operation, RelOperation, STLFormula
-from wstlLexer import wstlLexer
-from wstlParser import wstlParser
-from wstlVisitor import wstlVisitor
-
-from wstl import WSTLAbstractSyntaxTreeExtractor
-from stl import STLAbstractSyntaxTreeExtractor
-from long_wstl2milp import long_wstl2milp
-from wstl2milp import wstl2milp
+from stl import to_ast as stl2ast
 from stl2milp import stl2milp
-# from gurobipy import *
-from stlLexer import stlLexer
-from stlParser import stlParser
-from stlVisitor import stlVisitor
-from stl import STLAbstractSyntaxTreeExtractor
-from environment import environment, stl_zone, wstl_zone
 
 def stl_synthesis_control(formula, A, B, vars_ub, vars_lb, control_ub, 
                           control_lb, alpha=0.1, beta=0.1):
-    
-    lexer = stlLexer(InputStream(formula))
-    tokens = CommonTokenStream(lexer)
-    parser = stlParser(tokens)
-    t = parser.stlProperty()
-    ast = STLAbstractSyntaxTreeExtractor().visit(t)
 
+    ast = stl2ast(formula)
     stl_milp = stl2milp(ast, robust=True)
     
     time_bound = int(ast.bound()) + 1
+
     x = dict()
     y = dict()
     u = dict()

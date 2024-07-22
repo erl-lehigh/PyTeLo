@@ -295,6 +295,13 @@ class WSTLAbstractSyntaxTreeExtractor(wstlVisitor):
         '''
         return self.visit(ctx.child);
 
+def to_ast(formula, weights):
+    lexer = wstlLexer(InputStream(formula))
+    tokens = CommonTokenStream(lexer)
+    parser = wstlParser(tokens)
+    t = parser.wstlProperty()
+    ast = WSTLAbstractSyntaxTreeExtractor(weights).visit(t)
+    return ast
 
 if __name__ == '__main__':
     lexer = wstlLexer(InputStream("!(x < 10) &&^p1 F[0, 2]^w1 y > 2"
