@@ -156,7 +156,7 @@ class pstl2milp(object):
 
         self.model.addConstr(z == grb.max_(z_children))
 
-    def pstl2lp(self, formula, t=0):
+    def pstl2lp(self, formula, t=0, optimize=True):
         ''' It creates a linear problem from the formuale
              that needs to be satisfied '''
         lp = grb.Model("LP")
@@ -185,10 +185,9 @@ class pstl2milp(object):
                 lp.addConstr(var <= phi[0].threshold - self.rho)    
             lp.update()
         
-        lp.optimize()
-        print('Objective2: ')
-        obj = lp.getObjective()
-        print(str(obj), ':', obj.getValue(), "LP")
+        if optimize is True:
+            lp.optimize()
+
         return lp
         
     def predicate_pairs(self, formula, t=0):
@@ -233,27 +232,65 @@ class pstl2milp(object):
         return ret
 
 
-    def hierarchical(self): #(Hierarchical Optimization)
+    def hierarchical(self, model_name='model_test.lp', optimize=True):
+        '''
+        This method computes a hierarchical optimization formulation 
+        (lexicografical) from root node all the way to the leaves (predicates)
+        Input:
+            - model_name is a file name to generate Gurobi information about 
+              the optimization problem
+            - optimize is a flag type variable which is True by default performing
+              the optimization of the problem, in case it is False it will only
+              generate the objective function.
+        
+        Output:
+            - depth of the formula
+        '''
         max_depth = max(self.objectives)
         for d in range(max_depth+1):
             self.model.setObjectiveN(-self.objectives[d], d, 
                                      priority=max_depth-d)
             self.model.update()
         
-        self.model.optimize()
-        self.model.write('model_test.lp')
+        if optimize is True:
+            self.model.optimize()
+            self.model.write(model_name)
         return d
     
-    def ldf(self): #(Lowest depth first)
+    def ldf(self, model_name='model_test.lp', optimize=True):
+        '''
+        This method computes a Lowest depht first optimization formulation 
+        making and increasing penalization from being far from the root node
+        Input:
+            - model_name is a file name to generate Gurobi information about 
+              the optimization problem
+            - optimize is a flag type variable which is True by default performing
+              the optimization of the problem, in case it is False it will only
+              generate the objective function.
+        '''
         M2 = 30 # FIXME: computed based on formula size
         reward = sum([term * M2**(-d) for d, term in self.objectives.items()])
         self.model.setObjective(reward, grb.GRB.MAXIMIZE)
         self.model.update()
-        self.model.optimize()
-        self.model.write('model_test.lp')
 
-    def wln(self, z): #(Weighted Largest Number)
+        if optimize is True:
+            self.model.optimize()
+            self.model.write(model_name)
+
+    def wln(self, z, model_name='model_test.lp', optimize=True):
+        '''
+        This method computes a Weighted Largest Number optimization formulation 
+    
+        Input:
+            - z this is the decision variable capturing the root node
+            - model_name is a file name to generate Gurobi information about 
+              the optimization problem
+            - optimize is a flag type variable which is True by default performing
+              the optimization of the problem, in case it is False it will only
+              generate the objective function.
+        '''
         self.model.setObjective(z, grb.GRB.MAXIMIZE)
         self.model.update()
-        self.model.optimize()
-        self.model.write('model_test.lp')
+        if optimize is True:
+            self.model.optimize()
+            self.model.write(model_name)
