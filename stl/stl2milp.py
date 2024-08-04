@@ -72,7 +72,7 @@ class stl2milp(object):
             name = '{}_{}_{}'.format(opname, identifier, t)
             self.variables[formula][t] = self.model.addVar(vtype=vtype,
                                                            name=name)
-            self.model.update() #TODO: not sure if this is needed (NEEDED!)
+            self.model.update() 
             return self.variables[formula][t], True
         return self.variables[formula][t], False
 

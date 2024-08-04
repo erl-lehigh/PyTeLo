@@ -238,7 +238,6 @@ class MTLAbstractSyntaxTreeExtractor(mtlVisitor):
     def visitParprop(self, ctx):
         return self.visit(ctx.child)
 
-
 def to_ast(formula):
     '''Transforms a formula string to an Abstract Syntax Tree.'''
     lexer = mtlLexer(InputStream(formula))
@@ -248,9 +247,8 @@ def to_ast(formula):
     ast = MTLAbstractSyntaxTreeExtractor().visit(t)
     return ast
 
-
 if __name__ == '__main__':
-    formula = "!x && F[0, 2] y || G[1, 3] z"
-
+    
+    formula = ("!x && F[0, 2] y || G[1, 3] z")
     ast = to_ast(formula)
     print('AST:', str(ast))

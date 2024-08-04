@@ -359,10 +359,6 @@ class Trace(object):
 
     def __init__(self, variables, timePoints, data, kind='nearest'):
         '''Constructor'''
-        # self.timePoints = list(timePoints)
-        # self.data = np.array(data)
-        # for variable, var_data in zip(variables, data):
-        #     print(variable, var_data, timePoints)
         self.data = {variable : interp1d(timePoints, var_data, kind=kind)
                             for variable, var_data in zip(variables, data)}
 
@@ -412,7 +408,6 @@ class TraceBatch(object):
     def __str__(self):
         raise NotImplementedError
 
-
 def to_ast(formula):
     '''Transforms a formula string to an Abstract Syntax Tree.'''
     lexer = stlLexer(InputStream(formula))
@@ -422,11 +417,9 @@ def to_ast(formula):
     ast = STLAbstractSyntaxTreeExtractor().visit(t)
     return ast
 
-
 if __name__ == '__main__':
-    formula = "!(x > 10) && F[0, 2] y > 2 && G[1, 3] z<=8"
-    # formula = "!(x < 10) && y > 2 && z<=8"
-    # formula = "!(x < 10) U[1,3] (y > 2 && z<=8)"
+    
+    formula = ("!(x > 10) && F[0, 2] y > 2 && G[1, 3] z<=8")
 
     ast = to_ast(formula)
     print('AST:', str(ast))
