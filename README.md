@@ -45,6 +45,8 @@ cd <clone-dir>/stl
 antlr4 -Dlanguage=Python3 stl.g4
 cd <clone-dir>/mtl
 antlr4 -Dlanguage=Python3 mtl.g4
+cd <clone-dir>/wmtl
+antlr4 -Dlanguage=Python3 wmtl.g4
 ```
 ## How To Cite
 Cardona, G.A., Leahy, K., Mann, M. and Vasile, C.I., 2023. A Flexible and Efficient Temporal Logic Tool for Python: PyTeLo. arXiv preprint arXiv:2310.08714.
