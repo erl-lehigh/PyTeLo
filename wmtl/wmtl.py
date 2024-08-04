@@ -5,6 +5,7 @@
 '''
 
 import numpy as np
+
 from antlr4 import InputStream, CommonTokenStream
 from wmtlLexer import wmtlLexer
 from wmtlParser import wmtlParser
@@ -253,12 +254,6 @@ def to_ast(formula, weights):
     return ast
 
 if __name__ == '__main__':
-    # lexer = wmtlLexer(InputStream("&&^p1 (x, y)"))
-    # tokens = CommonTokenStream(lexer)
-
-    # parser = wmtlParser(tokens)
-    # t = parser.wmtlProperty()
-    # print(t.toStringTree())
     formula = "&&^p1 (x, y)"
     weights = {
         'p1': lambda i: i + 1,
@@ -266,7 +261,7 @@ if __name__ == '__main__':
         'w1': lambda x: 2 - np.abs(x - 1),
         'w2': lambda x: 1 + (x-2)**2
     }
-    # ast = WMTLAbstractSyntaxTreeExtractor(weights).visit(t)
+    
     ast = to_ast(formula, weights)
     print('AST:', ast)
 
@@ -274,8 +269,5 @@ if __name__ == '__main__':
     data = [[8, 8, 11, 11, 11], [2, 3, 1, 2, 2], [3, 9, 8, 9, 9]]
     timepoints = [0, 1, 2, 3, 4]
     
-
-    # print('r:', ast.robustness(s, 0))
-
     pnf = ast.pnf()
     print(pnf)

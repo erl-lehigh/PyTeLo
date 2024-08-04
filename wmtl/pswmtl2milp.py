@@ -73,7 +73,6 @@ class pswmtl2milp(object):
         assert pred.op == Operation.PRED
         self.add_state(pred.variable, t, z)
    
-
     def conjunction(self, formula, z, t):
         '''Adds a conjunction to the model.'''
         assert formula.op == Operation.AND
@@ -180,34 +179,81 @@ class pswmtl2milp(object):
 
         return ret
 
-
-    def hierarchical(self): #(Hierarchical Optimization)
+    def hierarchical(self, model_name='model_test.lp', optimize=True): 
+        '''
+        This method computes a hierarchical optimization formulation 
+        (lexicografical) from root node all the way to the leaves (predicates)
+        Input:
+            - model_name is a file name to generate Gurobi information about 
+              the optimization problem
+            - optimize is a flag type variable which is True by default performing
+              the optimization of the problem, in case it is False it will only
+              generate the objective function.
+        
+        Output:
+            - depth of the formula
+        '''
         max_depth = max(self.objectives)
         for d in range(max_depth+1):
             self.model.setObjectiveN(-self.objectives[d], d, 
                                      priority=max_depth-d)
             self.model.update()
         
-        self.model.optimize()
-        self.model.write('model_test.lp')
+        if optimize is True:
+            self.model.optimize()
+            self.model.write(model_name)
         return d
     
-    def ldf(self): #(Lowest depth first)
+    def ldf(self, model_name='model_test.lp', optimize=True): 
+        '''
+        This method computes a Lowest depht first optimization formulation 
+        making and increasing penalization from being far from the root node
+        Input:
+            - model_name is a file name to generate Gurobi information about 
+              the optimization problem
+            - optimize is a flag type variable which is True by default performing
+              the optimization of the problem, in case it is False it will only
+              generate the objective function.
+        '''
         M2 = 20 # FIXME: computed based on formula size
         reward = sum([term * M2**(-d) for d, term in self.objectives.items()])
         self.model.setObjective(reward, grb.GRB.MAXIMIZE)
         self.model.update()
-        self.model.optimize()
-        self.model.write('model_test.lp')
 
-    def wln(self, z): #(Weighted Largest Number)
+        if optimize is True:
+            self.model.optimize()
+            self.model.write(model_name)
+
+    def wln(self, z, model_name='model_test.lp', optimize=True):
+        '''
+        This method computes a Weighted Largest Number optimization formulation 
+    
+        Input:
+            - z this is the decision variable capturing the root node
+            - model_name is a file name to generate Gurobi information about 
+              the optimization problem
+            - optimize is a flag type variable which is True by default performing
+              the optimization of the problem, in case it is False it will only
+              generate the objective function.
+        '''
         self.model.setObjective(z, grb.GRB.MAXIMIZE)
         self.model.update()
-        self.model.optimize()
-        self.model.write('model_test.lp')
+        if optimize is True:
+            self.model.optimize()
+            self.model.write(model_name)
     
     def satis_score(self, formula, t=0):
-
+        '''
+        This method computes the actual satisfaction score/percentage of a given
+        optimization solution.
+        
+        Note: Current encoding captures how satisfaction aligns to user preferences.
+        For the case of disjunction and eventually this are not equivalent.
+        Example: OR^(0.4, 0.6) (a,b)
+        Make b=0 as a predefine constraint
+        Then z_or= max(0.4/0.6 *1 ,  0.6/0.6*0) = 0.666
+        But satisfaction score should be 1 since the other subformula was satisfied
+        '''
         if formula.op == Operation.PRED:
             return self.variables[formula][t].x
         
