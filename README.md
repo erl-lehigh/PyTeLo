@@ -1,5 +1,7 @@
 # Python Temporal Logic (PyTeLo)
 
+## Paper description [PDF](https://arxiv.org/pdf/2310.08714)
+
 Setup
 -----
 
@@ -30,19 +32,42 @@ alias antlr4="java -jar $PWD/lib/antlr-4.13.0-complete.jar -visitor"
 alias grun="java org.antlr.v4.gui.TestRig"
 ```
 
-where `<clone-dir>` is the directory where you cloned the `pytelo` repository.
+where `<clone-dir>` is the directory where you cloned the `PyTeLo` repository.
 
 Install *Gurobi* with *gurobipy* for python3.
-
-Pip install with `pip install pytelo/` from one directory level above. This will let other packages import pytelo functions without including pytelo in their directory structure or referencing the associated files by location.
 
 Run
 ---
 
 ```bash
-cd <clone-dir>/src
+cd <clone-dir>/stl
 antlr4 -Dlanguage=Python3 stl.g4
+cd <clone-dir>/mtl
+antlr4 -Dlanguage=Python3 mtl.g4
 ```
+## How To Cite
+Cardona, G.A., Leahy, K., Mann, M. and Vasile, C.I., 2023. A Flexible and Efficient Temporal Logic Tool for Python: PyTeLo. arXiv preprint arXiv:2310.08714.
+
+BibTeX:
+```
+@article{cardona2023flexible,
+  title={A Flexible and Efficient Temporal Logic Tool for Python: PyTeLo},
+  author={Cardona, Gustavo A and Leahy, Kevin and Mann, Makai and Vasile, Cristian-Ioan},
+  journal={arXiv preprint arXiv:2310.08714},
+  year={2023}
+}
+```
+
+Install as Package
+---
+After running `antlr4` above, from one directory level above `pytelo/`
+
+```bash
+pip install pytelo/
+```
+
+This will let other packages import pytelo functions without including pytelo in their directory structure or referencing the associated files by location.
+
 
 **NOTE:** At the moment the implementation only supports python2 and python3. However, you
 can generate lexers, parsers, listners, and visitors for other target languages,

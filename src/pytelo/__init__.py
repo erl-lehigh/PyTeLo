@@ -1,4 +1,5 @@
-from .stlLexer import stlLexer
-from .stlParser import stlParser
-from .stl import STLAbstractSyntaxTreeExtractor
-from .stl import Operation, RelOperation, STLFormula, Trace
+from .stl import STLFormula, Trace, TraceBatch
+from .mtl import MTLFormula
+
+
+__version__ = "0.1.0"
