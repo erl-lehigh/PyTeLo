@@ -3,10 +3,11 @@
  See license.txt file for license information.
  @author: Gustavo A. Cardona, Cristian-Ioan Vasile
 """
-import numpy as np
-import gurobipy as grb
 import sys
 sys.path.append('..')
+
+import numpy as np
+import gurobipy as grb
 
 from wstl2milp import wstl2milp
 from wstl import to_ast

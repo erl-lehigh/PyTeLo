@@ -7,7 +7,7 @@
 '''
 import gurobipy as grb
 
-from stl import Operation, RelOperation, STLFormula
+from stl import Operation, RelOperation
 
 class pswstl2milp(object):
     '''Translate an wSTL formula to an MILP.'''
@@ -34,13 +34,9 @@ class pswstl2milp(object):
         self.__milp_call = {
             Operation.PRED : self.predicate,
             Operation.AND : self.conjunction,
-            Operation.EAND : self.conjunction,
             Operation.OR : self.disjunction,
-            Operation.EOR : self.disjunction,
             Operation.EVENT : self.eventually,
-            Operation.EEVENT : self.eventually,
             Operation.ALWAYS : self.globally,
-            Operation.EALWAYS : self.globally,
         }
         
     def translate(self): # translate all the formula to milp at time 0
@@ -63,7 +59,7 @@ class pswstl2milp(object):
             opname = Operation.getString(formula.op)
             identifier = formula.identifier()
             name = 'z_{}_{}_{}'.format(opname, identifier, t)
-            if formula.op in (Operation.PRED, Operation.EAND, Operation.EALWAYS):
+            if formula.op is Operation.PRED:
                 variable = self.model.addVar(vtype=grb.GRB.BINARY, name=name)
             else:
                 variable = self.model.addVar(vtype=grb.GRB.CONTINUOUS,
@@ -93,17 +89,15 @@ class pswstl2milp(object):
         if pred.relation in (RelOperation.GE, RelOperation.GT):  
             self.model.addConstr(v  - self.M * z <= pred.threshold)         
             self.model.addConstr(v + self.M * (1 - z) >= pred.threshold)
-
         elif pred.relation in (RelOperation.LE, RelOperation.LT):
             self.model.addConstr(v + self.M * z >= pred.threshold)          
             self.model.addConstr(v - self.M * (1 - z) <= pred.threshold)     
-
         else:
             raise NotImplementedError
 
     def conjunction(self, formula, z, t):
         '''Adds a conjunction to the model.'''
-        assert formula.op in (Operation.AND, Operation.EAND)
+        assert formula.op is Operation.AND
         z_children = [self.to_milp(f, t) for f in formula.children]
         weights = []
         vars_children = []
@@ -114,14 +108,12 @@ class pswstl2milp(object):
             vars_children.append(z_child * weight)
         self.model.addConstr(z == sum(vars_children) / sum(weights))
         
-            
     def disjunction(self, formula, z, t):
         '''Adds a disjunction to the model.'''
-        assert formula.op in (Operation.OR, Operation.EOR)
+        assert formula.op is Operation.OR
         z_children = [self.to_milp(f, t) for f in formula.children]
         vars_children = []
         max_weights= max([formula.weight(k) for k in range(len(z_children))])
-        b_aux_vars=[]
         for k, (z_child) in enumerate(z_children):
             weight = formula.weight(k)
             name = 'y_dist_{}'.format(k) 
@@ -130,27 +122,17 @@ class pswstl2milp(object):
             self.model.addConstr(z_aux == z_child*weight/max_weights)
             vars_children.append(z_aux)
 
-            if formula.op == Operation.EOR:
-                name = 'b_aux_{}_{}'.format(k, z_child)
-                b_aux = self.model.addVar(vtype=grb.GRB.BINARY, name=name)    
-                self.model.addConstr(z_child <= b_aux)
-                b_aux_vars.append(b_aux)
-
-        if formula.op == Operation.EOR:
-            self.model.addConstr(sum(b_aux_vars) <= 1) 
-
         self.model.addConstr(z == grb.max_(vars_children))
 
     def eventually(self, formula, z, t):
         '''Adds an eventually to the model.'''
-        assert formula.op in (Operation.EVENT, Operation.EEVENT)
+        assert formula.op is Operation.EVENT
         a, b = int(formula.low), int(formula.high)
         child = formula.child
         z_children = [self.to_milp(child, t + tau) for tau in range(a, b+1)]
         zip_children = zip(range(a, b+1), z_children)
         vars_children = []
         max_weights= max([formula.weight(tau) for tau in range(a, b+1)])
-        b_aux_vars = []
         for tau, z_child in zip_children:
             weight = formula.weight(tau)
             name = 'y_event_{}'.format(tau) 
@@ -158,21 +140,11 @@ class pswstl2milp(object):
                                              name=name, lb=0, ub=1)
             self.model.addConstr(z_aux == z_child*weight/max_weights)
             vars_children.append(z_aux)
-
-            if formula.op == Operation.EEVENT:
-                name = 'b_aux_{}_{}'.format(tau, z_child)
-                b_aux = self.model.addVar(vtype=grb.GRB.BINARY, name=name)    
-                self.model.addConstr(z_child <= b_aux)
-                b_aux_vars.append(b_aux)
-
-        if formula.op == Operation.EEVENT:
-            self.model.addConstr(sum(b_aux_vars) <= 1)      
-
         self.model.addConstr(z == grb.max_(vars_children))
 
     def globally(self, formula, z, t):
         '''Adds a globally to the model.'''
-        assert formula.op in (Operation.ALWAYS, Operation.EALWAYS)
+        assert formula.op is Operation.ALWAYS
         a, b = int(formula.low), int(formula.high)
         child = formula.child
         z_children = [self.to_milp(child, t + tau) for tau in range(a, b+1)]
@@ -222,10 +194,8 @@ class pswstl2milp(object):
     def predicate_pairs(self, formula, t=0):
         '''It receives formula and time step and returns a set of the subformulae
              that needs to be satisfied at the specific time. Note that Disjunction
-             and eventually are special cases'''
-       
+             and eventually are special cases'''    
         ret = set()
-
         if formula.op == Operation.PRED:
             if self.variables[formula][t].x == 1:
                 ret = {(formula, t)}
@@ -255,9 +225,7 @@ class pswstl2milp(object):
                 if self.variables[f][t].x == 1:
                     ret = ret.union(self.predicate_pairs(f, t))
                     break
-
         return ret
-
 
     def hierarchical(self, model_name='model_test.lp', optimize=True):
         '''

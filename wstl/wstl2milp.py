@@ -37,7 +37,6 @@ class wstl2milp(object):
             Operation.EVENT : self.eventually,
             Operation.ALWAYS : self.globally,
             Operation.UNTIL : self.until,
-            Operation.RELEASE : self.release
         }
 
     def translate(self, satisfaction=True):
@@ -187,12 +186,7 @@ class wstl2milp(object):
 
     def until(self, formula, z, rho, t):
         '''Adds an until to the model.'''
+        #TODO: create milp constraints for until operator
         assert formula.op == Operation.UNTIL
 
-        raise NotImplementedError #TODO: under construction
-
-    def release(self, formula, z, rho, t):
-        '''Adds an release to the model.'''
-        assert formula.op == Operation.release
-
-        raise NotImplementedError #TODO: under construction
+        raise NotImplementedError 

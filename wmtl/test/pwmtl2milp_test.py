@@ -3,11 +3,11 @@
  See license.txt file for license information.
  @author: Gustavo A. Cardona, Cristian-Ioan Vasile
 """
+import sys
+sys.path.append('..')
 
 import numpy as np
-import sys
 
-sys.path.append('..')
 from wmtl import to_ast
 from pswmtl2milp import pswmtl2milp
 

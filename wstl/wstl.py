@@ -3,8 +3,8 @@
  See license.txt file for license information.
  @author: Gustavo A. Cardona, Cristian-Ioan Vasile
 '''
-
 import numpy as np
+
 from antlr4 import InputStream, CommonTokenStream
 
 from stl import Operation, RelOperation, STLFormula, Trace
@@ -42,13 +42,13 @@ class WSTLFormula(STLFormula):
         STLFormula.__init__(self, operation, **kwargs)
 
         if self.op in (Operation.AND, Operation.OR, Operation.ALWAYS,
-                       Operation.EVENT, Operation.UNTIL, Operation.RELEASE):
+                       Operation.EVENT, Operation.UNTIL):
             self.weight = kwargs.get('weight', None)
 
         self.__string = None # string representation cache for quick lookup
 
     def robustness(self, s, t, maximumRobustness=1):
-        '''Computes the robustness of the STL formula.
+        '''Computes the robustness of the wSTL formula.
 
         Parameters
         ----------
@@ -90,20 +90,6 @@ class WSTLFormula(STLFormula):
         elif self.op == Operation.EVENT:
             return max(self.child.robustness(s, t+tau) * self.weight(tau)
                        for tau in np.arange(self.low, self.high+1))
-    def bound(self):
-        '''Computes the bound of the STL formula.'''
-        if self.op in (Operation.BOOL, Operation.PRED):
-            return 0
-        elif self.op in (Operation.AND, Operation.OR):
-            return max([ch.bound() for ch in self.children])
-        elif self.op == Operation.IMPLIES:
-            return max(self.left.bound(), self.right.bound())
-        elif self.op == Operation.NOT:
-            return self.child.bound()
-        elif self.op == Operation.UNTIL:
-            return self.high + max(self.left.bound(), self.right.bound())
-        elif self.op in (Operation.ALWAYS, Operation.EVENT):
-            return self.high + self.child.bound()
             
     def __str__(self):
         '''Computes the string representation. The result is cached internally
@@ -137,7 +123,7 @@ class WSTLFormula(STLFormula):
                 children = [str(child) for child in self.children]
                 join_str = ' {op}{weight} '.format(op=opname, weight=op_weight)
                 s = '(' + join_str.join(children) + ')'
-            elif self.op in (Operation.UNTIL, Operation.RELEASE):
+            elif self.op is Operation.UNTIL:
                 s = '({left} {op}[{low}, {high}]{weight} {right})'.format(
                       op=opname, weight=op_weight, left=self.left,
                       right=self.right, low=self.low, high=self.high)
@@ -214,7 +200,7 @@ class WSTLAbstractSyntaxTreeExtractor(wstlVisitor):
                              right=self.visit(ctx.right))
         elif op == Operation.NOT:
             ret = WSTLFormula(op, child=self.visit(ctx.child))
-        elif op in (Operation.UNTIL, Operation.RELEASE):
+        elif op is Operation.UNTIL:
             low = float(ctx.low.text)
             high = float(ctx.high.text)
             weight = self.getWeight(ctx)
@@ -289,7 +275,7 @@ class WSTLAbstractSyntaxTreeExtractor(wstlVisitor):
         -------
         (wstl.WSTLFormula) AST of the WSTL predicate.
         '''
-        return self.visit(ctx.child);
+        return self.visit(ctx.child)
 
 def to_ast(formula, weights):
     lexer = wstlLexer(InputStream(formula))
@@ -300,12 +286,12 @@ def to_ast(formula, weights):
     return ast
 
 if __name__ == '__main__':
-    formula ="!(x < 10) &&^p1 F[0, 2]^w1 y > 2 ||^p2 G[1, 3]^w2 z<=8"
+    formula ="!(x < 10) &&^w1 F[0, 2]^w1 y > 2 ||^w1 G[1, 3]^w1 z<=8"
 
     weights = {
         'p1': lambda i: i + 1,
         'p2': lambda i: 2 - i,
-        'w1': lambda x: 2 - np.abs(x - 1),
+        'w1': lambda x: 4,
         'w2': lambda x: 1 + (x-2)**2
     }
     ast = to_ast(formula, weights)
@@ -316,7 +302,7 @@ if __name__ == '__main__':
     timepoints = [0, 1, 2, 3, 4]
     s = Trace(varnames, timepoints, data)
 
-    # print('r:', ast.robustness(s, 0))
+    print('r:', ast.robustness(s, 0))
 
     pnf = ast.pnf()
     print(pnf)

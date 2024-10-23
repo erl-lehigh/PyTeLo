@@ -6,7 +6,6 @@
 import gurobipy as grb
 from wmtl import Operation, MTLFormula
 
-
 class pswmtl2milp(object):
     '''Translate an wMTL formula to an MILP.'''
     def __init__(self, formula, model=None):
@@ -84,8 +83,7 @@ class pswmtl2milp(object):
             weights.append(weight)
             vars_children.append(z_child * weight)
         self.model.addConstr(z == sum(vars_children) / sum(weights))
-        
-            
+         
     def disjunction(self, formula, z, t):
         '''Adds a disjunction to the model.'''
         assert formula.op == Operation.OR

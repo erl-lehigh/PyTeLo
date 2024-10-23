@@ -1,4 +1,4 @@
 from wstlLexer import wstlLexer
 from wstlParser import wstlParser
-from wstl import WSTLAbstractSyntaxTreeExtractor
-from stl import Operation, RelOperation, STLFormula, Trace
+from wstl import WSTLAbstractSyntaxTreeExtractor, WSTLFormula
+from stl import Operation, RelOperation, Trace
