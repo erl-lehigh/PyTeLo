@@ -6,6 +6,7 @@
 
 import sys
 sys.path.append('..')
+
 from stl2milp import stl2milp
 from stl import to_ast
 

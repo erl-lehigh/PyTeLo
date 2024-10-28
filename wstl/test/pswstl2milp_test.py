@@ -6,13 +6,11 @@
 import sys
 sys.path.append('..')
 
-import numpy as np
+from wstl import to_ast
+from pswstl2milp import pswstl2milp
 
-from wmtl import to_ast
-from pswmtl2milp import pswmtl2milp
-
-def partial_wmtl_test():
-    formula = "&&^w1 (F[2,3]^w1 (a), F[2,3]^w1 (b))"
+def partial_wstl_test():
+    formula = "&&^w1 (F[2,3]^w1 (x>=2), F[2,3]^w1 (b>=1))"
     # formula = "F[0, 1]^w3 (y)"
     weights = {
             'p1': lambda i: i+1,
@@ -25,13 +23,12 @@ def partial_wmtl_test():
     nvar = ast.variables() 
     print('AST:', str(ast))
 
-    mtl_milp = pswmtl2milp(ast)
-    z = mtl_milp.translate()
+    wstl_milp = pswstl2milp(ast)
+    z = wstl_milp.translate()
 
     # creating the need of partial satisfaction
-    # mtl_milp.model.addConstr(mtl_milp.variables['a'][0] == 0)
-    # mtl_milp.model.addConstr(mtl_milp.variables['b'][0] == 0)
-    mtl_milp.model.addConstr(mtl_milp.variables['b'][2] == 0)
+    wstl_milp.model.addConstr(wstl_milp.variables['b'][2] == 0)
+    wstl_milp.model.addConstr(wstl_milp.variables['b'][3] == 0)
 
     '''
         we have implemented three different methods to capture partial satisfaction
@@ -47,38 +44,38 @@ def partial_wmtl_test():
     '''
     method = 3
     if method == 1:
-        d = mtl_milp.hierarchical()
-        obj = [mtl_milp.model.getObjective(objectives) 
+        d = wstl_milp.hierarchical()
+        obj = [wstl_milp.model.getObjective(objectives) 
                 for objectives in range(d+1)]
         print(str(obj), ':', [obj[i].getValue() for i in range(d+1)], "MILP")
     elif method == 2: 
-        mtl_milp.ldf()
+        wstl_milp.ldf()
         print('Objective')
-        obj = mtl_milp.model.getObjective()
+        obj = wstl_milp.model.getObjective()
         print(str(obj), obj.getValue(), "MILP")
     elif method == 3:
-        mtl_milp.wln(z)
+        wstl_milp.wln(z)
         print('Objective')
-        obj = mtl_milp.model.getObjective()
+        obj = wstl_milp.model.getObjective()
         print(str(obj), obj.getValue(), "MILP")
 
-    mtl_milp.model.update()
-    mtl_milp.model.optimize()
+    wstl_milp.model.update()
+    wstl_milp.model.optimize()
 
     print('Constraints')
-    for constr in mtl_milp.model.getConstrs():
+    for constr in wstl_milp.model.getConstrs():
         print(':', str(constr))
 
     print('Vars')
-    for var in mtl_milp.model.getVars():
+    for var in wstl_milp.model.getVars():
         print(var.VarName, ':', var.x)
 
     print('Objective')
-    obj = mtl_milp.model.getObjective()
+    obj = wstl_milp.model.getObjective()
     print(str(obj), ':', obj.getValue())
     
     print('Satisfaction score')
-    print(mtl_milp.satis_score(ast))
+    print(wstl_milp.satis_score(ast))
 
 if __name__ == '__main__':
-    partial_wmtl_test()
+    partial_wstl_test()
