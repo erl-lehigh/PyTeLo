@@ -6,20 +6,12 @@
 import sys
 sys.path.append('..')
 
-from antlr4 import InputStream, CommonTokenStream
-
-from mtlLexer import mtlLexer
-from mtlParser import mtlParser
-from mtl import MTLAbstractSyntaxTreeExtractor
+from mtl import to_ast
 from mtl2milp import mtl2milp
 
 formula = "(x) && F[0, 2] y  && G[1, 6] z "
 
-lexer = mtlLexer(InputStream(formula))
-tokens = CommonTokenStream(lexer)
-parser = mtlParser(tokens)
-t = parser.mtlProperty()
-ast = MTLAbstractSyntaxTreeExtractor().visit(t)
+ast = to_ast(formula)
 print('type: ', type(ast))
 nvar = ast.variables() 
 

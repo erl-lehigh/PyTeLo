@@ -252,7 +252,7 @@ class pswstl2milp(object):
             self.model.write(model_name)
         return d
     
-    def ldf(self, model_name='model_test.lp', optimize=True):
+    def ldf(self, model_name='model_test.lp', optimize=True, spec_bound=20):
         '''
         This method computes a Lowest depht first optimization formulation 
         making and increasing penalization from being far from the root node
@@ -263,8 +263,7 @@ class pswstl2milp(object):
               the optimization of the problem, in case it is False it will only
               generate the objective function.
         ''' 
-        M2 = 20 # FIXME: computed based on formula size
-        reward = sum([term * M2**(-d) for d, term in self.objectives.items()])
+        reward = sum([term * spec_bound**(-d) for d, term in self.objectives.items()])
         self.model.setObjective(reward, grb.GRB.MAXIMIZE)
         self.model.update()
 
