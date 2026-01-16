@@ -15,6 +15,7 @@ def addDynamics(model):
     print(model.getVars())
     for var in model.getVars():
         var_name = var.VarName
+        print(var_name)
         if var_name.startswith('x_') or var_name.startswith('y_'):
             t = int(var_name.split('_')[1])
             if t > 0:
@@ -24,7 +25,7 @@ def partial_stl_test():
     # formula = "(x > 10) && F[0, 2] y > 2 || G[1, 6] z > 8"
     # formula = "G[2,4] F[1,3](x>=3)"
     # formula = "(x <= 10) && F[0, 2] y > 2 && G[1, 6] (z < 8) && G[1,6] (z > 3)"
-    formula = 'G[0,6] x >= 3 && (F[0,4] y >= -1 || F[2,6] y<= 1)'
+    formula = 'F[0,5] x >= 3 && (x >= 1 U[2, 4] F[0,4] y <= -1) && F[0, 3] y >= 1 && G[7, 9] x <= 0 && G[4, 8] x>=-4'
     ast = to_ast(formula)
 
     print('AST:', str(ast))

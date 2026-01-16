@@ -167,10 +167,15 @@ class mstl2milp(object):
                                 for t__ in range(0,t_)]
             z_children_right = [self.to_milp(formula.right, t+t_, depth+1, 
                                              z_ancestors)]
-            z_children.append(grb.min_(z_children_right + z_children_left))
+            # Create an auxiliary variable to hold the min result
+            name = 'Until_{}_{}_{}'.format(formula.identifier(), t, t_)
+            z_aux = self.model.addVar(vtype=grb.GRB.BINARY, 
+                                    name=name + "_z")
+            self.model.addConstr(z_aux == grb.min_(z_children_right + z_children_left))
+            z_children.append(z_aux)
             if not formula.right in self.balanceSatisfactionObjectives[depth]:
                 self.balanceSatisfactionObjectives[depth][formula.right] = {}
-            self.balanceSatisfactionObjectives[depth][formula.right][t + t_] = self.zVariables[formula.right][t + t_]
+            self.balanceSatisfactionObjectives[depth][formula.right][t + t_] = z_aux
         self.model.addConstr(z == grb.max_(z_children))
         return sum(z_children)
 
@@ -284,7 +289,7 @@ class mstl2milp(object):
             lp.addConstr(rho == sum(childRhoVars)/sum(childZVars))
         elif op == Operation.ALWAYS:
             childRhoVars = []
-            a, b = int(formula.low), int(formula.high)
+            a, b = int(formula.low)+t, int(formula.high)+t
             child = formula.child
             for tau in range(a, b+1):
                 opname = Operation.getString(child.op)
@@ -301,7 +306,7 @@ class mstl2milp(object):
         elif op == Operation.EVENT:
             childRhoVars = []
             childZVars = []
-            a, b = int(formula.low), int(formula.high)
+            a, b = int(formula.low)+t, int(formula.high)+t
             child = formula.child
             for tau in range(a, b+1):
                 opname = Operation.getString(child.op)
@@ -319,7 +324,7 @@ class mstl2milp(object):
         elif op == Operation.UNTIL:
             childRhoVars = []
             childZVars = []
-            a, b = int(formula.low), int(formula.high)
+            a, b = int(formula.low)+t, int(formula.high)+t
             for t_ in range(a,b+1):
                 zValsInner = []
                 childRhoInner = []
@@ -346,12 +351,15 @@ class mstl2milp(object):
                 lp.update()
                 self.generate_robust_constraints(child_right, lp, childRhoRight, t + t_, depth+1, lp_state_vars)
                 childRhoInner.append(childRhoRight)
-                zValsInnerProduct = 1
-                for zVal in zValsInner:
-                    zValsInnerProduct *= zVal
-                childRhoVars.append(grb.min_(childRhoInner)*zValsInnerProduct)
+                zValsInnerProduct = min(zValsInner)
+                # Create auxiliary variable for the min result
+                name = 'Until_{}_{}_{}_inner'.format(formula.identifier(), t, t_)
+                minRhoInner = lp.addVar(vtype=grb.GRB.CONTINUOUS, 
+                                    name=name + "_rho", lb=rho_min, ub=rho_max)
+                lp.addConstr(minRhoInner == grb.min_(childRhoInner))
+                childRhoVars.append(zValsInnerProduct*minRhoInner)
                 childZVars.append(zValsInnerProduct)
-                self.balanceRobustnessObjectives[depth].append((grb.min_(childRhoInner)*grb.min_(childRhoInner))*zValsInnerProduct)
+                self.balanceRobustnessObjectives[depth].append((minRhoInner*minRhoInner)*zValsInnerProduct)
             lp.addConstr(rho == sum(childRhoVars)/sum(childZVars))
         lp.update()
 
@@ -392,7 +400,8 @@ class mstl2milp(object):
                         self.model.addConstr(sum(formula_terms) <= balanceOptimalObj, name=f"Fixed_Balance_{d}")
                     self.model.NumObj = 0
                     self.model.update()
-                    formula_terms = [sum(self.balanceSatisfactionObjectives[d][f].values())*sum(self.balanceSatisfactionObjectives[d][f].values()) for f in self.balanceSatisfactionObjectives[d].keys()]
+                    formula_terms = [sum(self.balanceSatisfactionObjectives[d][f].values())*sum(self.balanceSatisfactionObjectives[d][f].values())
+                                      for f in self.balanceSatisfactionObjectives[d].keys()]
                     self.model.setObjective(sum(formula_terms), grb.GRB.MINIMIZE)
                     self.model.update()
                     self.model.optimize()
