@@ -43,7 +43,7 @@ def partial_stl_test():
 
     mstlrobust = stl_milp.mstl2lp()
     addDynamics(mstlrobust)
-    stl_milp.lpOptim(mstlrobust)
+    stl_milp.outerOptim(mstlrobust)
 
     print('LP Model Status:', mstlrobust.status)
     print('Constraints')
