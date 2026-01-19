@@ -25,7 +25,7 @@ def partial_stl_test():
     # formula = "(x > 10) && F[0, 2] y > 2 || G[1, 6] z > 8"
     # formula = "G[2,4] F[1,3](x>=3)"
     # formula = "(x <= 10) && F[0, 2] y > 2 && G[1, 6] (z < 8) && G[1,6] (z > 3)"
-    formula = 'F[0,5] x >= 3 && (x >= 1 U[2, 4] F[0,4] y <= -1) && F[0, 3] y >= 1 && G[7, 9] x <= 0 && G[4, 8] x>=-4'
+    formula = 'F[0,4] x >= 3 && (x >= 1 U[2, 4] F[0,4] y <= -1) && F[0, 3] y >= 1 && G[7, 9] x <= 0 && G[4, 9] x>=-10'
     ast = to_ast(formula)
 
     print('AST:', str(ast))
@@ -34,16 +34,14 @@ def partial_stl_test():
     
     z = stl_milp.translate()
     addDynamics(stl_milp.model)
-    d = stl_milp.hierarchical()
+    d = stl_milp.hierarchical(balance=False, completeSolve=False)
     for var in stl_milp.model.getVars():
         print(var.VarName, ':', var.x)
-    #obj = [stl_milp.model.getObjective(objectives) for objectives in range(d+1)]
-    #print(str(obj), ':', [obj[i].getValue() for i in range(d+1)], "MILP")
 
 
     mstlrobust = stl_milp.mstl2lp()
     addDynamics(mstlrobust)
-    stl_milp.outerOptim(mstlrobust)
+    stl_milp.outerOptim(mstlrobust, balance=False)
 
     print('LP Model Status:', mstlrobust.status)
     print('Constraints')

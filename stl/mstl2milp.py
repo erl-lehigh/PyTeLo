@@ -30,6 +30,8 @@ class mstl2milp(object):
 
         self.rhoVariables = dict()
 
+        self.rhoObjectives = dict()
+
         self.balanceSatisfactionObjectives = []
 
         self.balanceRobustnessObjectives = []
@@ -212,13 +214,15 @@ class mstl2milp(object):
         multi-objective QP optimization. If the balance flag is not set, the system 
         will not balance the robustness values, reducing the problem to an LP.
         '''
-        qp.setObjective(rho, sense=grb.GRB.MAXIMIZE)
-        qp.update()
-        qp.optimize()
-        if balance:
-            maxRho = qp.getObjective().getValue()
-            qp.addConstr(rho >= maxRho, name='Fixed_Rho')
+        if rho is not None:
+            qp.setObjective(rho, sense=grb.GRB.MAXIMIZE)
             qp.update()
+            qp.optimize()
+        if balance:
+            if rho is not None:
+                maxRho = qp.getObjective().getValue()
+                qp.addConstr(rho >= maxRho, name='Fixed_Rho')
+                qp.update()
             objective_expr = None
             for depth, terms in enumerate(self.balanceRobustnessObjectives):
                 if terms and len(terms)>0:
@@ -375,7 +379,7 @@ class mstl2milp(object):
         the bi-level optimization problem for runtime comparison purposes.
         '''
         op = formula.op
-        rho_min, rho_max = self.ranges['rho']
+        rho_min, rho_max = -grb.GRB.INFINITY, self.M - 1
         if formula not in self.rhoVariables:
             self.rhoVariables[formula] = dict()
         if t not in self.rhoVariables[formula]:
@@ -387,6 +391,9 @@ class mstl2milp(object):
             self.model.addConstr(rho_var >= (self.variables[formula][t]-1)*self.M)
             self.model.update()
             self.rhoVariables[formula][t] = rho_var
+            if depth not in self.rhoObjectives:
+                self.rhoObjectives[depth] = 0
+            self.rhoObjectives[depth] += rho_var
         if balance and depth-1<len(self.balanceRobustnessObjectives):
                 self.balanceRobustnessObjectives.append([])
         if op == Operation.PRED:
@@ -415,7 +422,7 @@ class mstl2milp(object):
                 childRho = self.model.addVar(vtype=grb.GRB.CONTINUOUS,
                                                 name=name + '_rho', lb=rho_min, ub=rho_max)
                 self.model.addConstr(childRho <= self.rhoVariables[child][t])
-                self.model.addConstr(childRho <= (self.variables[child][t]-1)*self.M)
+                self.model.addConstr(childRho >= (self.variables[child][t]-1)*self.M)
                 self.model.update()
                 childRhoVars.append(childRho)
                 if balance:
@@ -427,7 +434,7 @@ class mstl2milp(object):
             child = formula.child
             for tau in range(a, b+1):
                 self.generate_MIQP_robustness_constraints(child, tau, depth+1, balance)
-                childRhoVars.append(childRho) 
+                childRhoVars.append(self.rhoVariables[child][tau])
             minRho = grb.min_(childRhoVars)
             self.model.addConstr(self.rhoVariables[formula][t] == minRho)
         elif op == Operation.EVENT:
@@ -444,13 +451,12 @@ class mstl2milp(object):
                 childRho = self.model.addVar(vtype=grb.GRB.CONTINUOUS,
                                                 name=name + '_rho', lb=rho_min, ub=rho_max)
                 self.model.addConstr(childRho <= self.rhoVariables[child][tau])
-                self.model.addConstr(childRho <= (self.variables[child][tau]-1)*self.M)
+                self.model.addConstr(childRho >= (self.variables[child][tau]-1)*self.M)
                 self.model.update()
-                childRhoVars.append(childRho*self.variables[child][tau].x) 
-                childZVars.append(self.variables[child][tau].x)
+                childRhoVars.append(childRho*self.variables[child][tau]) 
                 if balance:
-                    self.balanceRobustnessObjectives[depth].append((childRho*childRho)*self.variables[child][tau].x)
-            self.model.addConstr(self.rhoVariables[formula][t] == sum(childRhoVars)/sum(childZVars))
+                    self.balanceRobustnessObjectives[depth].append((childRho*childRho))
+            self.model.addConstr(self.rhoVariables[formula][t] == sum(childRhoVars)/(b-a+1))
         elif op == Operation.UNTIL:
             childRhoVars = []
             childZVars = []
@@ -468,26 +474,30 @@ class mstl2milp(object):
                 childRhoInner.append(self.rhoVariables[child_right][t + t_])
                 zValsInner.append(self.variables[child_right][t + t_])
                 # Create auxiliary variable for the min result
-                name = 'Until_Outer_{}_{}_{}'.format(formula.identifier(), t, t_)
+                name = 'Until_Inner_{}_{}_{}'.format(formula.identifier(), t, t_)
                 minZInner = self.model.addVar(vtype=grb.GRB.BINARY, 
                                     name=name + "_z")
-                name = 'Until_Outer_{}_{}_{}'.format(formula.identifier(), t, t_)
+                name = 'Until_Inner_{}_{}_{}'.format(formula.identifier(), t, t_)
                 minRhoInner = self.model.addVar(vtype=grb.GRB.CONTINUOUS, 
                                     name=name + "_rho", lb=rho_min, ub=rho_max)
                 self.model.addConstr(minZInner == grb.min_(zValsInner))
-                self.model.addConstr(minRhoInner <= grb.min_(childRhoInner))
-                self.model.addConstr(minRhoInner <= (minZInner-1)*self.M)
-                childRhoVars.append(minRhoInner)
+                self.model.addConstr(minRhoInner == grb.min_(childRhoInner))
+                name = 'Until_Outer_{}_{}_{}'.format(formula.identifier(), t, t_)
+                rhoOuter = self.model.addVar(vtype=grb.GRB.CONTINUOUS, 
+                                    name=name + "_rho", lb=rho_min, ub=rho_max)
+                self.model.addConstr(rhoOuter >= (minZInner-1)*self.M)
+                self.model.addConstr(rhoOuter <= minRhoInner)
+                childRhoVars.append(rhoOuter)
                 childZVars.append(minZInner)
                 if balance:
-                    self.balanceRobustnessObjectives[depth].append((minRhoInner*minRhoInner))
+                    self.balanceRobustnessObjectives[depth].append((rhoOuter*rhoOuter))
             self.model.addConstr(self.rhoVariables[formula][t] == sum(childRhoVars)/(b-a+1))
         self.model.update()
 
     def hierarchical(self, model_name='model_test.lp', optimize=True, balance=True, completeSolve=False):
         '''
         This method computes a hierarchical optimization formulation 
-        (lexicografical) from root node all the way to the leaves (predicates)
+        (lexicographical) from root node all the way to the leaves (predicates)
         Input:
             - model_name is a file name to generate Gurobi information about 
               the optimization problem
@@ -501,24 +511,29 @@ class mstl2milp(object):
         max_depth = max(self.objectives)
         for d in range(max_depth+1):
             self.model.setObjectiveN(-self.objectives[d], d, 
-                                     priority=2*max_depth-d)
+                                     priority=2*max_depth-d+1)
             self.model.update()
-        if optimize is True:
-            self.model.optimize()
+        if optimize:
             if completeSolve:
                 self.generate_MIQP_robustness_constraints(self.formula, balance=balance)
                 self.model.update()
+                
                 self.model.setObjectiveN(-self.rhoVariables[self.formula][0], max_depth+1, 
-                                        priority=max_depth)
+                                        priority=max_depth+1)
                 self.model.update()
                 self.model.optimize()
-
-                currentOptimalObj = [self.model.getObjective(i).getValue() 
-                                    for i in range(max_depth+2)]
-                self.model.addConstrs((self.objectives[d] >= -currentOptimalObj[d] 
-                                    for d in range(max_depth+2)), name='Fixed_Primary_Objectives')
                 if balance:
-                    self.custom_qp_optim(self.model, self.rhoVariables[self.formula][0])
+                    currentOptimalObj = [self.model.getObjective(i).getValue() 
+                                    for i in range(max_depth+2)]
+                    print("Current Optimal Objectives:", currentOptimalObj)
+                    print([Operation.getString(child.op) + str(self.rhoVariables[child][0].x) for child in self.formula.children])
+                    self.model.addConstrs((self.objectives[d] >= -currentOptimalObj[d] 
+                                        for d in range(max_depth+1)), name='Fixed_Primary_Objectives')
+                    self.model.addConstr(self.rhoVariables[self.formula][0] >= -currentOptimalObj[-1], 
+                                         name='Fixed_Robustness_Objective')
+                    self.model.NumObj = 0
+                    self.model.update()
+                    self.custom_qp_optim(self.model, None)
                     latestSpatialBalanceObj = self.model.getObjective().getValue()
                     self.model.addConstr(sum(self.balanceRobustnessObjectives[-1]) <= latestSpatialBalanceObj,
                                          name='Fixed_Balance_Robustness_Final')
@@ -536,6 +551,7 @@ class mstl2milp(object):
                             self.model.update()
                             self.model.optimize()
             elif balance:
+                self.model.optimize()
                 self.model.update()
                 currentOptimalObj = [self.model.getObjective(i).getValue() 
                                     for i in range(max_depth+1)]
@@ -554,6 +570,7 @@ class mstl2milp(object):
                         self.model.setObjective(sum(formula_terms), grb.GRB.MINIMIZE)
                         self.model.update()
                         self.model.optimize()
-                    
+            else:
+                self.model.optimize()
             self.model.write(model_name)
         return d
