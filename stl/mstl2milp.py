@@ -451,7 +451,7 @@ class mstl2milp(object):
                                                 name=name + '_rho', lb=rho_min, ub=rho_max)
                 self.model.addConstr(childRho <= self.rhoVariables[child][tau])
                 self.model.update()
-                childRhoVars.append(childRho*self.variables[child][tau]) 
+                childRhoVars.append(childRho) 
                 if balance:
                     self.balanceRobustnessObjectives[depth].append((childRho*childRho))
             self.model.addConstr(self.rhoVariables[formula][t] == sum(childRhoVars)/(b-a+1))
