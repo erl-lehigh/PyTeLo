@@ -422,7 +422,6 @@ class mstl2milp(object):
                 childRho = self.model.addVar(vtype=grb.GRB.CONTINUOUS,
                                                 name=name + '_rho', lb=rho_min, ub=rho_max)
                 self.model.addConstr(childRho <= self.rhoVariables[child][t])
-                self.model.addConstr(childRho >= (self.variables[child][t]-1)*self.M)
                 self.model.update()
                 childRhoVars.append(childRho)
                 if balance:
@@ -451,7 +450,6 @@ class mstl2milp(object):
                 childRho = self.model.addVar(vtype=grb.GRB.CONTINUOUS,
                                                 name=name + '_rho', lb=rho_min, ub=rho_max)
                 self.model.addConstr(childRho <= self.rhoVariables[child][tau])
-                self.model.addConstr(childRho >= (self.variables[child][tau]-1)*self.M)
                 self.model.update()
                 childRhoVars.append(childRho*self.variables[child][tau]) 
                 if balance:
@@ -485,7 +483,6 @@ class mstl2milp(object):
                 name = 'Until_Outer_{}_{}_{}'.format(formula.identifier(), t, t_)
                 rhoOuter = self.model.addVar(vtype=grb.GRB.CONTINUOUS, 
                                     name=name + "_rho", lb=rho_min, ub=rho_max)
-                self.model.addConstr(rhoOuter >= (minZInner-1)*self.M)
                 self.model.addConstr(rhoOuter <= minRhoInner)
                 childRhoVars.append(rhoOuter)
                 childZVars.append(minZInner)
