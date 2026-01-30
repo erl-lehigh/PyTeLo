@@ -44,6 +44,7 @@ class mstl2milp(object):
             Operation.ALWAYS : self.globally,
             Operation.UNTIL : self.until
         }
+        self.exitFlag = 0
 
     def translate(self, satisfaction=True): 
         '''Translates the STL formula to MILP from time 0.'''
@@ -269,9 +270,9 @@ class mstl2milp(object):
             else:
                 v = lp_state_vars[formula.variable][t]
             if formula.relation in (RelOperation.GE, RelOperation.GT):
-                lp.addConstr(v - formula.threshold >= rho)
+                lp.addConstr(v - formula.threshold == rho)
             elif formula.relation in (RelOperation.LE, RelOperation.LT):
-                lp.addConstr(formula.threshold - v >= rho)
+                lp.addConstr(formula.threshold - v == rho)
         elif op == Operation.AND:
             childRhoVars = []
             for child in formula.children:
@@ -427,14 +428,14 @@ class mstl2milp(object):
                 childRhoVars = []
                 for child in formula.children:
                     self.generate_MIQP_robustness_constraints(child, t, depth+1, balance)
-                    opname = Operation.getString(op)
-                    childId = child.identifier()
-                    identifier = formula.identifier()
-                    name = '{}_{}_{}_{}'.format(opname, identifier, childId, t)
-                    childRho = self.model.addVar(vtype=grb.GRB.CONTINUOUS,
-                                                    name=name + '_rho', lb=rho_min, ub=rho_max)
-                    self.model.addConstr(childRho <= self.rhoVariables[child][t])
-                    self.model.update()
+                    #opname = Operation.getString(op)
+                    #childId = child.identifier()
+                    #identifier = formula.identifier()
+                    #name = '{}_{}_{}_{}'.format(opname, identifier, childId, t)
+                    #childRho = self.model.addVar(vtype=grb.GRB.CONTINUOUS,
+                    #                                name=name + '_rho', lb=rho_min, ub=rho_max)
+                    #self.model.addConstr(childRho <= self.rhoVariables[child][t])
+                    childRho = self.rhoVariables[child][t]
                     childRhoVars.append(childRho)
                     if balance:
                         self.balanceRobustnessObjectives[depth].append(childRho*childRho)
@@ -455,13 +456,14 @@ class mstl2milp(object):
                 child = formula.child
                 for tau in range(a, b+1):
                     self.generate_MIQP_robustness_constraints(child, tau, depth+1, balance)
-                    opname = Operation.getString(op)
-                    childId = child.identifier()
-                    identifier = formula.identifier()
-                    name = '{}_{}_{}_{}'.format(opname, identifier, tau, t)
-                    childRho = self.model.addVar(vtype=grb.GRB.CONTINUOUS,
-                                                    name=name + '_rho', lb=rho_min, ub=rho_max)
-                    self.model.addConstr(childRho <= self.rhoVariables[child][tau])
+                    #opname = Operation.getString(op)
+                    #childId = child.identifier()
+                    #identifier = formula.identifier()
+                    #name = '{}_{}_{}_{}'.format(opname, identifier, tau, t)
+                    #childRho = self.model.addVar(vtype=grb.GRB.CONTINUOUS,
+                    #                                name=name + '_rho', lb=rho_min, ub=rho_max)
+                    #self.model.addConstr(childRho <= self.rhoVariables[child][tau])
+                    childRho = self.rhoVariables[child][tau]
                     self.model.update()
                     childRhoVars.append(childRho) 
                     if balance:
@@ -492,10 +494,11 @@ class mstl2milp(object):
                                         name=name + "_rho", lb=rho_min, ub=rho_max)
                     self.model.addConstr(minZInner == grb.min_(zValsInner))
                     self.model.addConstr(minRhoInner == grb.min_(childRhoInner))
-                    name = 'Until_Outer_{}_{}_{}'.format(formula.identifier(), t, t_)
-                    rhoOuter = self.model.addVar(vtype=grb.GRB.CONTINUOUS, 
-                                        name=name + "_rho", lb=rho_min, ub=rho_max)
-                    self.model.addConstr(rhoOuter <= minRhoInner)
+                    #name = 'Until_Outer_{}_{}_{}'.format(formula.identifier(), t, t_)
+                    #rhoOuter = self.model.addVar(vtype=grb.GRB.CONTINUOUS, 
+                    #                    name=name + "_rho", lb=rho_min, ub=rho_max)
+                    #self.model.addConstr(rhoOuter <= minRhoInner)
+                    rhoOuter = minRhoInner
                     childRhoVars.append(rhoOuter)
                     childZVars.append(minZInner)
                     if balance:
@@ -555,6 +558,7 @@ class mstl2milp(object):
                             self.model.update()
                             formula_terms = [sum(self.balanceSatisfactionObjectives[d][f].values())*sum(self.balanceSatisfactionObjectives[d][f].values())
                                             for f in self.balanceSatisfactionObjectives[d].keys()]
+                            
                             self.model.setObjective(sum(formula_terms), grb.GRB.MINIMIZE)
                             self.model.update()
                             self.model.optimize()
