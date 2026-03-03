@@ -12,14 +12,14 @@ from stl import to_ast
 
 # formula = "(x > 10) && F[0, 2] y > 2 || G[1, 6] z > 8"
 # formula = "G[2,4] F[1,3](x>=3)"
-# formula = "(x <= 10) && F[0, 2] y > 2 && G[1, 6] (z < 8) && G[1,6] (z > 3)"
-formula = 'G[0,1] x >= 3'
+formula = "(x <= 10) && F[0, 2] y > 2 && G[1, 6] (z < 8) && G[1,6] (z > 3)"
+# formula = 'G[0,1] x >= 3'
 
-ast = to_ast(formula)
+ast = to_ast(formula, UUID=True)
 
 print('AST:', str(ast))
 
-stl_milp = stl2milp(ast, ranges={'x': [-4, 5]}, robust=True)
+stl_milp = stl2milp(ast, ranges={'x': [-4, 5], 'y': [-4, 5], 'z': [-4, 10]}, robust=True)
 stl_milp.translate(satisfaction=True)
 stl_milp.model.optimize()
 
