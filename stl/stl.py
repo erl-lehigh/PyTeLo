@@ -304,7 +304,7 @@ class STLFormula(object):
 
 class STLAbstractSyntaxTreeExtractor(stlVisitor):
     '''Parse Tree visitor that constructs the AST of an STL formula'''
-    def __init__(self, UUID):
+    def __init__(self, UUID=False):
         super().__init__()
         self._trackUUID = UUID
     def visit(self, ctx):
