@@ -94,7 +94,7 @@ class STLFormula(object):
             self.right = kwargs['right']
 
         self.__string = None
-        self.__hash = kwargs['UUID']
+        self.__hash = kwargs['UUID'] if 'UUID' in kwargs else None
 
     def robustness(self, s, t, max_robustness=1):
         '''Computes the robustness of the STL formula.'''
