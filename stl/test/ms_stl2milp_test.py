@@ -25,14 +25,14 @@ def addDynamics(model, timestep):
                 model.addConstr(var - model.getVarByName(var_name.replace(f"_{t}", f"_{t-1}")) <= timestep)
                 model.addConstr(var - model.getVarByName(var_name.replace(f"_{t}", f"_{t-1}")) >= -timestep)
 def maximal_stl_test(complete=False, balanced=True, standard=False, timestep=1):
-    AC="(x<=5 || x>=16 || y<=5 || y>=20)"
-    BC="(x<=20 || x>=30 || y<=6 || y>=15)"
-    C="(x>=0 && x<=10 && y>=24 && y<=30)"
+    AC="(x<=5 || x>=15 || y<=5 || y>=20)"
+    BC="(x<=20 || x>=30 || y<=5 || y>=15)"
+    C="(x>=0 && x<=10 && y>=25 && y<=30)"
     D="(x>=15 && x<=25 && y>=25 && y<=35)"
-    E="(x>=35 && x<=40 && y>=30 && y<=36)"
-    F="(x>=16 && x<=21 && y>=0 && y<=5)"
+    E="(x>=35 && x<=40 && y>=30 && y<=35)"
+    F="(x>=15 && x<=20 && y>=0 && y<=5)"
     formula = f'G[0,{80//timestep}]({AC} && {BC}) && ((F[{20//timestep}, {45//timestep}]{C}) || (F[{20//timestep}, {45//timestep}]{E}) || (F[{20//timestep}, {45//timestep}]{D})) && G[{75//timestep}, {80//timestep}]{F}]'
-    ast = to_ast(formula)
+    ast = to_ast(formula, UUID=True)
     if not standard:
         stl_milp = mstl2milp(ast, ranges={'x': [-5, 40], 'y': [0, 40]}, robust=True)
         z = stl_milp.translate()
@@ -81,7 +81,7 @@ if __name__ == '__main__':
      print("=" * 50)
      print("Running maximal_stl_test() function calls...")
      print("=" * 50)
-     timeTest = 0.25
+     timeTest = 1
      start = time.time()
      x1, y1 = maximal_stl_test(False, False, timestep=timeTest)
      elapsed1 = (time.time() - start) * 1000
@@ -126,12 +126,12 @@ if __name__ == '__main__':
      # AC = (x<=5 || x>=16 || y<=5 || y>=20) is complement, so A = (x>5 && x<16 && y>5 && y<20)
      # BC = (x<=20 || x>=30 || y<=6 || y>=15) is complement, so B = (x>20 && x<30 && y>6 && y<15)
      regions = {
-         'A': {'x_min': 5, 'x_max': 16, 'y_min': 5, 'y_max': 20, 'color': '#FFD700', 'alpha': 0.3},
-         'B': {'x_min': 20, 'x_max': 30, 'y_min': 6, 'y_max': 15, 'color': '#87CEEB', 'alpha': 0.3},
-         'C': {'x_min': 0, 'x_max': 10, 'y_min': 24, 'y_max': 30, 'color': '#FFB6C1', 'alpha': 0.3},
+         'A': {'x_min': 5, 'x_max': 15, 'y_min': 5, 'y_max': 20, 'color': '#FFD700', 'alpha': 0.3},
+         'B': {'x_min': 20, 'x_max': 30, 'y_min': 5, 'y_max': 15, 'color': '#87CEEB', 'alpha': 0.3},
+         'C': {'x_min': 0, 'x_max': 10, 'y_min': 25, 'y_max': 30, 'color': '#FFB6C1', 'alpha': 0.3},
          'D': {'x_min': 15, 'x_max': 25, 'y_min': 25, 'y_max': 35, 'color': '#90EE90', 'alpha': 0.3},
-         'E': {'x_min': 35, 'x_max': 40, 'y_min': 30, 'y_max': 36, 'color': '#DDA0DD', 'alpha': 0.3},
-         'F': {'x_min': 16, 'x_max': 21, 'y_min': 0, 'y_max': 5, 'color': '#F0E68C', 'alpha': 0.3},
+         'E': {'x_min': 35, 'x_max': 40, 'y_min': 30, 'y_max': 35, 'color': '#DDA0DD', 'alpha': 0.3},
+         'F': {'x_min': 15, 'x_max': 20, 'y_min': 0, 'y_max': 5, 'color': '#F0E68C', 'alpha': 0.3},
      }
      
      # Draw regions

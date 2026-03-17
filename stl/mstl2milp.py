@@ -75,7 +75,7 @@ class mstl2milp(object):
         if t not in self.variables[formula]:  
             opname = Operation.getString(formula.op)
             identifier = formula.identifier()
-            name = '{}_{}_{}'.format(opname, identifier, t)
+            name = '{}_{}_{}'.format(opname, identifier, self._nameSanitize(t))
             z = self.model.addVar(vtype=grb.GRB.BINARY,
                                             name=name + '_zi')
             self.objectives[depth] += z
@@ -119,7 +119,7 @@ class mstl2milp(object):
         z_children = [self.to_milp(f, t, depth+1, z_ancestors) 
                       for f in formula.children]
         # zero if any child is not fully satisfied, 1 otherwise
-        name = '&&_{}_{}_Intmd'.format(formula.identifier(), t)
+        name = '&&_{}_{}_Intmd'.format(formula.identifier(), self._nameSanitize(t))
         z_intmd = self.model.addVar(vtype=grb.GRB.BINARY, name=name)
         self.model.addConstr(z_intmd == grb.min_(z_children))
         self.model.addConstr(z <= z_intmd)
@@ -161,7 +161,7 @@ class mstl2milp(object):
         child = formula.child
         z_children = [self.to_milp(child, t + (t[-1]+tau,), depth+1, z_ancestors) 
                       for tau in range(a, b+1)]
-        name = 'Always_{}_{}_Intmd'.format(formula.identifier(), t)
+        name = 'Always_{}_{}_Intmd'.format(formula.identifier(), self._nameSanitize(t))
         z_intmd = self.model.addVar(vtype=grb.GRB.BINARY, name=name)
         self.model.addConstr(z_intmd == grb.min_(z_children))
         self.model.addConstr(z <= z_intmd)
@@ -179,7 +179,7 @@ class mstl2milp(object):
             z_children_right = [self.to_milp(formula.right, t+(t[-1]+t_,), depth+1, 
                                              z_ancestors)]
             # Create an auxiliary variable to hold the min result
-            name = 'Until_{}_{}_{}'.format(formula.identifier(), t, t_)
+            name = 'Until_{}_{}_{}'.format(formula.identifier(), self._nameSanitize(t), t_)
             z_aux = self.model.addVar(vtype=grb.GRB.BINARY, 
                                     name=name + "_z")
             self.model.addConstr(z_aux == grb.min_(z_children_right + z_children_left))
@@ -280,7 +280,7 @@ class mstl2milp(object):
             for child in formula.children:
                 opname = Operation.getString(child.op)
                 identifier = child.identifier()
-                name = '{}_{}_{}'.format(opname, identifier, t)
+                name = '{}_{}_{}'.format(opname, identifier, self._nameSanitize(t))
                 rho_min, rho_max = self.ranges['rho']
                 childRho = lp.addVar(vtype=grb.GRB.CONTINUOUS,
                                     name=name + '_rho', lb=rho_min, ub=rho_max)
@@ -295,7 +295,7 @@ class mstl2milp(object):
             for child in formula.children:
                 opname = Operation.getString(child.op)
                 identifier = child.identifier()
-                name = '{}_{}_{}'.format(opname, identifier, t)
+                name = '{}_{}_{}'.format(opname, identifier, self._nameSanitize(t))
                 rho_min, rho_max = self.ranges['rho']
                 childRho = lp.addVar(vtype=grb.GRB.CONTINUOUS,
                                     name=name + '_rho', lb=rho_min, ub=rho_max)
@@ -312,7 +312,7 @@ class mstl2milp(object):
             for tau in range(a, b+1):
                 opname = Operation.getString(child.op)
                 identifier = child.identifier()
-                name = '{}_{}_{}'.format(opname, identifier, t+(t[-1]+tau,))
+                name = '{}_{}_{}'.format(opname, identifier, self._nameSanitize(t+(t[-1]+tau,)))
                 rho_min, rho_max = self.ranges['rho']
                 childRho = lp.addVar(vtype=grb.GRB.CONTINUOUS,
                                     name=name + '_rho', lb=rho_min, ub=rho_max)
@@ -329,7 +329,7 @@ class mstl2milp(object):
             for tau in range(a, b+1):
                 opname = Operation.getString(child.op)
                 identifier = child.identifier()
-                name = '{}_{}_{}'.format(opname, identifier, t+(t[-1]+tau,))
+                name = '{}_{}_{}'.format(opname, identifier, self._nameSanitize(t+(t[-1]+tau,)))
                 rho_min, rho_max = self.ranges['rho']
                 childRho = lp.addVar(vtype=grb.GRB.CONTINUOUS,
                                     name=name + '_rho', lb=rho_min, ub=rho_max)
@@ -351,7 +351,7 @@ class mstl2milp(object):
                     zValsInner.append(self.variables[childLeft][t + (t[-1]+t__,)].x)
                     opname = Operation.getString(childLeft.op)
                     identifier = childLeft.identifier()
-                    name = 'Until_Inner_{}_{}_{}'.format(identifier, t, (t[-1]+t__,))
+                    name = 'Until_Inner_{}_{}_{}'.format(identifier, self._nameSanitize(t), (t[-1]+t__,))
                     rho_min, rho_max = self.ranges['rho']
                     childRhoLeft = lp.addVar(vtype=grb.GRB.CONTINUOUS,
                                     name=name + '_rho', lb=rho_min, ub=rho_max)
@@ -362,7 +362,7 @@ class mstl2milp(object):
                 zValsInner.append(self.variables[child_right][t + (t[-1]+t_,)].x)
                 opname = Operation.getString(child_right.op)
                 identifier = child_right.identifier()
-                name = 'Until_Outer_{}_{}_{}'.format(identifier, t, (t[-1]+t_,))
+                name = 'Until_Outer_{}_{}_{}'.format(identifier, self._nameSanitize(t), (t[-1]+t_,))
                 rho_min, rho_max = self.ranges['rho']
                 childRhoRight = lp.addVar(vtype=grb.GRB.CONTINUOUS,
                                     name=name + '_rho', lb=rho_min, ub=rho_max)
@@ -371,7 +371,7 @@ class mstl2milp(object):
                 childRhoInner.append(childRhoRight)
                 zValsInnerProduct = min(zValsInner)
                 # Create auxiliary variable for the min result
-                name = 'Until_{}_{}_{}_inner'.format(formula.identifier(), t, (t[-1]+t_,))
+                name = 'Until_{}_{}_{}_inner'.format(formula.identifier(), self._nameSanitize(t), (t[-1]+t_,))
                 minRhoInner = lp.addVar(vtype=grb.GRB.CONTINUOUS, 
                                     name=name + "_rho", lb=rho_min, ub=rho_max)
                 lp.addConstr(minRhoInner == grb.min_(childRhoInner))
@@ -395,7 +395,7 @@ class mstl2milp(object):
         if t not in self.rhoVariables[formula]:
             opname = Operation.getString(op)
             identifier = formula.identifier()
-            name = '{}_{}_{}'.format(opname, identifier, t)
+            name = '{}_{}_{}'.format(opname, identifier, self._nameSanitize(t))
             rho_var = self.model.addVar(vtype=grb.GRB.CONTINUOUS,
                                             name=name + '_rho', lb=rho_min, ub=rho_max)
             rho_var_intmd = self.model.addVar(vtype=grb.GRB.CONTINUOUS,
@@ -470,7 +470,7 @@ class mstl2milp(object):
                     self.generate_MIQP_robustness_constraints(child_right, t + (t_,), depth+1, balance)
                     childRhoInner.append(self.rhoVariables[child_right][t + (t_,)])
                     # Create auxiliary variable for the min result
-                    name = 'Until_Inner_{}_{}_{}'.format(formula.identifier(), t, t_)
+                    name = 'Until_Inner_{}_{}_{}'.format(formula.identifier(), self._nameSanitize(t), t_)
                     minRhoInner = self.model.addVar(vtype=grb.GRB.CONTINUOUS, 
                                         name=name + "_rho", lb=rho_min, ub=rho_max)
                     self.model.addConstr(minRhoInner == grb.min_(childRhoInner))
@@ -480,8 +480,9 @@ class mstl2milp(object):
                         self.balanceRobustnessObjectives[depth].append((rhoOuter*rhoOuter))
                 self.model.addConstr(rho_var_intmd == sum(childRhoVars)/(b-a+1))
             self.model.update()
-
-    def hierarchical(self, model_name='model_test.lp', optimize=True, balance=True, completeSolve=False):
+    def _nameSanitize(self, name):
+        return str(name).replace(" ", "").replace(",", "_").replace("-", "_").replace("(", "t").replace(")", "t")
+    def hierarchical(self, model_name='model_test.lp', optimize=True, balance=True, completeSolve=False, feasibilityEpsilon=1e-4):
         '''
         This method computes a hierarchical optimization formulation 
         (lexicographical) from root node all the way to the leaves (predicates)
@@ -515,7 +516,7 @@ class mstl2milp(object):
                                     for i in range(max_depth+2)]
                     self.model.addConstrs((self.objectives[d] >= -currentOptimalObj[d] 
                                         for d in range(max_depth+1)), name='Fixed_Primary_Objectives')
-                    self.model.addConstr(self.rhoVariables[self.formula][(0, )] >= -currentOptimalObj[-1], 
+                    self.model.addConstr(self.rhoVariables[self.formula][(0, )] >= -currentOptimalObj[-1]-feasibilityEpsilon, 
                                          name='Fixed_Robustness_Objective')
                     self.model.NumObj = 0
                     self.model.update()
@@ -524,11 +525,14 @@ class mstl2milp(object):
                     self.model.addConstr(sum(self.balanceRobustnessObjectives[-1]) <= latestSpatialBalanceObj,
                                          name='Fixed_Balance_Robustness_Final')
                     formula_terms = None
+                    fixConstr = None
                     for d in range(max_depth+1):
                         if len(self.balanceSatisfactionObjectives[d])>0:
                             if formula_terms is not None:
                                 balanceOptimalObj = self.model.getObjective().getValue()
-                                self.model.addConstr(sum(formula_terms) <= balanceOptimalObj, name=f"Fixed_Balance_{d}")
+                                epsilon = feasibilityEpsilon*max(1, abs(balanceOptimalObj)) if fixConstr is None else max(0, -fixConstr.QCSlack)
+                                fixConstr = self.model.addConstr(sum(formula_terms) <= balanceOptimalObj
+                                                     +epsilon, name=f"Fixed_Balance_{d}")
                             self.model.NumObj = 0
                             self.model.update()
                             formula_terms = [sum(self.balanceSatisfactionObjectives[d][f].values())*sum(self.balanceSatisfactionObjectives[d][f].values())
