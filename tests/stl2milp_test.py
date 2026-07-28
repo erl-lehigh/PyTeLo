@@ -7,8 +7,8 @@
 import sys
 sys.path.append('..')
 
-from stl2milp import stl2milp
-from stl import to_ast
+from pytelo.stl import stl2milp
+from pytelo.stl import to_ast
 
 # formula = "(x > 10) && F[0, 2] y > 2 || G[1, 6] z > 8"
 # formula = "G[2,4] F[1,3](x>=3)"

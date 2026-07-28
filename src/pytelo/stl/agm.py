@@ -12,7 +12,7 @@ from antlr4 import InputStream, CommonTokenStream
 from pytelo._internal.stlLexer import stlLexer
 from pytelo._internal.stlParser import stlParser
 
-from pytelo.stl import Operation, RelOperation, STLAbstractSyntaxTreeExtractor, Trace
+from .stl import Operation, RelOperation, STLAbstractSyntaxTreeExtractor, Trace
 
 
 def powermean(vector, order, plus=0):

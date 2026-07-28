@@ -6,8 +6,8 @@
 import sys
 sys.path.append('..')
 
-from pstl2milp import pstl2milp
-from stl import to_ast
+from pytelo.stl import pstl2milp
+from pytelo.stl import to_ast
 
 def partial_stl_test():
     # formula = "(x > 10) && F[0, 2] y > 2 || G[1, 6] z > 8"
