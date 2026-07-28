@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PyTeLo"                    # This becomes the pip name
+version = "1.0.0"
+description = "A Flexible and Efficient Temporal Logic Tool"
+readme = "README.md"
+license = {text = "BSD-3-Clause"}
+authors = [{name = "Crockett Hensley", email = "crh325@lehigh.edu"}, {name = "Cristian-Ioan Vasile", email = "crv519@lehigh.edu"}]
+requires-python = ">=3.6"
+dependencies = [
+    "gurobipy>=12.0.3",
+    "antlr4-python3-runtime>=4.13.0",
+    "numpy>=1.20.0",
+]
+
+
+[project.urls]
+"Homepage" = "https://github.com/erl-lehigh/PyTeLo"
+"Repository" = "https://github.com/erl-lehigh/PyTeLo"
+
+[tool.setuptools]
+packages = ["pytelo"]
+package-dir = {"" = "src"}

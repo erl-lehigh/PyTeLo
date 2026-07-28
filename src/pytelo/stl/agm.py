@@ -78,12 +78,12 @@ def powermean_robustness(formula, trace, time, pos_order=0, neg_order=1,
     if formula.op in (Operation.AND, Operation.OR):
         r_children = np.array([powermean_robustness(child, trace, time)
                                for child in formula.children],
-                              dtype=np.float)
+                              dtype=np._ArrayFloat64_co)
     elif formula.op in (Operation.ALWAYS, Operation.EVENT):
         r_children = np.array(
             [powermean_robustness(formula.child, trace, time + tau)
              for tau in np.arange(formula.low, formula.high + 1)],
-            dtype=np.float)
+            dtype=np.float64)
     if formula.op in (Operation.AND, Operation.ALWAYS):
         eta = conjunction_function(r_children, pos_order, neg_order, plus=plus)
         return eta
