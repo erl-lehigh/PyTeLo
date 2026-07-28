@@ -78,7 +78,7 @@ def powermean_robustness(formula, trace, time, pos_order=0, neg_order=1,
     if formula.op in (Operation.AND, Operation.OR):
         r_children = np.array([powermean_robustness(child, trace, time)
                                for child in formula.children],
-                              dtype=np._ArrayFloat64_co)
+                              dtype=np.float64)
     elif formula.op in (Operation.ALWAYS, Operation.EVENT):
         r_children = np.array(
             [powermean_robustness(formula.child, trace, time + tau)
