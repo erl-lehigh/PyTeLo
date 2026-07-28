@@ -6,8 +6,8 @@
 import sys
 sys.path.append('..')
 
-from mtl import to_ast
-from mtl2milp import mtl2milp
+from pytelo.mtl import to_ast
+from pytelo.mtl import mtl2milp
 
 formula = "(x) && F[0, 2] y  && G[1, 6] z "
 

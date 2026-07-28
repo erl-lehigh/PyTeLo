@@ -6,8 +6,8 @@
 import sys
 
 sys.path.append('..')
-from mtl import to_ast
-from psmtl2milp import psmtl2milp
+from pytelo.mtl import to_ast
+from pytelo.mtl import psmtl2milp
 
 def partial_mtl_test():
     formula = "G[0, 2] y  && G[0, 2] z "
