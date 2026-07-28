@@ -4,7 +4,7 @@
  @author: Gustavo A. Cardona, Cristian-Ioan Vasile
 '''
 import gurobipy as grb
-from wmtl import Operation, MTLFormula
+from pytelo.wmtl import Operation, MTLFormula
 
 class pswmtl2milp(object):
     '''Translate an wMTL formula to an MILP.'''

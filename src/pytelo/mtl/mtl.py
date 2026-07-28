@@ -6,9 +6,9 @@
 
 from antlr4 import InputStream, CommonTokenStream
 
-from mtlLexer import mtlLexer
-from mtlParser import mtlParser
-from mtlVisitor import mtlVisitor
+from pytelo._internal.mtlLexer import mtlLexer
+from pytelo._internal.mtlParser import mtlParser
+from pytelo._internal.mtlVisitor import mtlVisitor
 
 
 class Operation(object):

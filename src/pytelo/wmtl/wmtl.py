@@ -7,10 +7,10 @@
 import numpy as np
 
 from antlr4 import InputStream, CommonTokenStream
-from wmtlLexer import wmtlLexer
-from wmtlParser import wmtlParser
-from wmtlVisitor import wmtlVisitor
-from mtl import Operation, MTLFormula
+from pytelo._internal.wmtlLexer import wmtlLexer
+from pytelo._internal.wmtlParser import wmtlParser
+from pytelo._internal.wmtlVisitor import wmtlVisitor
+from pytelo.mtl import Operation, MTLFormula
 
 class WMTLFormula(MTLFormula):
     '''Abstract Syntax Tree representation of an WMTL formula. The class is

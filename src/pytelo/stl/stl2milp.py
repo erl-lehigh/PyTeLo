@@ -7,7 +7,7 @@
 
 import gurobipy as grb
 
-from stl import Operation, RelOperation, STLFormula
+from pytelo.stl import Operation, RelOperation, STLFormula
 
 
 class stl2milp(object):

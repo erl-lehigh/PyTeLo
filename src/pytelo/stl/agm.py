@@ -9,10 +9,10 @@ from __future__ import print_function
 import numpy as np
 from antlr4 import InputStream, CommonTokenStream
 
-from stlLexer import stlLexer
-from stlParser import stlParser
+from pytelo._internal.stlLexer import stlLexer
+from pytelo._internal.stlParser import stlParser
 
-from stl import Operation, RelOperation, STLAbstractSyntaxTreeExtractor, Trace
+from pytelo.stl import Operation, RelOperation, STLAbstractSyntaxTreeExtractor, Trace
 
 
 def powermean(vector, order, plus=0):
