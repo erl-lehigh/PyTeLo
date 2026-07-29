@@ -71,13 +71,20 @@ class MTLFormula(object):
     Instance Attributes
     ----------
     op (int): opcode for the MTL operation represented by this object
-    child (MTLFormula): object associated with nested subformula of a unary operator - defined only for ALWAYS, EVENT, and NOT operations
-    children (list): list of MTLFormula objects associated with each nested subformula - defined only for AND and OR operations
-    left (MTLFormula): object associated with the left subformula of a binary non-commutative operator - defined only for UNTIL and IMPLIES operations
-    right (MTLFormula): object associated with the right subformula of a binary non-commutative operator - defined only for UNTIL and IMPLIES operations
-    low (int or float): time value associated with the interval start of a temporal operator - defined only for ALWAYS, EVENT, and UNTIL operations
-    high (int or float): time value associated with the interval end of a temporal operator - defined only for ALWAYS, EVENT, and UNTIL operations
-    value (bool): representation of 0/1 literals passed in to the MTL formula - defined only for BOOL operations
+    child (MTLFormula): object associated with nested subformula of a unary operator - defined 
+                        only for ALWAYS, EVENT, and NOT operations
+    children (list): list of MTLFormula objects associated with each nested subformula - defined
+                     only for AND and OR operations
+    left (MTLFormula): object associated with the left subformula of a binary non-commutative 
+                       operator - defined only for UNTIL and IMPLIES operations
+    right (MTLFormula): object associated with the right subformula of a binary non-commutative 
+                        operator - defined only for UNTIL and IMPLIES operations
+    low (int or float): time value associated with the interval start of a temporal operator - 
+                        defined only for ALWAYS, EVENT, and UNTIL operations
+    high (int or float): time value associated with the interval end of a temporal operator - 
+                         defined only for ALWAYS, EVENT, and UNTIL operations
+    value (bool): representation of 0/1 literals passed in to the MTL formula - defined only for 
+                  BOOL operations
     variable (str): name of variable passed in to MTL formula - defined only for PRED operations
     '''
 
@@ -110,8 +117,8 @@ class MTLFormula(object):
         self.__hash = None
 
     def negate(self):
-        '''Computes the negation of the MTL formula by propagating the negation
-        towards predicates. Modifies tree structure in place.
+        '''Computes the negation of the MTL formula by propagating the negation towards predicates. 
+        Modifies tree structure in place.
         '''
         self.__string = None
         if self.op == Operation.BOOL:
@@ -132,8 +139,13 @@ class MTLFormula(object):
         return self
 
     def pnf(self, insert_negation_variables=False):
-        '''Computes the Positive Normal Form of the MTL formula.
-        Modifies the tree structure in place.
+        '''Computes the Positive Normal Form of the MTL formula. Modifies the tree structure in place.
+
+        Parameters:
+        ----------
+        insert_negation_variables: default=False - if truthy, any predicate variables requiring negation
+                                                   will be replaced by new variables named <var_name>_neg
+                                                   in place of the negation operation.
         '''
         self.__string = None
         if self.op in (Operation.AND, Operation.OR):
@@ -155,7 +167,12 @@ class MTLFormula(object):
         return self
 
     def bound(self):
-        '''Returns the time bound of the MTL formula.'''
+        '''Computes an upper bound for the maximum time with could affect the satisfaction or 
+        violation of the MTL formula at t=0.
+
+        Returns:
+        ----------
+        t (int or float): Latest relevant time for analysis of self.formula at t=0.'''
         if self.op in (Operation.BOOL, Operation.PRED):
             return 0
         elif self.op in (Operation.AND, Operation.OR):
@@ -170,7 +187,11 @@ class MTLFormula(object):
             return self.high + self.child.bound()
 
     def variables(self):
-        '''Returns the set of variables (str) involved in the MTL formula.'''
+        '''Finds all variables used in the MTL formula specification.
+
+        Returns:
+        ----------
+         vars (set): The set of variable names (str) used in the MTL formula.'''
         if self.op == Operation.BOOL:
             return set()
         elif self.op == Operation.PRED:
@@ -183,7 +204,11 @@ class MTLFormula(object):
             return self.child.variables()
 
     def identifier(self):
-        '''Computes the subformula ID in a manner safe for use as a gurobi variable name'''
+        '''Computes the subformula ID in a manner safe for use as a gurobi variable name.
+        
+        Returns:
+        ----------
+        id (int): A gurobi-safe hash ID (64-bit) for the subformula stored in self.formula.'''
         h = hash(self)
         if h < 0:
             h = hex(ord('-'))[2:] + hex(-h)[1:]
@@ -237,7 +262,11 @@ class MTLAbstractSyntaxTreeExtractor(mtlVisitor):
     '''
 
     def visitFormula(self, ctx):
-        '''Parse data from contexts that have been identified as subformulae by antlr'''
+        '''Extract data from contexts that have been identified as subformulae by antlr.
+        
+        Parameters:
+        ----------
+        ctx (mtlParser.FormulaContext): Context generated by antlr for this operation in the parse tree.'''
         op = Operation.getCode(ctx.op.text)
         ret = None
         low = -1
@@ -275,7 +304,11 @@ class MTLAbstractSyntaxTreeExtractor(mtlVisitor):
         return self.visit(ctx.booleanExpr())
 
     def visitBooleanExpr(self, ctx):
-        '''Parse data from contexts that have been identified as predicates by antlr'''
+        '''Extract data from contexts that have been identified as predicates by antlr
+        
+        Parameters:
+        ----------
+        ctx (mtlParser.BooleanExprContext): Context generated by antlr for this operation in the parse tree.'''
         if ctx.op.text.lower() in ('true', 'false'):
             value = ctx.op.text.lower() == 'true'
             return MTLFormula(Operation.BOOL, value=value)
@@ -287,7 +320,14 @@ class MTLAbstractSyntaxTreeExtractor(mtlVisitor):
 def to_ast(formula):
     '''Transforms a formula string to an Abstract Syntax Tree in one shot.
     Parses formula with antlr and then generates MTLFormula objects.
-    Returns MTLFormula object at the root of the AST.
+
+    Parameters:
+    ----------
+    formula (str): A string representation of the MTL formula.
+
+    Returns:
+    ----------
+    ast (MTLFormula): Root node of the generated AST.
     '''
     lexer = mtlLexer(InputStream(formula))
     tokens = CommonTokenStream(lexer)

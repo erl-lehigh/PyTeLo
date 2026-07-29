@@ -12,9 +12,12 @@ else:
 '''
  Copyright (c) 2015-2020 
  Hybrid and Networked Systems (HyNeSs) Group, BU Robotics Lab, Boston University
- Explainable Robotics Lab, Lehigh University
- See license.txt file for license information.
+ Explainable Robotics Lab (ERL), Lehigh University
  @author: Cristian Ioan Vasile <cvasile@lehigh.edu>
+
+ Copyright (c) 2026, Explainable Robotics Lab (ERL), Lehigh University
+ @editor: Crockett L. Hensley
+ See license.txt file for license information.
 '''
 
 def serializedATN():
