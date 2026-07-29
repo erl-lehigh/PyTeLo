@@ -1,10 +1,10 @@
 '''
  Copyright (c) 2023, Explainable Robotics Lab (ERL), Lehigh University
- See license.txt file for license information.
  @author: Gustavo A. Cardona, Cristian-Ioan Vasile
 
  Copyright (c) 2026, Explainable Robotics Lab (ERL), Lehigh University
  @editor: Crockett L. Hensley
+ See license.txt file for license information.
 '''
 
 import gurobipy as grb
