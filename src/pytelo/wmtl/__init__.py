@@ -1,4 +1,5 @@
 from pytelo._internal.wmtlLexer import wmtlLexer
 from pytelo._internal.wmtlParser import wmtlParser
-from pytelo.wmtl import WMTLAbstractSyntaxTreeExtractor
-from pytelo.mtl import Operation, MTLFormula, to_ast
+from pytelo.mtl import Operation, MTLFormula
+from .wmtl import WMTLAbstractSyntaxTreeExtractor, to_ast
+from .pswmtl2milp import pswmtl2milp

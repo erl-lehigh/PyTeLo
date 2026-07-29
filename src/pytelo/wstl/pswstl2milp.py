@@ -1,9 +1,15 @@
 '''
- Copyright (C) 2018-2020 Cristian Ioan Vasile <cvasile@lehigh.edu>
+ Copyright (C) 2018-2023,
  Hybrid and Networked Systems (HyNeSs) Group, BU Robotics Lab, Boston University
- Explainable Robotics Lab, Lehigh University
+ Explainable Robotics Lab (ERL), Lehigh University
+ @author: Cristian Ioan Vasile
+
+ Copyright (c) 2023, Explainable Robotics Lab (ERL), Lehigh University
+ @author: Gustavo A. Cardona
+
+ Copyright (c) 2026, Explainable Robotics Lab (ERL), Lehigh University
+ @editor: Crockett L. Hensley
  See license.txt file for license information.
- @author: Gustavo A. Cardona, Cristian-Ioan Vasile
 '''
 import gurobipy as grb
 

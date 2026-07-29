@@ -3,13 +3,14 @@ from antlr4 import *
 if "." in __name__:
     from .stlParser import stlParser
 else:
-    from pytelo._internal.stlParser import stlParser
+    from stlParser import stlParser
 
 '''
- Copyright (C) 2015-2020 Cristian Ioan Vasile <cvasile@lehigh.edu>
+ Copyright (c) 2015-2020 
  Hybrid and Networked Systems (HyNeSs) Group, BU Robotics Lab, Boston University
  Explainable Robotics Lab, Lehigh University
  See license.txt file for license information.
+ @author: Cristian Ioan Vasile <cvasile@lehigh.edu>
 '''
 
 

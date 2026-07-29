@@ -1,13 +1,16 @@
-"""
- Copyright (c) 2023, Explainable Robotics Lab (ERL)
+'''
+ Copyright (c) 2023, Explainable Robotics Lab (ERL), Lehigh University
  See license.txt file for license information.
  @author: Gustavo A. Cardona, Cristian-Ioan Vasile
-"""
+
+ Copyright (c) 2026, Explainable Robotics Lab (ERL), Lehigh University
+ @editor: Crockett L. Hensley
+'''
 import sys
 sys.path.append('..')
 
-from wstl import to_ast
-from pswstl2milp import pswstl2milp
+from pytelo.wstl import to_ast
+from pytelo.wstl import pswstl2milp
 
 def partial_wstl_test():
     formula = "&&^w1 (F[2,3]^w1 (x>=2), F[2,3]^w1 (b>=1))"

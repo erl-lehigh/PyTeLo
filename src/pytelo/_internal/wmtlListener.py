@@ -3,7 +3,7 @@ from antlr4 import *
 if "." in __name__:
     from .wmtlParser import wmtlParser
 else:
-    from pytelo._internal.wmtlParser import wmtlParser
+    from wmtlParser import wmtlParser
 
 '''
  Copyright (c) 2023, Explainable Robotics Lab (ERL)

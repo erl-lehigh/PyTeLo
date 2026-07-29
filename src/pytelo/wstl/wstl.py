@@ -1,16 +1,19 @@
 '''
- Explainable Robotics Lab, Lehigh University
+ Copyright (c) 2023, Explainable Robotics Lab (ERL), Lehigh University
  See license.txt file for license information.
  @author: Gustavo A. Cardona, Cristian-Ioan Vasile
+
+ Copyright (c) 2026, Explainable Robotics Lab (ERL), Lehigh University
+ @editor: Crockett L. Hensley
 '''
 import numpy as np
 
 from antlr4 import InputStream, CommonTokenStream
 
 from stl import Operation, RelOperation, STLFormula, Trace
-from wstlLexer import wstlLexer
-from wstlParser import wstlParser
-from wstlVisitor import wstlVisitor
+from pytelo._internal.wstlLexer import wstlLexer
+from pytelo._internal.wstlParser import wstlParser
+from pytelo._internal.wstlVisitor import wstlVisitor
 
 class WSTLFormula(STLFormula):
     '''Abstract Syntax Tree representation of an WSTL formula. The class is

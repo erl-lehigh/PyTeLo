@@ -3,10 +3,10 @@ from antlr4 import *
 if "." in __name__:
     from .wstlParser import wstlParser
 else:
-    from pytelo._internal.wstlParser import wstlParser
+    from wstlParser import wstlParser
 
 '''
- Explainable Robotics Lab, Lehigh University
+ Copyright (c) 2023, Explainable Robotics Lab (ERL)
  See license.txt file for license information.
  @author: Gustavo A. Cardona, Cristian-Ioan Vasile
 '''

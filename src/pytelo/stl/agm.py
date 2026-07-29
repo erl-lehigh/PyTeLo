@@ -1,8 +1,11 @@
 '''
-Copyright (C) 2019 Noushin Mehdipour <noushinm@bu.edu> and
-2015-2019 Cristian Ioan Vasile <cvasile@bu.edu,cvasile@lehigh.edu>,
-Hybrid and Networked Systems (HyNeSs) Group, BU Robotics Lab, Boston University
-See license.txt file for license information.
+ Copyright (c) 2019, Noushin Mehdipour <noushinm@bu.edu>,
+ Copyright (c) 2015-2019 Cristian Ioan Vasile <cvasile@bu.edu,cvasile@lehigh.edu>,
+ Hybrid and Networked Systems (HyNeSs) Group, BU Robotics Lab, Boston University
+
+ Copyright (c) 2026, Explainable Robotics Lab (ERL), Lehigh University
+ @editor: Crockett L. Hensley
+ See license.txt file for license information.
 '''
 from __future__ import print_function
 

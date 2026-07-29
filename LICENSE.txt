@@ -1,6 +1,7 @@
 BSD 3-Clause License
 
-Copyright (c) 2023, Explainable Robotics Lab (ERL)
+Copyright (c) 2026, Explainable Robotics Lab (ERL), 
+Christian-Ioan Vasile, Gustavo A. Cardona, Crockett L. Hensley, Noushin Mehdipour
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:

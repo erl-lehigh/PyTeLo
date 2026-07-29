@@ -3,7 +3,7 @@ from antlr4 import *
 if "." in __name__:
     from .mtlParser import mtlParser
 else:
-    from pytelo._internal.mtlParser import mtlParser
+    from mtlParser import mtlParser
 
 '''
  Copyright (c) 2023, Explainable Robotics Lab (ERL)

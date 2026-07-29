@@ -1,7 +1,10 @@
 '''
- Copyright (C) 2018-2020 Cristian Ioan Vasile <cvasile@lehigh.edu>
+ Copyright (c) 2018-2020 Cristian Ioan Vasile <cvasile@lehigh.edu>
  Hybrid and Networked Systems (HyNeSs) Group, BU Robotics Lab, Boston University
- Explainable Robotics Lab, Lehigh University
+ Explainable Robotics Lab (ERL), Lehigh University
+ 
+ Copyright (c) 2026, Explainable Robotics Lab (ERL), Lehigh University
+ @editor: Crockett L. Hensley
  See license.txt file for license information.
 '''
 
