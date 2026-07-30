@@ -94,7 +94,7 @@ class STLFormula(object):
             self.right = kwargs['right']
 
         self.__string = None
-        self.__hash = None
+        self.__hash = kwargs['UUID'] if 'UUID' in kwargs else None
 
     def robustness(self, s, t, max_robustness=1):
         '''Computes the robustness of the STL formula.'''
@@ -304,13 +304,23 @@ class STLFormula(object):
 
 class STLAbstractSyntaxTreeExtractor(stlVisitor):
     '''Parse Tree visitor that constructs the AST of an STL formula'''
-
+    def __init__(self, UUID=False):
+        super().__init__()
+        self._trackUUID = UUID
+    def visit(self, ctx):
+        if self._trackUUID and not hasattr(ctx, 'ID'):
+            ctx.ID = hash(str(ctx))
+        return super().visit(ctx)
     def visitFormula(self, ctx):
         op = Operation.getCode(ctx.op.text)
         ret = None
         low = -1
         high = -1
+        UUID = (ctx.ID if self._trackUUID else None)
         if op in (Operation.AND, Operation.OR):
+            if self._trackUUID:
+                ctx.left.ID = hash(str(ctx.left)) ^ ctx.ID
+                ctx.right.ID = hash(str(ctx.right)) ^ ctx.ID
             left = self.visit(ctx.left)
             right = self.visit(ctx.right)
             assert op != right.op
@@ -319,39 +329,55 @@ class STLAbstractSyntaxTreeExtractor(stlVisitor):
             else:
                 children = [left]
             children.append(right)
-            ret = STLFormula(op, children=children)
+            ret = STLFormula(op, children=children, UUID = UUID)
         elif op == Operation.IMPLIES:
+            if self._trackUUID:
+                ctx.left.ID = hash(str(ctx.left)) ^ ctx.ID
+                ctx.right.ID = hash(str(ctx.right)) ^ ctx.ID
             ret = STLFormula(op, left=self.visit(ctx.left),
-                             right=self.visit(ctx.right))
+                             right=self.visit(ctx.right), UUID = UUID)
         elif op == Operation.NOT:
-            ret = STLFormula(op, child=self.visit(ctx.child))
+            if self._trackUUID:
+                ctx.child.ID = hash(str(ctx.child)) ^ ctx.ID
+            ret = STLFormula(op, child=self.visit(ctx.child), UUID = UUID)
         elif op == Operation.UNTIL:
+            if self._trackUUID:
+                ctx.left.ID = hash(str(ctx.left)) ^ ctx.ID
+                ctx.right.ID = hash(str(ctx.right)) ^ ctx.ID
             low = float(ctx.low.text)
             high = float(ctx.high.text)
             ret = STLFormula(op, left=self.visit(ctx.left),
-                             right=self.visit(ctx.right), low=low, high=high)
+                             right=self.visit(ctx.right), low=low, high=high, UUID = UUID)
         elif op in (Operation.ALWAYS, Operation.EVENT):
+            if self._trackUUID:
+                ctx.child.ID = hash(str(ctx.child)) ^ ctx.ID
             low = float(ctx.low.text)
             high = float(ctx.high.text)
             ret = STLFormula(op, child=self.visit(ctx.child),
-                             low=low, high=high)
+                             low=low, high=high, UUID = UUID)
         else:
             print('Error: unknown operation!')
         return ret
 
     def visitBooleanPred(self, ctx):
-        return self.visit(ctx.booleanExpr())
+        expr = ctx.booleanExpr()
+        if self._trackUUID:
+            expr.ID = hash(str(expr)) ^ ctx.ID
+        return self.visit(expr)
 
     def visitBooleanExpr(self, ctx):
+        UUID = (ctx.ID if self._trackUUID else None)
         if ctx.op.text.lower() in ('true', 'false'):
             value = ctx.op.text.lower() == 'true'
-            return STLFormula(Operation.BOOL, value=value)
+            return STLFormula(Operation.BOOL, value=value, UUID = UUID)
         return STLFormula(Operation.PRED,
             relation=RelOperation.getCode(ctx.op.text),
-            variable=ctx.left.getText(), threshold=float(ctx.right.getText()))
+            variable=ctx.left.getText(), threshold=float(ctx.right.getText()), UUID = UUID)
 
     def visitParprop(self, ctx):
-        return self.visit(ctx.child);
+        if self._trackUUID:
+            ctx.child.ID = hash(str(ctx.child)) ^ ctx.ID
+        return self.visit(ctx.child)
 
 
 class Trace(object):
@@ -408,13 +434,17 @@ class TraceBatch(object):
     def __str__(self):
         raise NotImplementedError
 
-def to_ast(formula):
-    '''Transforms a formula string to an Abstract Syntax Tree.'''
+def to_ast(formula, UUID=False):
+    '''
+    Transforms a formula string to an Abstract Syntax Tree.
+    formula (string): STL formula string
+    UUID (boolean): whether to generate unique identifiers for subformulae
+    '''
     lexer = stlLexer(InputStream(formula))
     tokens = CommonTokenStream(lexer)
     parser = stlParser(tokens)
     t = parser.stlProperty()
-    ast = STLAbstractSyntaxTreeExtractor().visit(t)
+    ast = STLAbstractSyntaxTreeExtractor(UUID).visit(t)
     return ast
 
 if __name__ == '__main__':
