@@ -19,7 +19,19 @@ from .stl import Operation, RelOperation, STLAbstractSyntaxTreeExtractor, Trace
 
 
 def powermean(vector, order, plus=0):
-    '''Computes the power mean of a vector.'''
+    '''Computes the power mean (generalized Holder mean) of a vector. 
+    
+    Parameters:
+    ----------
+    vector (array-like): Input vector whose mean is to be computed.
+    order (float or str): The order of the power mean. Can be any real number or 'inf'/'-inf' 
+                          for max/min.
+    plus (int): default=0 - If truthy, the function computes a +1 shifted power mean.
+
+    Returns:
+    ----------
+    mean (np.float64): The power mean of the input vector.
+    '''
     alpha = 1. / len(vector)
     if order == 'inf':
         return np.max(vector)
@@ -37,7 +49,19 @@ def powermean(vector, order, plus=0):
             return np.prod(abs(vector)) ** alpha
 
 def conjunction_function(r_children, pos_order, neg_order, plus=0):
-    '''Computes the conjuction robustness value from children values.'''
+    '''Computes the conjuction robustness value from children values.
+    
+    Parameters:
+    ----------
+    r_children (array-like): Robustness values of the child nodes.
+    pos_order (float or str): The order of the power mean for positive values.
+    neg_order (float or str): The order of the power mean for negative values.
+    plus (int): default=0 - If truthy, the function computes a +1 shifted power mean.
+
+    Returns:
+    ----------
+    eta (np.float64): The conjuction robustness value.
+    '''
     r_non_pos = r_children <= 0
     if np.any(r_non_pos):
         eta = -powermean(-r_children * r_non_pos, order=neg_order, plus=plus)
@@ -46,10 +70,19 @@ def conjunction_function(r_children, pos_order, neg_order, plus=0):
     return eta
 
 def disjunction_function(r_children, pos_order, neg_order, plus=0):
-    '''Computes the disjuction robustness value from children values.
+    '''Computes the disjuction robustness value from children values. This is identical
+    to -conjunction_function(-r_children, pos_order, neg_order, plus)
 
-    Note: Returns the same value as:
-        -conjunction_function(-r_children, pos_order, neg_order, plus)
+    Parameters:
+    ----------
+    r_children (array-like): Robustness values of the child nodes.
+    pos_order (float or str): The order of the power mean for positive values.
+    neg_order (float or str): The order of the power mean for negative values.
+    plus (int): default=0 - If truthy, the function computes a +1 shifted power mean.
+
+    Returns:
+    ----------
+    eta (np.float64): The disjuction robustness value.
     '''
     r_pos = r_children > 0
     if np.any(r_pos):
@@ -60,7 +93,27 @@ def disjunction_function(r_children, pos_order, neg_order, plus=0):
 
 def powermean_robustness(formula, trace, time, pos_order=0, neg_order=1,
                          maximum_robustness=1, plus=0):
-    '''Computes the powermean robustness of the STL formula.'''
+    '''Computes the powermean robustness of a formula with respect to a trace at a given time.
+    Recursively constructs robustness values over the formula tree as needed.
+
+    Parameters:
+    ----------
+    formula (STLFormula): The STL formula with respect to which robustness is to be computed.
+    trace (BoundedTrace): The signal trace whose robustness is to be evaluated.
+    time (int): The time point at which robustness is to be evaluated.
+    pos_order (int or float or str): default=0 - The order of the power mean for positive values.
+                                                 Use 'inf'/'-inf' for max/min.
+    neg_order (int or float or str): default=1 - The order of the power mean for negative values.
+                                                 Use 'inf'/'-inf' for max/min.
+    maximum_robustness (float): default=1 - The defined robustness of a boolean predicate. A True
+                                            value in the trace returns maximum_robustness, False 
+                                            returns -maximum_robustness.
+    plus (int): default=0 - If truthy, the function computes a +1 shifted power mean.
+
+    Returns:
+    ----------
+    eta (np.float64): The powermean robustness value.
+    '''
     if formula.op == Operation.BOOL:
         if formula.value:
             return maximum_robustness
@@ -79,12 +132,12 @@ def powermean_robustness(formula, trace, time, pos_order=0, neg_order=1,
         return eta / trace.range(formula.variable) # normalization
 
     if formula.op in (Operation.AND, Operation.OR):
-        r_children = np.array([powermean_robustness(child, trace, time)
+        r_children = np.array([powermean_robustness(child, trace, time, pos_order, neg_order, maximum_robustness, plus)
                                for child in formula.children],
                               dtype=np.float64)
     elif formula.op in (Operation.ALWAYS, Operation.EVENT):
         r_children = np.array(
-            [powermean_robustness(formula.child, trace, time + tau)
+            [powermean_robustness(formula.child, trace, time + tau, pos_order, neg_order, maximum_robustness, plus)
              for tau in np.arange(formula.low, formula.high + 1)],
             dtype=np.float64)
     if formula.op in (Operation.AND, Operation.ALWAYS):
@@ -95,7 +148,7 @@ def powermean_robustness(formula, trace, time, pos_order=0, neg_order=1,
         return eta
 
     if formula.op == Operation.NOT:
-        return -powermean_robustness(formula.child, trace, time, plus=plus)
+        return -powermean_robustness(formula.child, trace, time, pos_order, neg_order, maximum_robustness, plus=plus)
     elif formula.op in (Operation.IMPLIES, Operation.UNTIL):
         raise NotImplementedError
     else:
@@ -103,15 +156,31 @@ def powermean_robustness(formula, trace, time, pos_order=0, neg_order=1,
 
 
 class BoundedTrace(Trace):
-    '''Representation of a bounded system trace.'''
+    '''Representation of a bounded system trace.
+    
+    Inherits from Trace and adds bounds for each variable to allow for normalization of robustness values.
+    
+    Instance Attributes:
+    ----------
+    bounds (dict): A dictionary mapping variable names to their respective (min, max) bounds.
+    '''
 
     def __init__(self, variables, time_points, data, bounds, kind='nearest'):
-        '''Constructor'''
+        '''Construct a signal trace with bounds for each variable.'''
         Trace.__init__(self, variables, time_points, data, kind)
         self.bounds = bounds
 
     def range(self, variable):
-        '''Return the range for each parameter'''
+        '''Return the size of the range of a specified variable.
+        
+        Parameters:
+        ----------
+        variable (str): The name of the variable for which to return the range.
+        
+        Returns:
+        --------
+        bound_len (float): The size of the range of the specified variable.
+        '''
         var_bounds = self.bounds[variable]
         return var_bounds[1] - var_bounds[0]
 
