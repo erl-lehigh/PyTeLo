@@ -16,29 +16,42 @@ from pytelo._internal.wmtlVisitor import wmtlVisitor
 from pytelo.mtl import Operation, MTLFormula
 
 class WMTLFormula(MTLFormula):
-    '''Abstract Syntax Tree representation of an WMTL formula. The class is
-    derived from MTLFormula.
+    '''Abstract Syntax Tree representation of a weighted MTL formula.
+
+    Contains nested WMTLFormula objects for child subformulae. Also contains
+    interval definitions for temporal operators and weight functions for
+    weighted logical and temporal operators. The class is derived from
+    MTLFormula.
+
+    Instance Attributes
+    ----------
+    op (int): opcode for the MTL operation represented by this object
+    child (MTLFormula): object associated with nested subformula of a unary operator - defined 
+                        only for ALWAYS, EVENT, and NOT operations
+    children (list): list of MTLFormula objects associated with each nested subformula - defined
+                     only for AND and OR operations
+    left (MTLFormula): object associated with the left subformula of a binary non-commutative 
+                       operator - defined only for UNTIL and IMPLIES operations
+    right (MTLFormula): object associated with the right subformula of a binary non-commutative 
+                        operator - defined only for UNTIL and IMPLIES operations
+    low (int or float): time value associated with the interval start of a temporal operator - 
+                        defined only for ALWAYS, EVENT, and UNTIL operations
+    high (int or float): time value associated with the interval end of a temporal operator - 
+                         defined only for ALWAYS, EVENT, and UNTIL operations
+    value (bool): representation of 0/1 literals passed in to the MTL formula - defined only for 
+                  BOOL operations
+    variable (str): name of variable passed in to MTL formula - defined only for PRED operations
+    weight (function): weight function associated with a weighted operator
     '''
 
     def __init__(self, operation, **kwargs):
-        '''Constructor
+        '''Construct a weighted MTL formula object from keyword arguments.
+        Note: kwargs for MTLFormula class are still applicable.
 
-        Parameters
+        Parameters:
         ----------
-        operation (mtl.Operation) operation code.
-        value (bool, optional) value of a Boolean constant.
-        variable (string, optional) name of a predicate's variable.
-        left (WMTLFormula, optional) left AST subtree of binary operations.
-        right (WMTLFormula, optional) right AST subtree of binary operations.
-        child (WMTLFormula, optional) child AST subtree of unary operations.
-        children (WMTLFormula, optional) children AST subtrees of n-ary
-            operations (i.e., disjuction and conjuction).
-        low (int, optional) lower bound of the time interval associate with a
-            temporal operator.
-        high (int, optional) upper bound of the time interval associate with a
-            temporal operator.
-        weight (function, optional, default: None) weight function associated
-            with weighted operators.
+        operation (int) opcode for the operation at the root of the AST.
+        weight (function): optional weight function associated with a weighted operator.
         '''
         MTLFormula.__init__(self, operation, **kwargs)
 
@@ -49,7 +62,13 @@ class WMTLFormula(MTLFormula):
         self.__string = None # string representation cache for quick lookup
 
     def bound(self):
-        '''Computes the bound of the WTL formula.'''
+        '''Computes an upper bound for the maximum time which could affect the
+        satisfaction or violation of the WMTL formula at t=0.
+
+        Returns:
+        ----------
+        t (int or float): Latest relevant time for analysis of self.formula at t=0.
+        '''
         if self.op in (Operation.BOOL, Operation.PRED):
             return 0
         elif self.op in (Operation.AND, Operation.OR):
@@ -64,13 +83,6 @@ class WMTLFormula(MTLFormula):
             return self.high + self.child.bound()
             
     def __str__(self):
-        '''Computes the string representation. The result is cached internally
-        for quick subsequent calls.
-
-        Returns
-        -------
-        (string) formula string
-        '''
         if self.__string is not None:
             return self.__string
 
@@ -110,12 +122,11 @@ class WMTLAbstractSyntaxTreeExtractor(wmtlVisitor):
     '''Parse Tree visitor that constructs the AST of an WMTL formula'''
 
     def __init__(self, predicate_weights):
-        '''Constructor
+        '''Construct an AST extractor for weighted MTL formulas.
 
-        Parameters
+        Parameters:
         ----------
-        predicate_weights (dictionary) maps the names of predicate weights to
-            funtions implementing them.
+        predicate_weights (dict): maps the names of predicate weights to functions implementing them.
         '''
         wmtlVisitor.__init__(self)
         self.predicate_weights = predicate_weights
@@ -123,13 +134,13 @@ class WMTLAbstractSyntaxTreeExtractor(wmtlVisitor):
     def getWeight(self, ctx):
         '''Returns the weight function from the node/rule context.
 
-        Parameters
+        Parameters:
         ----------
-        ctx (ParseRuleContext) the context of a rule.
+        ctx (ParseRuleContext): the context of a rule.
 
-        Returns
-        -------
-        weight (function) the implementation of weight
+        Returns:
+        ---------- 
+        weight (function): the implementation of weight.
         '''
         if ctx.weight is None:
             weight = None
@@ -144,13 +155,13 @@ class WMTLAbstractSyntaxTreeExtractor(wmtlVisitor):
         '''Transforms a parse tree associated with Boolean and temporal
         operators into an AST of the associated WMTL formula.
 
-        Parameters
+        Parameters:
         ----------
-        ctx (ParseRuleContext) the context of a rule.
+        ctx (ParseRuleContext): the context of a rule.
 
-        Returns
-        -------
-        (wmtl.WMTLFormula) AST of the WMTL formula.
+        Returns:
+        ---------- 
+        ret (WMTLFormula): AST of the WMTL formula.
         '''
         op = Operation.getCode(ctx.op.text)
         ret = None
@@ -192,13 +203,13 @@ class WMTLAbstractSyntaxTreeExtractor(wmtlVisitor):
         conjuction operators in long format into an AST of the associated WMTL
         formula.
 
-        Parameters
+        Parameters:
         ----------
-        ctx (ParseRuleContext) the context of a rule.
+        ctx (ParseRuleContext): the context of a rule.
 
-        Returns
-        -------
-        (wmtl.WMTLFormula) AST of the WMTL formula.
+        Returns:
+        ----------
+        ret (wmtl.WMTLFormula): AST of the WMTL formula.
         '''
         op = Operation.getCode(ctx.op.text)
         assert op in (Operation.AND, Operation.OR)
@@ -210,13 +221,13 @@ class WMTLAbstractSyntaxTreeExtractor(wmtlVisitor):
     def visitBooleanPred(self, ctx):
         '''Parses Boolean predicates.
 
-        Parameters
+        Parameters:
         ----------
-        ctx (ParseRuleContext) the context of a rule.
+        ctx (ParseRuleContext): the context of a rule.
 
-        Returns
-        -------
-        (wmtl.WMTLFormula) AST of the WMTL predicate.
+        Returns:
+        ----------
+        ret (wmtl.WMTLFormula): AST of the WMTL predicate.
         '''
         return self.visit(ctx.booleanExpr())
 
@@ -224,31 +235,42 @@ class WMTLAbstractSyntaxTreeExtractor(wmtlVisitor):
         '''Transforms a parse tree associated with Boolean expression of a
         predicate into an AST terminal leaf.
 
-        Parameters
+        Parameters:
         ----------
-        ctx (ParseRuleContext) the context of a rule.
+        ctx (ParseRuleContext): the context of a rule.
 
-        Returns
-        -------
-        (wmtl.WMTLFormula) AST of the WMTL predicate.
+        Returns:
+        ----------
+        ret (wmtl.WMTLFormula): AST of the WMTL predicate.
         '''
         return WMTLFormula(Operation.PRED, variable=ctx.op.text)
 
     def visitParprop(self, ctx):
         '''Parses properties within parantheses.
 
-        Parameters
+        Parameters:
         ----------
-        ctx (ParseRuleContext) the context of a rule.
+        ctx (ParseRuleContext): the context of a rule.
 
-        Returns
-        -------
-        (wmtl.WMTLFormula) AST of the WMTL predicate.
+        Returns:
+        ----------
+        ast (WMTLFormula): AST of the WMTL predicate.
         '''
         return self.visit(ctx.child)
 
 def to_ast(formula, weights):
-    '''Transforms a formula string to an Abstract Syntax Tree.'''
+    '''Transforms a weighted MTL formula string to an Abstract Syntax Tree.
+
+    Parameters:
+    ----------
+    formula (str): A string representation of the weighted MTL formula.
+    weights (dict): A dictionary mapping names used by weighted operators to
+                    their corresponding weight functions.
+
+    Returns:
+    ----------
+    ast (WMTLFormula): Root node of the generated AST.
+    '''
     lexer = wmtlLexer(InputStream(formula))
     tokens = CommonTokenStream(lexer)
     parser = wmtlParser(tokens)

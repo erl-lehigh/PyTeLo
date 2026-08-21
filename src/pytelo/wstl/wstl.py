@@ -16,31 +16,38 @@ from pytelo._internal.wstlParser import wstlParser
 from pytelo._internal.wstlVisitor import wstlVisitor
 
 class WSTLFormula(STLFormula):
-    '''Abstract Syntax Tree representation of an WSTL formula. The class is
-    derived from STLFormula.
+    '''Abstract Syntax Tree representation of a weighted STL formula.
+
+    Contains nested WSTLFormula objects for child subformulae. Also contains
+    interval definitions for temporal operators and weight functions for
+    weighted logical and temporal operators. The class is derived from
+    STLFormula.
+
+    Instance Attributes
+    ----------
+    op (int): opcode for the STL operation represented by this object
+    child (WSTLFormula): nested subformula of a unary operator
+    children (list): nested subformulae of an AND or OR operation
+    left (WSTLFormula): left subformula of an UNTIL or IMPLIES operation
+    right (WSTLFormula): right subformula of an UNTIL or IMPLIES operation
+    low (int or float): start of the interval for a temporal operator
+    high (int or float): end of the interval for a temporal operator
+    value (bool): 0/1 literal value for a BOOL operation
+    variable (str): predicate variable name
+    relation (int): predicate relation opcode
+    threshold (int or float): predicate threshold value
+    weight (function): weight function associated with a weighted operator
     '''
 
     def __init__(self, operation, **kwargs):
-        '''Constructor
-
-        Parameters
+        '''Construct a weighted STL formula object from keyword arguments.
+        Note: kwargs for MTLFormula class are still applicable.
+        
+        Parameters:
         ----------
         operation (stl.Operation) operation code.
-        value (bool, optional) value of a Boolean constant.
-        variable (string, optional) name of a predicate's variable.
-        relation (stl.RelOperation, optional) relation of a predicate.
-        threshold (number, optional) threshold of a predicate.
-        left (WSTLFormula, optional) left AST subtree of binary operations.
-        right (WSTLFormula, optional) right AST subtree of binary operations.
-        child (WSTLFormula, optional) child AST subtree of unary operations.
-        children (WSTLFormula, optional) children AST subtrees of n-ary
-            operations (i.e., disjuction and conjuction).
-        low (int, optional) lower bound of the time interval associate with a
-            temporal operator.
-        high (int, optional) upper bound of the time interval associate with a
-            temporal operator.
-        weight (function, optional, default: None) weight function associated
-            with weighted operators.
+        weight (function): optional weight function associated with a weighted
+                           operator.
         '''
         STLFormula.__init__(self, operation, **kwargs)
 
@@ -51,17 +58,19 @@ class WSTLFormula(STLFormula):
         self.__string = None # string representation cache for quick lookup
 
     def robustness(self, s, t, maximumRobustness=1):
-        '''Computes the robustness of the wSTL formula.
+        '''Computes the robustness of the WSTL formula at time t.
 
-        Parameters
+        Parameters:
         ----------
-        s (stl.Trace) a signal
-        t (number) time instant
+        s (Trace or TraceBatch): trajectory or batch of trajectories to evaluate
+        t (int or float): time at which to evaluate the robustness
+        maximumRobustness (int or float): default=1 - robustness used for satisfaction
+                                                      of Boolean predicates
 
-        Returns
-        -------
-        (number) the traditional robustness of signal `s` at time `t` with
-            respect to the formula `self`
+        Returns:
+        ----------
+        res (number or np.ndarray): Robustness of the trajectory with respect
+                                    to the formula at time t.
         '''
         if self.op in (Operation.BOOL, Operation.PRED, Operation.NOT,
                        Operation.IMPLIES):
@@ -98,9 +107,9 @@ class WSTLFormula(STLFormula):
         '''Computes the string representation. The result is cached internally
         for quick subsequent calls.
 
-        Returns
-        -------
-        (string) formula string
+        Returns:
+        ----------
+        s (str): String representation of the formula.
         '''
         if self.__string is not None:
             return self.__string
@@ -141,12 +150,12 @@ class WSTLAbstractSyntaxTreeExtractor(wstlVisitor):
     '''Parse Tree visitor that constructs the AST of an WSTL formula'''
 
     def __init__(self, predicate_weights):
-        '''Constructor
+        '''Construct an AST extractor for weighted STL formulas.
 
-        Parameters
+        Parameters:
         ----------
-        predicate_weights (dictionary) maps the names of predicate weights to
-            funtions implementing them.
+        predicate_weights (dict): maps names used by weighted operators to
+                                  functions implementing those weights.
         '''
         wstlVisitor.__init__(self)
         self.predicate_weights = predicate_weights
@@ -154,13 +163,13 @@ class WSTLAbstractSyntaxTreeExtractor(wstlVisitor):
     def getWeight(self, ctx):
         '''Returns the weight function from the node/rule context.
 
-        Parameters
+        Parameters:
         ----------
         ctx (ParseRuleContext) the context of a rule.
 
-        Returns
-        -------
-        weight (function) the implementation of weight
+        Returns:
+        ----------
+        weight (function): The implementation of the weight.
         '''
         if ctx.weight is None:
             weight = None
@@ -179,9 +188,9 @@ class WSTLAbstractSyntaxTreeExtractor(wstlVisitor):
         ----------
         ctx (ParseRuleContext) the context of a rule.
 
-        Returns
-        -------
-        (wstl.WSTLFormula) AST of the WSTL formula.
+        Returns:
+        ----------
+        ast (WSTLFormula): AST of the WSTL formula.
         '''
         op = Operation.getCode(ctx.op.text)
         ret = None
@@ -223,13 +232,13 @@ class WSTLAbstractSyntaxTreeExtractor(wstlVisitor):
         conjuction operators in long format into an AST of the associated WSTL
         formula.
 
-        Parameters
+        Parameters:
         ----------
         ctx (ParseRuleContext) the context of a rule.
 
-        Returns
-        -------
-        (wstl.WSTLFormula) AST of the WSTL formula.
+        Returns:
+        ----------
+        ast (WSTLFormula): AST of the WSTL formula.
         '''
         op = Operation.getCode(ctx.op.text)
         assert op in (Operation.AND, Operation.OR)
@@ -241,13 +250,13 @@ class WSTLAbstractSyntaxTreeExtractor(wstlVisitor):
     def visitBooleanPred(self, ctx):
         '''Parses Boolean predicates.
 
-        Parameters
+        Parameters:
         ----------
         ctx (ParseRuleContext) the context of a rule.
 
-        Returns
-        -------
-        (wstl.WSTLFormula) AST of the WSTL predicate.
+        Returns:
+        ----------
+        ast (WSTLFormula): AST of the WSTL predicate.
         '''
         return self.visit(ctx.booleanExpr())
 
@@ -255,13 +264,13 @@ class WSTLAbstractSyntaxTreeExtractor(wstlVisitor):
         '''Transforms a parse tree associated with Boolean expression of a
         predicate into an AST terminal leaf.
 
-        Parameters
+        Parameters:
         ----------
         ctx (ParseRuleContext) the context of a rule.
 
-        Returns
-        -------
-        (wstl.WSTLFormula) AST of the WSTL predicate.
+        Returns:
+        ----------
+        ast (WSTLFormula): AST of the WSTL predicate.
         '''
         return WSTLFormula(Operation.PRED,
             relation=RelOperation.getCode(ctx.op.text),
@@ -270,17 +279,29 @@ class WSTLAbstractSyntaxTreeExtractor(wstlVisitor):
     def visitParprop(self, ctx):
         '''Parses properties within parantheses.
 
-        Parameters
+        Parameters:
         ----------
         ctx (ParseRuleContext) the context of a rule.
 
-        Returns
-        -------
-        (wstl.WSTLFormula) AST of the WSTL predicate.
+        Returns:
+        ----------
+        ast (WSTLFormula): AST of the WSTL predicate.
         '''
         return self.visit(ctx.child)
 
 def to_ast(formula, weights):
+    '''Transforms a weighted STL formula string to an Abstract Syntax Tree.
+
+    Parameters:
+    ----------
+    formula (str): A string representation of the weighted STL formula.
+    weights (dict): A dictionary mapping names used by weighted operators to
+                    their corresponding weight functions.
+
+    Returns:
+    ----------
+    ast (WSTLFormula): Root node of the generated AST.
+    '''
     lexer = wstlLexer(InputStream(formula))
     tokens = CommonTokenStream(lexer)
     parser = wstlParser(tokens)

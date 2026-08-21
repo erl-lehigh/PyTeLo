@@ -10,8 +10,25 @@ import gurobipy as grb
 from pytelo.wmtl import Operation, MTLFormula
 
 class pswmtl2milp(object):
-    '''Translate an wMTL formula to an MILP.'''
+    '''Tools to generate an MILP for partial satisfaction of a weighted MTL
+    formula.
+
+    Instance Attributes
+    ----------
+    formula (WMTLFormula): AST root node
+    model (grb.Model): MILP model with constraints consistent with the formula
+    variables (dict): Variables tracking satisfaction of formula subtrees and
+                      signal states
+    '''
     def __init__(self, formula, model=None):
+        '''Construct a weighted MTL partial-satisfaction optimization problem.
+
+        Parameters:
+        ----------
+        formula (WMTLFormula): root node of the desired weighted MTL formula
+        model (grb.Model): default=None - existing Gurobi model to extend; if
+                                          None, a new model is created
+        '''
         self.formula = formula
 
         self.model = model
@@ -29,20 +46,43 @@ class pswmtl2milp(object):
             # Operation.UNTIL : self.until
         }
         
-    def translate(self): # translate all the formula to milp at time 0
-        '''Translates the wMTL formula to MILP from time 0.'''
+    def translate(self): 
+        '''Generates MILP constraints from self.formula at time t=0.
+
+        Returns:
+        ----------
+        z (grb.Variable): Variable indicating the weighted degree of
+                          satisfaction of the root formula.
+        '''
         z = self.to_milp(self.formula)
         return z
 
     def to_milp(self, formula, t=0):
-        '''Generates the MILP from the wMTL formula.'''
+        '''Generates MILP constraints for a weighted MTL formula or subformula.
+
+        Parameters:
+        ----------
+        formula (WMTLFormula): formula or subformula to encode
+        t (int): default=0 - time at which the formula is evaluated
+
+        Returns:
+        ----------
+        z (grb.Variable): Variable indicating the weighted degree of
+                          satisfaction of the formula.
+        '''
         z, added = self.add_formula_variable(formula, t)
         if added:
             self.__milp_call[formula.op](formula, z, t) 
         return z
 
     def add_formula_variable(self, formula, t): 
-        '''Adds a variable for the `formula` at time `t`.'''
+        '''Adds a satisfaction variable for a weighted formula at time t.
+
+        Returns:
+        ----------
+        z (grb.Variable): Variable tracking the formula satisfaction.
+        added (bool): True if a variable was newly created, otherwise False.
+        '''
         if formula not in self.variables:               
             self.variables[formula] = dict()
         if t not in self.variables[formula]:            
@@ -60,7 +100,18 @@ class pswmtl2milp(object):
         return self.variables[formula][t], False
     
     def add_state(self, state, t, z):
-        '''Adds the `state` at time `t` as a variable.'''
+        '''Associates a signal state with its satisfaction variable.
+
+        Parameters:
+        ----------
+        state (str): signal variable name
+        t (int): time at which the state is used
+        z (grb.Variable): variable linked to the state satisfaction
+
+        Returns:
+        ----------
+        z (grb.Variable): The stored state variable.
+        '''
         if state not in self.variables:
             self.variables[state] = dict()
 
@@ -70,12 +121,26 @@ class pswmtl2milp(object):
         return self.variables[state][t]
 
     def predicate(self, pred, z, t):
-        '''Adds a predicate to the model.'''
+        '''Adds a weighted predicate to the model.
+
+        Parameters:
+        ----------
+        pred (WMTLFormula): predicate formula
+        z (grb.Variable): satisfaction variable for the predicate
+        t (int): time at which the predicate is evaluated
+        '''
         assert pred.op == Operation.PRED
         self.add_state(pred.variable, t, z)
    
     def conjunction(self, formula, z, t):
-        '''Adds a conjunction to the model.'''
+        '''Adds weighted conjunction constraints and recursively encodes children.
+
+        Parameters:
+        ----------
+        formula (WMTLFormula): conjunction formula
+        z (grb.Variable): satisfaction variable for the conjunction
+        t (int): time at which the conjunction is evaluated
+        '''
         assert formula.op == Operation.AND
         z_children = [self.to_milp(f, t) for f in formula.children]
         weights = []
@@ -88,7 +153,14 @@ class pswmtl2milp(object):
         self.model.addConstr(z == sum(vars_children) / sum(weights))
          
     def disjunction(self, formula, z, t):
-        '''Adds a disjunction to the model.'''
+        '''Adds weighted disjunction constraints and recursively encodes children.
+
+        Parameters:
+        ----------
+        formula (WMTLFormula): disjunction formula
+        z (grb.Variable): satisfaction variable for the disjunction
+        t (int): time at which the disjunction is evaluated
+        '''
         assert formula.op == Operation.OR
         z_children = [self.to_milp(f, t) for f in formula.children]
         vars_children = []
@@ -103,7 +175,14 @@ class pswmtl2milp(object):
         self.model.addConstr(z == grb.max_(vars_children))
 
     def eventually(self, formula, z, t):
-        '''Adds an eventually to the model.'''
+        '''Adds weighted eventually constraints over the formula interval.
+
+        Parameters:
+        ----------
+        formula (WMTLFormula): eventually formula
+        z (grb.Variable): satisfaction variable for the formula
+        t (int): time at which the formula is evaluated
+        '''
         assert formula.op == Operation.EVENT
         a, b = int(formula.low), int(formula.high)
         child = formula.child
@@ -122,7 +201,14 @@ class pswmtl2milp(object):
         self.model.addConstr(z == grb.max_(vars_children))
 
     def globally(self, formula, z, t):
-        '''Adds a globally to the model.'''
+        '''Adds weighted globally constraints over the formula interval.
+
+        Parameters:
+        ----------
+        formula (WMTLFormula): globally formula
+        z (grb.Variable): satisfaction variable for the formula
+        t (int): time at which the formula is evaluated
+        '''
         assert formula.op == Operation.ALWAYS
         a, b = int(formula.low), int(formula.high)
         child = formula.child
@@ -139,9 +225,18 @@ class pswmtl2milp(object):
         self.model.addConstr(z == sum(vars_children) / sum(weights))  
         
     def predicate_pairs(self, formula, t=0):
-        '''It receives formula and time step and returns a set of the subformulae
-             that needs to be satisfied at the specific time. Note that Disjunction
-             and eventually are special cases'''
+        '''Finds predicate-time pairs selected by the optimized formula.
+
+        Parameters:
+        ----------
+        formula (WMTLFormula): formula for which to find predicate pairs
+        t (int): default=0 - time at which to evaluate the formula
+
+        Returns:
+        ----------
+        ret (set): Set of predicate-time pairs satisfying as much of the
+                   weighted formula as possible.
+        '''
        
         ret = set()
 
@@ -180,18 +275,18 @@ class pswmtl2milp(object):
         return ret
 
     def hierarchical(self, model_name='model_test.lp', optimize=True): 
-        '''
-        This method computes a hierarchical optimization formulation 
-        (lexicografical) from root node all the way to the leaves (predicates)
-        Input:
-            - model_name is a file name to generate Gurobi information about 
-              the optimization problem
-            - optimize is a flag type variable which is True by default performing
-              the optimization of the problem, in case it is False it will only
-              generate the objective function.
-        
-        Output:
-            - depth of the formula
+        '''Performs hierarchical lexicographic optimization from the root node to
+        the predicate leaves.
+
+        Parameters:
+        ----------
+        model_name (str): default='model_test.lp' - file name for Gurobi model output
+        optimize (bool): default=True - whether to optimize immediately; if falsy, 
+                                        only the objective functions are generated
+
+        Returns:
+        ----------
+        depth (int): Depth of the formula AST.
         '''
         max_depth = max(self.objectives)
         for d in range(max_depth+1):
@@ -205,15 +300,14 @@ class pswmtl2milp(object):
         return d
     
     def ldf(self, model_name='model_test.lp', optimize=True): 
-        '''
-        This method computes a Lowest depht first optimization formulation 
-        making and increasing penalization from being far from the root node
-        Input:
-            - model_name is a file name to generate Gurobi information about 
-              the optimization problem
-            - optimize is a flag type variable which is True by default performing
-              the optimization of the problem, in case it is False it will only
-              generate the objective function.
+        '''Performs lowest-depth-first optimization by penalizing satisfaction
+        according to AST depth.
+
+        Parameters:
+        ----------
+        model_name (str): default='model_test.lp' - file name for Gurobi model output
+        optimize (bool): default=True - whether to optimize immediately; if falsy, 
+                                        only the objective function is generated
         '''
         M2 = 20 # FIXME: computed based on formula size
         reward = sum([term * M2**(-d) for d, term in self.objectives.items()])
@@ -226,15 +320,14 @@ class pswmtl2milp(object):
 
     def wln(self, z, model_name='model_test.lp', optimize=True):
         '''
-        This method computes a Weighted Largest Number optimization formulation 
-    
-        Input:
-            - z this is the decision variable capturing the root node
-            - model_name is a file name to generate Gurobi information about 
-              the optimization problem
-            - optimize is a flag type variable which is True by default performing
-              the optimization of the problem, in case it is False it will only
-              generate the objective function.
+        Performs weighted-largest-number optimization using the root variable.
+
+        Parameters:
+        ----------
+        z (grb.Variable): Decision variable capturing root-node satisfaction
+        model_name (str): default='model_test.lp' - file name for Gurobi model output
+        optimize (bool): default=True - whether to optimize immediately; if falsy, 
+                                        only the objective function is generated
         '''
         self.model.setObjective(z, grb.GRB.MAXIMIZE)
         self.model.update()
@@ -244,15 +337,18 @@ class pswmtl2milp(object):
     
     def satis_score(self, formula, t=0):
         '''
-        This method computes the actual satisfaction score/percentage of a given
-        optimization solution.
-        
-        Note: Current encoding captures how satisfaction aligns to user preferences.
-        For the case of disjunction and eventually this are not equivalent.
-        Example: OR^(0.4, 0.6) (a,b)
-        Make b=0 as a predefine constraint
-        Then z_or= max(0.4/0.6 *1 ,  0.6/0.6*0) = 0.666
-        But satisfaction score should be 1 since the other subformula was satisfied
+        Computes the unweighted satisfaction score of an optimized solution.
+
+        Parameters:
+        ----------
+        formula (WMTLFormula): formula whose score is computed
+        t (int): default=0 - time at which to evaluate the formula
+
+        Note:
+        The MILP encoding captures user preferences through weights, but this
+        score intentionally reports the ordinary satisfaction percentage. For
+        disjunction and eventually operators, the two values are not
+        equivalent.
         '''
         if formula.op == Operation.PRED:
             return self.variables[formula][t].x
