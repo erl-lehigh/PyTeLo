@@ -10,9 +10,17 @@
 '''
 
 import itertools as it
+import warnings
 
 import numpy as np
-from scipy.interpolate import interp1d
+try:
+    from scipy.interpolate import make_interp_spline
+except ImportError:
+    warnings.warn("Scipy is not available in the current environment. " +
+    "This is needed for spline interpolation of signal trace values. " +
+    "If you do not wish to install scipy, note that Trace and TraceBatch " +
+    "objects will be limited to order 0 and 1 interpolation capabilities.", ImportWarning)
+
 from antlr4 import InputStream, CommonTokenStream
 
 from pytelo._internal.stlLexer import stlLexer
@@ -21,7 +29,28 @@ from pytelo._internal.stlVisitor import stlVisitor
 
 
 class Operation(object):
-    '''STL operations'''
+    '''Representation of all possible operations in an STL formula.
+    
+    This class provides necessary mapping interfaces for use of enumeration 
+    codes as a representation of the operations defined in stl.g4 grammar.
+    
+    Class Attributes
+    ----------
+    NOP (int): 0
+    NOT (int): 1
+    OR (int): 2
+    AND (int): 3
+    IMPLIES (int): 4
+    UNTIL (int): 5
+    EVENT (int): 6
+    ALWAYS (int): 7
+    PRED (int): 8
+    BOOL (int): 9
+    opnames (list): mapping from opcodes to default MILP variable prefixes
+    opcodes (dict): inverse mapping of opnames
+    opstrnames (list): mapping from opcodes to user-friendly string names
+    negop (tuple): mapping from opcodes to opcodes of negatory operations (where defined)
+    '''
     NOP, NOT, OR, AND, IMPLIES, UNTIL, EVENT, ALWAYS, PRED, BOOL = range(10)
     opnames = [None, '!', '||', '&&', '=>', 'U', 'F', 'G', 'predicate', 'bool']
     opcodes = {'!': NOT, '&&': AND, '||' : OR, '=>': IMPLIES,
@@ -48,7 +77,25 @@ class Operation(object):
 
 
 class RelOperation(object):
-    '''Predicate relationship operations'''
+    '''Representation of all possible predicate relationships in an STL formula.
+    
+    This class provides necessary mapping interfaces for use of enumeration 
+    codes as a representation of the boolean expressions defined in stl.g4 grammar.
+    
+    Class Attributes
+    ----------
+    NOP (int): 0
+    LT (int): 1
+    LE (int): 2
+    GT (int): 3
+    GE (int): 4
+    EQ (int): 5
+    NQ (int): 6
+    opnames (list): mapping from opcodes to string values for formula inline representation
+    opcodes (dict): inverse mapping of opnames
+    negop (tuple): mapping from opcodes to opcodes of complementary operations (where defined, e.g. LT <-> GE)
+    invop (tuple): mapping from opcodes to opcodes of inverse operations (where defined, e.g. LT <-> GT)
+    '''
     NOP, LT, LE, GT, GE, EQ, NQ = range(7)
     opnames = [None, '<', '<=', '>', '>=', '=', '!=']
     opcodes = {'<': LT, '<=': LE, '>' : GT, '>=': GE, '=': EQ, '!=': NQ}
@@ -68,10 +115,40 @@ class RelOperation(object):
 
 
 class STLFormula(object):
-    '''Abstract Syntax Tree representation of an STL formula'''
+    '''Abstract Syntax Tree representation of an STL formula
+    
+    Contains nested STLFormula objects for child subformulae. Also contains
+    interval definitions for temporal operators.
+    
+    Instance Attributes
+    ----------
+    op (int): opcode for the STL operation represented by this object
+    child (STLFormula): object associated with nested subformula of a unary operator - defined 
+                        only for ALWAYS, EVENT, and NOT operations
+    children (list): list of STLFormula objects associated with each nested subformula - defined
+                     only for AND and OR operations
+    left (STLFormula): object associated with the left subformula of a binary non-commutative 
+                       operator - defined only for UNTIL and IMPLIES operations
+    right (STLFormula): object associated with the right subformula of a binary non-commutative 
+                        operator - defined only for UNTIL and IMPLIES operations
+    low (int or float): time value associated with the interval start of a temporal operator - 
+                        defined only for ALWAYS, EVENT, and UNTIL operations
+    high (int or float): time value associated with the interval end of a temporal operator - 
+                         defined only for ALWAYS, EVENT, and UNTIL operations
+    value (bool): representation of 0/1 literals passed in to the STL formula - defined only for 
+                  BOOL operations
+    variable (str): name of variable passed in to STL formula - defined only for PRED operations
+    relation (int): opcode for the relationship between variable and threshold - defined only for
+                    PRED operations
+    threshold (int or float): threshold value for signal satisfaction - defined only for PRED operations
+    '''
 
     def __init__(self, operation, **kwargs):
-        '''Constructor'''
+        '''Construct formula object from key word arguments passed by formula tree visitor
+        Parameters:
+        ----------
+        operation (int): opcode for the STL operation at the root of the subtree.
+        '''
         self.op = operation
 
         if self.op == Operation.BOOL:
@@ -101,7 +178,23 @@ class STLFormula(object):
         self.__hash = kwargs['UUID'] if 'UUID' in kwargs else None
 
     def robustness(self, s, t, max_robustness=1):
-        '''Computes the robustness of the STL formula.'''
+        '''Computes the robustness of a trajectory with respect to the STL formula at time t.
+        Recursively evaluates the robustness of all necessary subformulae.
+        
+        Parameters:
+        ----------
+        s (Trace or TraceBatch): trajectory (or trajectories) to evaluate.
+        t (int or float): time at which to evaluate the robustness.
+        max_robustness (int or float): default=1 - robustness to be used for satisfaction of
+                                                   boolean predicates.
+        
+        Returns:
+        ----------
+        res (np.ndarray or np.float64): robustness of the trajectory with respect to the STL 
+                                        formula at time t. If s is a TraceBatch, res is a 1D 
+                                        array of robustness values for each trace. Otherwise,
+                                        res is a float.
+        '''
         no_signals = s.number_signals()
         if self.op == Operation.BOOL:
             ret = np.array([max_robustness] * no_signals)
@@ -156,8 +249,8 @@ class STLFormula(object):
             return np.amax(res, axis=0)
 
     def negate(self):
-        '''Computes the negation of the STL formula by propagating the negation
-        towards predicates.
+        '''Computes the negation of the STL formula by propagating the negation towards predicates. 
+        Modifies tree structure in place.
         '''
         self.__string = None
         if self.op == Operation.BOOL:
@@ -178,10 +271,13 @@ class STLFormula(object):
         return self
 
     def pnf(self, insert_inverse_variables=False):
-        '''Computes the Positive Normal Form of the STL formula, potentially
-        adding new variables.
-
-        Note: The tree structure is modified in-place.
+        '''Computes the Positive Normal Form of the STL formula. Modifies the tree structure in place.
+        
+        Parameters:
+        ----------
+        insert_negation_variables: default=False - if truthy, any predicate variables requiring negation
+                                                   will be replaced by new variables named <var_name>_neg
+                                                   in place of the negation operation.
         '''
         self.__string = None
         flag = insert_inverse_variables
@@ -232,7 +328,13 @@ class STLFormula(object):
         return self
 
     def bound(self):
-        '''Computes the bound of the STL formula.'''
+        '''Computes an upper bound for the maximum time with could affect the satisfaction or 
+        violation of the STL formula at t=0.
+        
+        Returns:
+        ----------
+        t (int or float): Latest relevant time for analysis of self.formula at t=0.
+        '''
         if self.op in (Operation.BOOL, Operation.PRED):
             return 0
         elif self.op in (Operation.AND, Operation.OR):
@@ -247,7 +349,12 @@ class STLFormula(object):
             return self.high + self.child.bound()
 
     def variables(self):
-        '''Computes the set of variables involved in the STL formula.'''
+        '''Finds all variables used in the STL formula specification.
+        
+        Returns:
+        ----------
+        vars (set): The set of variable names (str) used in the STL formula.
+        '''
         if self.op == Operation.BOOL:
             return set()
         elif self.op == Operation.PRED:
@@ -260,6 +367,12 @@ class STLFormula(object):
             return self.child.variables()
 
     def identifier(self):
+        '''Computes the subformula ID in a manner safe for use as a gurobi variable name.
+        
+        Returns:
+        ----------
+        id (int): A gurobi-safe hash ID (64-bit) for the subformula stored in self.formula.
+        '''
         h = hash(self)
         if h < 0:
             h = hex(ord('-'))[2:] + hex(-h)[1:]
@@ -307,15 +420,40 @@ class STLFormula(object):
 
 
 class STLAbstractSyntaxTreeExtractor(stlVisitor):
-    '''Parse Tree visitor that constructs the AST of an STL formula'''
+    '''Parse tree visitor that constructs the AST of an STL formula.
+    Relies on inherited functionality from antlr to populate context.
+    Recursively populates STLFormula objects using data extracted from 
+    formula parser.
+    '''
     def __init__(self, UUID=False):
+        '''Override of stlVisitor constructor to allow for optional generation of unique identifiers for 
+        subformulae.
+
+        Parameters:
+        ----------
+        UUID (boolean): whether to generate unique identifiers for subformulae
+        '''
         super().__init__()
         self._trackUUID = UUID
     def visit(self, ctx):
+        '''Override of stlVisitor visit method to allow propagation of unique identifiers for subformulae.
+        Assigns the first identifier at the root of the parse tree. All other subformula ID's are derived
+        from this one.
+
+        Parameters:
+        ----------
+        ctx (antlr4.ParserRuleContext): Context generated by antlr for this operation in the parse tree.
+        '''
         if self._trackUUID and not hasattr(ctx, 'ID'):
             ctx.ID = hash(str(ctx))
         return super().visit(ctx)
     def visitFormula(self, ctx):
+        '''Extract data from contexts that have been identified as subformulae by antlr.
+        
+        Parameters:
+        ----------
+        ctx (stlParser.FormulaContext): Context generated by antlr for this operation in the parse tree.
+        '''
         op = Operation.getCode(ctx.op.text)
         ret = None
         low = -1
@@ -370,6 +508,12 @@ class STLAbstractSyntaxTreeExtractor(stlVisitor):
         return self.visit(expr)
 
     def visitBooleanExpr(self, ctx):
+        '''Extract data from contexts that have been identified as predicates by antlr
+        
+        Parameters:
+        ----------
+        ctx (mtlParser.BooleanExprContext): Context generated by antlr for this operation in the parse tree.
+        '''
         UUID = (ctx.ID if self._trackUUID else None)
         if ctx.op.text.lower() in ('true', 'false'):
             value = ctx.op.text.lower() == 'true'
@@ -385,19 +529,105 @@ class STLAbstractSyntaxTreeExtractor(stlVisitor):
 
 
 class Trace(object):
-    '''Representation of a system trace.'''
+    '''Representation of a single signal trace. This consists of a set of time points and corresponding
+    signal values for all relevant variables.
+    
+    Instance Attributes
+    ----------
+    data (dict): mapping from variable names to callables that return the value at any time point.
+    '''
 
     def __init__(self, variables, timePoints, data, kind='nearest'):
-        '''Constructor'''
-        self.data = {variable : interp1d(timePoints, var_data, kind=kind)
+        '''Constructs callables for each variable in the trace to get values as a function of time.
+        Requires scipy for spline interpolation modes
+        
+        Parameters:
+        ----------
+        variables (iterable of strings): names of the variables in the trace
+        timePoints (iterable of number-like): time points at which the signal values are defined (only one set of
+                                              time points is allowed for all variables collectively).
+        data (iterable of iterables of number-like): signal values for each variable at each time point 
+                                                     (must be in the same order as variables iter)
+        kind (string): default='nearest' - type of interpolation to use for the callables. Accepts the following
+                       values based on legacy call to scipy.interpolate.interp1d: 'linear', 'nearest', 'nearest-up',
+                       'zero', 'slinear', 'quadratic', 'cubic', 'previous', 'next', or any integer for the order of 
+                       spline interpolation. 
+        '''
+        def interp_func(times, values):
+            if kind == 'linear':
+                def interp(t):
+                    self._clean(t, times)
+                    return np.interp(t, times, values)
+            elif kind == 'nearest':
+                def interp(t):
+                    self._clean(t, times)
+                    idx = np.searchsorted(times, t, side='left')
+                    idx[idx == 0] = 1
+                    prevs = times[idx - 1] - t <= t - times[idx]
+                    return np.where(prevs, values[idx - 1], values[idx])
+            elif kind == 'nearest-up':
+                def interp(t):
+                    self._clean(t, times)
+                    idx = np.searchsorted(times, t, side='right')
+                    idx[idx == len(times)] = len(times) - 1
+                    prevs = times[idx - 1] - t < t - times[idx]
+                    return np.where(prevs, values[idx - 1], values[idx])
+            elif kind == 'previous':
+                def interp(t):
+                    self._clean(t, times)
+                    idx = np.searchsorted(times, t, side='left')
+                    idx[idx == 0] = 1
+                    return values[idx - 1]
+            elif kind == 'next':
+                def interp(t):
+                    self._clean(t, times)
+                    idx = np.searchsorted(times, t, side='right')
+                    idx[idx == len(times)] = len(times) - 1
+                    return values[idx]
+            elif (isinstance(kind, int) and kind >= 0) or kind in ('zero', 'slinear', 'quadratic', 'cubic'):
+                order = {'zero': 0, 'slinear': 1, 'quadratic': 2, 'cubic': 3}.get(kind, kind)
+                b_spline = make_interp_spline(times, values, k=order)
+                def interp(t):
+                    self._clean(t, times)
+                    return b_spline(t)
+            else:
+                raise ValueError(f'Invalid interpolation kind: {kind}')
+            return interp
+        self.data = {variable : interp_func(timePoints, var_data)
                             for variable, var_data in zip(variables, data)}
 
+    def _clean(t, times):
+        if np.any(t < times[0]) or np.any(t > times[-1]):
+            raise ValueError(f'Cannot interpolate outside of time range [{times[0]}, {times[-1]}]')
+        t = np.asarray(t)
+        return t
+    
     def value(self, variable, t):
-        '''Returns value of the given signal component at time t.'''
+        '''Returns value of the given signal component at time t.
+        
+        Parameters:
+        ----------
+        variable (str): identifier of the variable to fetch.
+        t (number-like or array-like): time (or array of times) to check the variable value.
+        
+        Returns:
+        ----------
+        data (number-like or array-like): value (or array of values) of the signal at the indicated time(s).
+        '''
         return self.data[variable](t)
 
     def values(self, variable, timepoints):
-        '''Returns value of the given signal component at desired timepoint.'''
+        '''Same as Trace.value, but converts timepoints into an ndarray for extra flexibility.
+        
+        Parameters:
+        ----------
+        variable (str): identifier of the variable to fetch.
+        timepoints (number-like or array-like): time (or array of times) to check the variable value.
+        
+        Returns:
+        ----------
+        data (number-like or array-like): value (or array of values) of the signal at the indicated time(s).
+        '''
         return self.data[variable](np.asarray(timepoints))
 
     def number_signals(self):
@@ -408,28 +638,117 @@ class Trace(object):
 
 
 class TraceBatch(object):
-    '''Representation of a system trace.'''
+    '''Representation of a batch of signal traces. This consists of a set of time points and corresponding
+    signal values for all relevant variables across all batches.
+    
+    Instance Attributes
+    ----------
+    data (dict): mapping from variable names to callables that return the values at any time point for all
+                 traces in an array-like object.
+    no_signals (int): the number of traces in the batch.
+    '''
 
     def __init__(self, variables, timePoints, data, kind='nearest'):
-        '''Constructor
-
-        variables (iterable of strings)
-        timepoints (iterable of common time points)
-        data (iterable of multi-dimensional signals)
-        kind (type of interpolation)
+        '''Constructs callables for each variable in the trace to get values as a function of time.
+        Requires scipy for spline interpolation modes
+        
+        Parameters:
+        ----------
+        variables (iterable of strings): names of the variables in the trace
+        timePoints (iterable of number-like): time points at which the signal values are defined (only one set of
+                                              time points is allowed for all variables collectively).
+        data (array-like: num_traces X num_vars X t): signal values for each variable at each time point 
+                                                      (must be in the same order as variables iter)
+        kind (string): default='nearest' - type of interpolation to use for the callables. Accepts the following
+                       values based on legacy call to scipy.interpolate.interp1d: 'linear', 'nearest', 'nearest-up',
+                       'zero', 'slinear', 'quadratic', 'cubic', 'previous', 'next', or any integer for the order of 
+                       spline interpolation. 
         '''
+        def interp_func(times, values):
+            if kind == 'linear':
+                def interp(t):
+                    self._clean(t, times)
+                    idx = np.searchsorted(times, t, side='left')
+                    idx[idx == 0] = 1
+                    times_low, times_high = times[idx - 1], times[idx]
+                    vals_low, vals_high = values[:, idx -1], values[:, idx]
+                    weights = (t - times_low) / (times_high - times_low)
+                    return vals_low + weights * (vals_high - vals_low)
+            elif kind == 'nearest':
+                def interp(t):
+                    self._clean(t, times)
+                    idx = np.searchsorted(times, t, side='left')
+                    idx[idx == 0] = 1
+                    prevs = times[idx - 1] - t <= t - times[idx]
+                    return np.where(prevs, values[:, idx - 1], values[:, idx])
+            elif kind == 'nearest-up':
+                def interp(t):
+                    self._clean(t, times)
+                    idx = np.searchsorted(times, t, side='right')
+                    idx[idx == len(times)] = len(times) - 1
+                    prevs = times[idx - 1] - t < t - times[idx]
+                    return np.where(prevs, values[:, idx - 1], values[:, idx])
+            elif kind == 'previous':
+                def interp(t):
+                    self._clean(t, times)
+                    idx = np.searchsorted(times, t, side='left')
+                    idx[idx == 0] = 1
+                    return values[:, idx - 1]
+            elif kind == 'next':
+                def interp(t):
+                    self._clean(t, times)
+                    idx = np.searchsorted(times, t, side='right')
+                    idx[idx == len(times)] = len(times) - 1
+                    return values[:, idx]
+            elif (isinstance(kind, int) and kind >= 0) or kind in ('zero', 'slinear', 'quadratic', 'cubic'):
+                order = {'zero': 0, 'slinear': 1, 'quadratic': 2, 'cubic': 3}.get(kind, kind)
+                b_splines = [make_interp_spline(times, trace, k=order) for trace in values]
+                def interp(t):
+                    self._clean(t, times)
+                    return np.asarray([b_spline(t) for b_spline in b_splines])
+            else:
+                raise ValueError(f'Invalid interpolation kind: {kind}')
+            return interp
         self.no_signals = len(data)
-        self.data = dict()
-        for k, variable in enumerate(variables):
-            var_data = np.array([d[k] for d in data])
-            self.data[variable] = interp1d(timePoints, var_data, kind=kind)
+        var_dataset = np.swapaxes(np.asarray(data), 0, 1)
+        self.data = {variable : interp_func(timePoints, var_data)
+                            for variable, var_data in zip(variables, var_dataset)}
 
+    def _clean(t, times):
+        if np.any(t < times[0]) or np.any(t > times[-1]):
+            raise ValueError(f'Cannot interpolate outside of time range [{times[0]}, {times[-1]}]')
+        t = np.asarray(t)
+        return t
+        
     def value(self, variable, t):
-        '''Returns value of the given signal component at time t.'''
+        '''Returns values of the given signal component at time t across all traces.
+        
+        Parameters:
+        ----------
+        variable (str): identifier of the variable to fetch.
+        t (number-like or array-like): time (or array of times) to check the variable values.
+        
+        Returns:
+        ----------
+        data (array-like): array of values of the indicated signal across all traces at the
+                           indicated time(s).
+        '''
         return self.data[variable](t)
 
     def values(self, variable, timepoints):
-        '''Returns value of the given signal component at desired timepoint.'''
+        '''Same as Trace.value, but converts timepoints into an ndarray for extra flexibility.
+        
+        Parameters:
+        ----------
+        variable (str): identifier of the variable to fetch.
+        timepoints (number-like or array-like): time (or array of times) to check the variable
+                                                values.
+        
+        Returns:
+        ----------
+        data (array-like): array of values of the indicated signals across all traces at the 
+                           indicated time(s).
+        '''
         return self.data[variable](np.asarray(timepoints))
 
     def number_signals(self):
@@ -439,10 +758,20 @@ class TraceBatch(object):
         raise NotImplementedError
 
 def to_ast(formula, UUID=False):
-    '''
-    Transforms a formula string to an Abstract Syntax Tree.
-    formula (string): STL formula string
-    UUID (boolean): whether to generate unique identifiers for subformulae
+    '''Transforms a formula string to an Abstract Syntax Tree in one shot.
+    Parses formula with antlr and then generates STLFormula objects.
+    
+    Parameters:
+    ----------
+    formula (str): A string representation of the STL formula.
+    UUID (boolean): default=False - If truthy, identical subtrees will be uniquely identifiable
+                                    via their ID. This is needed for some optimization problems
+                                    where the ancestry of a subtree matters with respect to its
+                                    priority for satisfaction.
+    
+    Returns:
+    ----------
+    ast (STLFormula): Root node of the generated AST.
     '''
     lexer = stlLexer(InputStream(formula))
     tokens = CommonTokenStream(lexer)

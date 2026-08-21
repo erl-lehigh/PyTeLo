@@ -89,7 +89,11 @@ class MTLFormula(object):
     '''
 
     def __init__(self, operation, **kwargs):
-        '''Construct formula object from key word arguments passed by formula tree visitor'''
+        '''Construct formula object from key word arguments passed by formula tree visitor
+        Parameters:
+        ----------
+        operation (int): opcode for the MTL operation at the root of the subtree.
+        '''
         self.op = operation
 
         if self.op == Operation.BOOL:
