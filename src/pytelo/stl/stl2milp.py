@@ -14,9 +14,33 @@ from pytelo.stl import Operation, RelOperation, STLFormula
 
 
 class stl2milp(object):
-    '''Translate an STL formula to an MILP.'''
-
+    '''Tools to generate an MILP from the AST of an STL formula
+    
+    Instance Attributes
+    ----------
+    formula (STLFormula): AST root node
+    model (grb.Model): MILP model with constraints consistent with the MTL formula.
+    variables (dict): All variables, identified by name, tracking internal states within the MILP model.
+    M (int): A large constant used to enforce the satisfaction of predicates.
+    robust (bool): If True, the LP for inner optimization will include a variable rho which can be maximized
+                   to find the most robust trajectory.
+    ranges (dict): A dictionary mapping variable names to their respective (min, max) bounds.
+    vtypes (dict): A dictionary mapping variable names to their respective Gurobi variable types.
+    '''
     def __init__(self, formula, ranges, vtypes=None, model=None, robust=False):
+        '''
+        Parameters:
+        ----------
+        formula (STLFormula): root node of AST generated from the desired STL formula
+        ranges (dict): A dictionary mapping variable names to their respective (min, max) bounds.
+        vtypes (dict): default=None - A dictionary mapping variable names to their respective Gurobi variable 
+                                      types. If set to None, all variables will be initialized as continuous.
+        model (grb.Model): default=None - Existing gurobi MIP. Constraints to track satisfaction of the MTL 
+                                            formula will be added to this model if passed. If set to None, a 
+                                            new model will be created.
+        robust (bool): default=False - If True, the LP for inner optimization will include a variable rho which
+                                       can be maximized to find the most robust trajectory.
+        '''
         self.formula = formula
 
         self.M = 1000
@@ -52,21 +76,65 @@ class stl2milp(object):
         }
 
     def translate(self, satisfaction=True):
-        '''Translates the STL formula to MILP from time 0.'''
+        '''Generates MILP constraints on self.model from the STL formula stored in self.formula. Note: this always
+        constructs the constraints with respect to satisfaction at t=0.
+        
+        Parameters:
+        ----------
+        satisfaction (bool): default=True - If truthy, failure to find a satisfying solution will raise a GurobiError 
+                                            for infeasibility upon optimization.
+                                            Otherwise, the formula is allowed to satisfy or violate, and satisfying
+                                            solutions may be found by using the returned z variable as an optimization
+                                            objective, or by using self.rho as an objective if optimizing for
+                                            robustness.
+
+        Returns:
+        ----------
+        z (grb.Variable): The gurobi variable indicating the satisfaction or violation of the STL formula. 
+                          A value of 1 after optimization indicates a solution was found which satisfied the formula.
+                          A value of 0 indicates that no satisfying solution was found.
+        '''
         z = self.to_milp(self.formula)
         if satisfaction:
             self.model.addConstr(z == 1, 'formula_satisfaction')
         return z
 
     def to_milp(self, formula, t=0):
-        '''Generates the MILP from the STL formula.'''
+        '''Generates the MILP constraints and optimization objectives from an STL formula.
+        
+        Parameters:
+        ----------
+        formula (STLFormula): Root node of AST generated from the desired STL formula.
+        t (int): default=0 - The time at which the formula should be evaluated.
+        
+        Returns:
+        ----------
+        z (grb.Variable): The gurobi variable constrained to indicate the satisfaction or violation for the formula 
+                          or subformula.
+        '''
         z, added = self.add_formula_variable(formula, t)
         if added:
             self.__milp_call[formula.op](formula, z, t)
         return z
 
     def add_formula_variable(self, formula, t, vtype=grb.GRB.BINARY):
-        '''Adds a variable for the `formula` at time `t`.'''
+        '''Add a variables to self.model to track the satisfaction or violation of the parent node of passed
+        STL AST at time t. 
+        
+        Parameters:
+        ----------
+        formula (STLFormula): Root node of AST for desired formula (or subformula).
+        t (int): time at which the formula (or subformula)'s satisfaction must be evaluated.
+        vtype (int): default=grb.GRB.BINARY - The type of variable (usually either binary or continuous) to 
+                                              create for tracking formula satisfaction.
+        
+        Returns:
+        ----------
+        z (grb.Variable): A gurobi variable to indicate the satisfaction or violation of the formula (or 
+                          subformula) at time t.
+        added (bool): True if a variable for this (or identical) formula did not previously exist in self.model. 
+                        False otherwise.
+        '''
         if formula not in self.variables:
             self.variables[formula] = dict()
         if t not in self.variables[formula]:
@@ -80,7 +148,19 @@ class stl2milp(object):
         return self.variables[formula][t], False
 
     def add_state(self, state, t):
-        '''Adds the `state` at time `t` as a variable.'''
+        '''Create variables for signal state at time t if they have not already been created. Adds 
+        variables for trajectory states as special entries in self.variables. This allows trajectory 
+        states to be extracted by the string variable name.
+        
+        Parameters:
+        ----------
+        state (str): Name of the state variable in the STL formula.
+        t (int): Time at which the value is being used to constrain the MILP.
+        
+        Returns:
+        ----------
+        v (grb.Variable): The gurobi variable for the specified state variable at time t.
+        '''
         if state not in self.variables:
             self.variables[state] = dict()
         if t not in self.variables[state]:
@@ -93,7 +173,17 @@ class stl2milp(object):
         return self.variables[state][t]
 
     def predicate(self, pred, z, t):
-        '''Adds a predicate to the model.'''
+        '''Adds appropriate reference data for a subformula that is a predicate only. Creates state variables
+        for the predicate signal variable at time t if needed. Adds model constraints to ensure that the z
+        variable provided is consistent with the predicate's satisfaction or violation at time t. If optimizing
+        for robustness, the robustness is factored in to the predicates where needed as self.rho.
+        
+        Parameters:
+        ----------
+        pred (STLFormula): AST formula root (must be a predicate).
+        z (grb.Variable): Gurobi variable created to indicate satisfaction of this subformula.
+        t (int): The time at which the variable z is meant to evaluate satisfaction.
+        '''
         assert pred.op == Operation.PRED
         v = self.add_state(pred.variable, t)
         if pred.relation in (RelOperation.GE, RelOperation.GT):
@@ -106,7 +196,15 @@ class stl2milp(object):
             raise NotImplementedError
 
     def conjunction(self, formula, z, t):
-        '''Adds a conjunction to the model.'''
+        '''Adds constraints for a subformula with conjunction as its root operation. 
+        Recursively constructs child constraints.
+        
+        Parameters:
+        ----------
+        formula (STLFormula): AST formula root (must be a conjunction operation).
+        z (grb.Variable): Gurobi variable created to indicate satisfaction of this subformula.
+        t (int): The time at which the variable z is meant to evaluate the degree of satisfaction.
+        '''
         assert formula.op == Operation.AND
         z_children = [self.to_milp(f, t) for f in formula.children]
         for z_child in z_children:
@@ -114,7 +212,15 @@ class stl2milp(object):
         self.model.addConstr(z >= 1 - len(z_children) + sum(z_children))
 
     def disjunction(self, formula, z, t):
-        '''Adds a disjunction to the model.'''
+        '''Adds constraints for a subformula with disjunction as its root operation. 
+        Recursively constructs child constraints.
+        
+        Parameters:
+        ----------
+        formula (STLFormula): AST formula root (must be a disjunction operation).
+        z (grb.Variable): Gurobi variable created to indicate satisfaction of this subformula.
+        t (int): The time at which the variable z is meant to evaluate the degree of satisfaction.
+        '''
         assert formula.op == Operation.OR
         z_children = [self.to_milp(f, t) for f in formula.children]
         for z_child in z_children:
@@ -122,7 +228,15 @@ class stl2milp(object):
         self.model.addConstr(z <= sum(z_children))
 
     def eventually(self, formula, z, t):
-        '''Adds an eventually to the model.'''
+        '''Adds constraints for a subformula with eventually as its root operation. 
+        Recursively constructs child constraints.
+        
+        Parameters:
+        ----------
+        formula (STLFormula): AST formula root (must be an eventually operation).
+        z (grb.Variable): Gurobi variable created to indicate satisfaction of this subformula.
+        t (int): The time at which the variable z is meant to evaluate the degree of satisfaction.
+        '''
         assert formula.op == Operation.EVENT
         a, b = int(formula.low), int(formula.high)
         child = formula.child
@@ -132,7 +246,15 @@ class stl2milp(object):
         self.model.addConstr(z <= sum(z_children))
 
     def globally(self, formula, z, t):
-        '''Adds a globally to the model.'''
+        '''Adds constraints for a subformula with always as its root operation. 
+        Recursively constructs child constraints.
+        
+        Parameters:
+        ----------
+        formula (STLFormula): AST formula root (must be an always operation).
+        z (grb.Variable): Gurobi variable created to indicate satisfaction of this subformula.
+        t (int): The time at which the variable z is meant to evaluate the degree of satisfaction.
+        '''
         assert formula.op == Operation.ALWAYS
         a, b = int(formula.low), int(formula.high)
         child = formula.child
@@ -142,7 +264,15 @@ class stl2milp(object):
         self.model.addConstr(z >= 1 - len(z_children) + sum(z_children))
 
     def until(self, formula, z, t):
-        '''Adds an until to the model.'''
+        '''Adds constraints for a subformula with until as its root operation. 
+        Recursively constructs child constraints.
+        
+        Parameters:
+        ----------
+        formula (STLFormula): AST formula root (must be an until operation).
+        z (grb.Variable): Gurobi variable created to indicate satisfaction of this subformula.
+        t (int): The time at which the variable z is meant to evaluate the degree of satisfaction.
+        '''
         assert formula.op == Operation.UNTIL
 
         a, b = int(formula.low), int(formula.high)

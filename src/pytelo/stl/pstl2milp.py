@@ -92,7 +92,7 @@ class pstl2milp(object):
         
         Parameters:
         ----------
-        formula (STLFormula): Root node of AST generated from the desired STL formula
+        formula (STLFormula): Root node of AST generated from the desired STL formula.
         t (int): default=0 - The time at which the formula should be evaluated.
         depth (int): default=0 - The depth from the true root of the AST. Used for recursion to order 
                                  optimization objective priorities.
@@ -116,12 +116,12 @@ class pstl2milp(object):
         return z
 
     def add_formula_variable(self, formula, t, depth, z_ancestors): 
-        '''Adds variables to self.model to track the satisfaction of violation of the parent node of passed
+        '''Adds variables to self.model to track the satisfaction or violation of the parent node of passed
         STL AST at time t. Creates variables tracking both discrete satisfaction and degree of satisfaction.
         
         Parameters:
         ----------
-        formula (STLFormula): Root node of AST for desired formula (or subformula)
+        formula (STLFormula): Root node of AST for desired formula (or subformula).
         t (int): time at which the formula (or subformula)'s satisfaction must be evaluated
         depth (int): The depth from the true root of the AST.
         z_ancestors (list): List of the variables indicating discrete satisfaction of all parent AST nodes.
@@ -234,7 +234,7 @@ class pstl2milp(object):
         
         Parameters:
         ----------
-        formula (STLFormula): AST formula root (must be a conjunction operation).
+        formula (STLFormula): AST formula root (must be a disjunction operation).
         z (grb.Variable): Gurobi variable created to indicate satisfaction of this subformula.
         t (int): The time at which the variable z is meant to evaluate the degree of satisfaction.
         depth (int): The depth from the true root of the AST.
