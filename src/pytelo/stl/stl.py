@@ -561,27 +561,27 @@ class Trace(object):
             elif kind == 'nearest':
                 def interp(t):
                     self._clean(t, times)
-                    idx = np.searchsorted(times, t, side='left')
+                    idx = np.asarray(np.searchsorted(times, t, side='left'))
                     idx[idx == 0] = 1
                     prevs = times[idx - 1] - t <= t - times[idx]
                     return np.where(prevs, values[idx - 1], values[idx])
             elif kind == 'nearest-up':
                 def interp(t):
                     self._clean(t, times)
-                    idx = np.searchsorted(times, t, side='right')
+                    idx = np.asarray(np.searchsorted(times, t, side='right'))
                     idx[idx == len(times)] = len(times) - 1
                     prevs = times[idx - 1] - t < t - times[idx]
                     return np.where(prevs, values[idx - 1], values[idx])
             elif kind == 'previous':
                 def interp(t):
                     self._clean(t, times)
-                    idx = np.searchsorted(times, t, side='left')
+                    idx = np.asarray(np.searchsorted(times, t, side='left'))
                     idx[idx == 0] = 1
                     return values[idx - 1]
             elif kind == 'next':
                 def interp(t):
                     self._clean(t, times)
-                    idx = np.searchsorted(times, t, side='right')
+                    idx = np.asarray(np.searchsorted(times, t, side='right'))
                     idx[idx == len(times)] = len(times) - 1
                     return values[idx]
             elif (isinstance(kind, int) and kind >= 0) or kind in ('zero', 'slinear', 'quadratic', 'cubic'):
@@ -596,7 +596,7 @@ class Trace(object):
         self.data = {variable : interp_func(timePoints, var_data)
                             for variable, var_data in zip(variables, data)}
 
-    def _clean(t, times):
+    def _clean(self, t, times):
         if np.any(t < times[0]) or np.any(t > times[-1]):
             raise ValueError(f'Cannot interpolate outside of time range [{times[0]}, {times[-1]}]')
         t = np.asarray(t)
@@ -668,7 +668,7 @@ class TraceBatch(object):
             if kind == 'linear':
                 def interp(t):
                     self._clean(t, times)
-                    idx = np.searchsorted(times, t, side='left')
+                    idx = np.asarray(np.searchsorted(times, t, side='left'))
                     idx[idx == 0] = 1
                     times_low, times_high = times[idx - 1], times[idx]
                     vals_low, vals_high = values[:, idx -1], values[:, idx]
@@ -677,27 +677,27 @@ class TraceBatch(object):
             elif kind == 'nearest':
                 def interp(t):
                     self._clean(t, times)
-                    idx = np.searchsorted(times, t, side='left')
+                    idx = np.asarray(np.searchsorted(times, t, side='left'))
                     idx[idx == 0] = 1
                     prevs = times[idx - 1] - t <= t - times[idx]
                     return np.where(prevs, values[:, idx - 1], values[:, idx])
             elif kind == 'nearest-up':
                 def interp(t):
                     self._clean(t, times)
-                    idx = np.searchsorted(times, t, side='right')
+                    idx = np.asarray(np.searchsorted(times, t, side='right'))
                     idx[idx == len(times)] = len(times) - 1
                     prevs = times[idx - 1] - t < t - times[idx]
                     return np.where(prevs, values[:, idx - 1], values[:, idx])
             elif kind == 'previous':
                 def interp(t):
                     self._clean(t, times)
-                    idx = np.searchsorted(times, t, side='left')
+                    idx = np.asarray(np.searchsorted(times, t, side='left'))
                     idx[idx == 0] = 1
                     return values[:, idx - 1]
             elif kind == 'next':
                 def interp(t):
                     self._clean(t, times)
-                    idx = np.searchsorted(times, t, side='right')
+                    idx = np.asarray(np.searchsorted(times, t, side='right'))
                     idx[idx == len(times)] = len(times) - 1
                     return values[:, idx]
             elif (isinstance(kind, int) and kind >= 0) or kind in ('zero', 'slinear', 'quadratic', 'cubic'):
@@ -714,7 +714,7 @@ class TraceBatch(object):
         self.data = {variable : interp_func(timePoints, var_data)
                             for variable, var_data in zip(variables, var_dataset)}
 
-    def _clean(t, times):
+    def _clean(self, t, times):
         if np.any(t < times[0]) or np.any(t > times[-1]):
             raise ValueError(f'Cannot interpolate outside of time range [{times[0]}, {times[-1]}]')
         t = np.asarray(t)
