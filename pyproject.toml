@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "PyTeLo"                    # This becomes the pip name
-version = "1.0.0"
+version = "1.0.1"
 description = "A Flexible and Efficient Temporal Logic Tool"
 readme = "README.md"
 license = {text = "BSD-3-Clause"}
@@ -31,5 +31,13 @@ full = [
 "Repository" = "https://github.com/erl-lehigh/PyTeLo"
 
 [tool.setuptools]
-packages = ["pytelo"]
 package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"pytelo.mtl" = ["*.g4"]
+"pytelo.stl" = ["*.g4"]
+"pytelo.wmtl" = ["*.g4"]
+"pytelo.wstl" = ["*.g4"]
