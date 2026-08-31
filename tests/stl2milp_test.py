@@ -1,0 +1,41 @@
+'''
+ Copyright (c) 2023, Explainable Robotics Lab (ERL), Lehigh University
+ @author: Gustavo A. Cardona, Cristian-Ioan Vasile
+
+ Copyright (c) 2026, Explainable Robotics Lab (ERL), Lehigh University
+ @contributor: Crockett L. Hensley
+ See license.txt file for license information.
+'''
+
+import sys
+sys.path.append('..')
+
+from pytelo.stl import stl2milp
+from pytelo.stl import to_ast
+
+# formula = "(x > 10) && F[0, 2] y > 2 || G[1, 6] z > 8"
+# formula = "G[2,4] F[1,3](x>=3)"
+# formula = "(x <= 10) && F[0, 2] y > 2 && G[1, 6] (z < 8) && G[1,6] (z > 3)"
+formula = 'G[0,1] x >= 3'
+
+ast = to_ast(formula)
+
+print('AST:', str(ast))
+
+stl_milp = stl2milp(ast, ranges={'x': [-4, 5]}, robust=True)
+stl_milp.translate(satisfaction=True)
+stl_milp.model.optimize()
+
+print('Vars')
+for var in stl_milp.model.getVars():
+    print(var.VarName, ':', var.x)
+
+print('Constraints')
+for constr in stl_milp.model.getConstrs():
+    print(':', str(constr))
+
+print('Objective')
+obj = stl_milp.model.getObjective()
+print(str(obj), ':', obj.getValue())
+
+stl_milp.model.write('stl2milp.lp')

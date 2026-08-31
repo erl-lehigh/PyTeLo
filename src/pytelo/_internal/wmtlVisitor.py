@@ -1,0 +1,48 @@
+# Generated from wmtl.g4 by ANTLR 4.13.0
+from antlr4 import *
+if "." in __name__:
+    from .wmtlParser import wmtlParser
+else:
+    from wmtlParser import wmtlParser
+
+'''
+ Copyright (c) 2023, Explainable Robotics Lab (ERL), Lehigh University
+ @author: Gustavo A. Cardona, Cristian-Ioan Vasile
+
+ Copyright (c) 2026, Explainable Robotics Lab (ERL), Lehigh University
+ @editor: Crockett L. Hensley
+ See license.txt file for license information.
+'''
+
+
+# This class defines a complete generic visitor for a parse tree produced by wmtlParser.
+
+class wmtlVisitor(ParseTreeVisitor):
+
+    # Visit a parse tree produced by wmtlParser#booleanPred.
+    def visitBooleanPred(self, ctx:wmtlParser.BooleanPredContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by wmtlParser#longFormula.
+    def visitLongFormula(self, ctx:wmtlParser.LongFormulaContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by wmtlParser#formula.
+    def visitFormula(self, ctx:wmtlParser.FormulaContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by wmtlParser#parprop.
+    def visitParprop(self, ctx:wmtlParser.ParpropContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by wmtlParser#booleanExpr.
+    def visitBooleanExpr(self, ctx:wmtlParser.BooleanExprContext):
+        return self.visitChildren(ctx)
+
+
+
+del wmtlParser

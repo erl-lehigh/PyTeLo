@@ -109,10 +109,4 @@ venv.bak/
 .settings
 
 # ANTLR generated files
-*.tokens
-*.interp
-*Lexer.py
-*Parser.py
-*Visitor.py
-*Listener.py
 *.lp
