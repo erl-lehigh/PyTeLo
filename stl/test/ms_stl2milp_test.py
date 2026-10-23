@@ -111,9 +111,9 @@ if __name__ == '__main__':
      
      # Define colors and line styles that work in both color and B&W
      colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']  # blue, orange, green, red, purple
-     linestyles = ['-', '--', '-.', ':', '-']  # solid, dashed, dash-dot, dotted, solid
-     labels = ['DECOUPLED (UNBALANCED)', 'DECOUPLED (BALANCED)', 
-               'COUPLED (UNBALANCED)', 'COUPLED (BALANCED)', 'STANDARD STL']
+     linestyles = ['-', '-', '-', '-', '-']  # all solid
+     labels = ['DC', 'DC-B', 
+               'C', 'C-B', 'STL']
      
      # Create a single figure with subplots: XY plane on left, time series on right
      fig = plt.figure(figsize=(16, 10))
@@ -126,12 +126,12 @@ if __name__ == '__main__':
      # AC = (x<=5 || x>=16 || y<=5 || y>=20) is complement, so A = (x>5 && x<16 && y>5 && y<20)
      # BC = (x<=20 || x>=30 || y<=6 || y>=15) is complement, so B = (x>20 && x<30 && y>6 && y<15)
      regions = {
-         'A': {'x_min': 5, 'x_max': 15, 'y_min': 5, 'y_max': 20, 'color': '#FFD700', 'alpha': 0.3},
-         'B': {'x_min': 20, 'x_max': 30, 'y_min': 5, 'y_max': 15, 'color': '#87CEEB', 'alpha': 0.3},
-         'C': {'x_min': 0, 'x_max': 10, 'y_min': 25, 'y_max': 30, 'color': '#FFB6C1', 'alpha': 0.3},
-         'D': {'x_min': 15, 'x_max': 25, 'y_min': 25, 'y_max': 35, 'color': '#90EE90', 'alpha': 0.3},
-         'E': {'x_min': 35, 'x_max': 40, 'y_min': 30, 'y_max': 35, 'color': '#DDA0DD', 'alpha': 0.3},
-         'F': {'x_min': 15, 'x_max': 20, 'y_min': 0, 'y_max': 5, 'color': '#F0E68C', 'alpha': 0.3},
+         '$\\mathcal{A}$': {'x_min': 5, 'x_max': 15, 'y_min': 5, 'y_max': 20, 'color': '#FFD700', 'alpha': 0.3},
+         '$\\mathcal{B}$': {'x_min': 20, 'x_max': 30, 'y_min': 5, 'y_max': 15, 'color': '#87CEEB', 'alpha': 0.3},
+         '$\\mathcal{C}$': {'x_min': 0, 'x_max': 10, 'y_min': 25, 'y_max': 30, 'color': '#FFB6C1', 'alpha': 0.3},
+         '$\\mathcal{D}$': {'x_min': 15, 'x_max': 25, 'y_min': 25, 'y_max': 35, 'color': '#90EE90', 'alpha': 0.3},
+         '$\\mathcal{E}$': {'x_min': 35, 'x_max': 40, 'y_min': 30, 'y_max': 35, 'color': '#DDA0DD', 'alpha': 0.3},
+         '$\\mathcal{F}$': {'x_min': 15, 'x_max': 20, 'y_min': 0, 'y_max': 5, 'color': '#F0E68C', 'alpha': 0.3},
      }
      
      # Draw regions
@@ -147,7 +147,7 @@ if __name__ == '__main__':
          # Add label in center of region
          label_x = region_props['x_min'] + width / 2
          label_y = region_props['y_min'] + height / 2
-         ax1.text(label_x, label_y, region_name, fontsize=26, fontweight='bold',
+         ax1.text(label_x, label_y, region_name, fontsize=26, 
                   ha='center', va='center', bbox=dict(boxstyle='round', facecolor='white', alpha=0.7))
      
      ax1.plot(x1, y1, color=colors[0], linestyle=linestyles[0], linewidth=2, 

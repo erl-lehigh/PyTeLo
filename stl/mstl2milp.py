@@ -430,7 +430,7 @@ class mstl2milp(object):
                     childRhoVars.append(childRhoIntmd)
                     if balance or True:
                         self.balanceRobustnessObjectives[depth].append(childRhoIntmd*childRhoIntmd)
-                self.model.addConstr(rho_var == sum(childRhoVars)/len(formula.children))
+                self.model.addConstr(rho_var == grb.quicksum(childRhoVars)/len(formula.children))
             elif op == Operation.ALWAYS:
                 childRhoVars = []
                 a, b = int(formula.low)+t[-1], int(formula.high)+t[-1]
@@ -453,7 +453,7 @@ class mstl2milp(object):
                     childRhoVars.append(childRhoIntmd)
                     if balance:
                         self.balanceRobustnessObjectives[depth].append((childRhoIntmd*childRhoIntmd))
-                self.model.addConstr(rho_var == sum(childRhoVars)/(b-a+1))
+                self.model.addConstr(rho_var == grb.quicksum(childRhoVars)/(b-a+1))
             elif op == Operation.UNTIL:
                 childRhoVars = []
                 a, b = int(formula.low)+t[-1], int(formula.high)+t[-1]
@@ -476,7 +476,7 @@ class mstl2milp(object):
                     childRhoVars.append(rhoOuter)
                     if balance:
                         self.balanceRobustnessObjectives[depth].append((rhoOuter*rhoOuter))
-                self.model.addConstr(rho_var == sum(childRhoVars)/(b-a+1))
+                self.model.addConstr(rho_var == grb.quicksum(childRhoVars)/(b-a+1))
             self.model.update()
     def _nameSanitize(self, name):
         return str(name).replace(" ", "").replace(",", "_").replace("-", "_").replace("(", "t").replace(")", "t")
@@ -520,7 +520,7 @@ class mstl2milp(object):
                     self.model.update()
                     self.customOuterOptim(self.model, None)
                     latestSpatialBalanceObj = self.model.getObjective().getValue()
-                    self.model.addConstr(sum(self.balanceRobustnessObjectives[-1]) <= latestSpatialBalanceObj,
+                    self.model.addConstr(grb.quicksum(self.balanceRobustnessObjectives[-1]) <= latestSpatialBalanceObj,
                                          name='Fixed_Balance_Robustness_Final')
                     formula_terms = None
                     fixConstr = None
@@ -529,14 +529,14 @@ class mstl2milp(object):
                             if formula_terms is not None:
                                 balanceOptimalObj = self.model.getObjective().getValue()
                                 epsilon = feasibilityEpsilon*max(1, abs(balanceOptimalObj)) if fixConstr is None else max(0, -fixConstr.QCSlack)
-                                fixConstr = self.model.addConstr(sum(formula_terms) <= balanceOptimalObj
+                                fixConstr = self.model.addConstr(grb.quicksum(formula_terms) <= balanceOptimalObj
                                                      +epsilon, name=f"Fixed_Balance_{d}")
                             self.model.NumObj = 0
                             self.model.update()
-                            formula_terms = [sum(self.balanceSatisfactionObjectives[d][f].values())*sum(self.balanceSatisfactionObjectives[d][f].values())
+                            formula_terms = [grb.quicksum(self.balanceSatisfactionObjectives[d][f].values())*grb.quicksum(self.balanceSatisfactionObjectives[d][f].values())
                                             for f in self.balanceSatisfactionObjectives[d].keys()]
                             
-                            self.model.setObjective(sum(formula_terms), grb.GRB.MINIMIZE)
+                            self.model.setObjective(grb.quicksum(formula_terms), grb.GRB.MINIMIZE)
                             self.model.update()
                             self.model.optimize()
             elif balance:
@@ -551,12 +551,12 @@ class mstl2milp(object):
                     if len(self.balanceSatisfactionObjectives[d])>0:
                         if formula_terms is not None:
                             balanceOptimalObj = self.model.getObjective().getValue()
-                            self.model.addConstr(sum(formula_terms) <= balanceOptimalObj, name=f"Fixed_Balance_{d}")
+                            self.model.addConstr(grb.quicksum(formula_terms) <= balanceOptimalObj, name=f"Fixed_Balance_{d}")
                         self.model.NumObj = 0
                         self.model.update()
-                        formula_terms = [sum(self.balanceSatisfactionObjectives[d][f].values())*sum(self.balanceSatisfactionObjectives[d][f].values())
+                        formula_terms = [grb.quicksum(self.balanceSatisfactionObjectives[d][f].values())*grb.quicksum(self.balanceSatisfactionObjectives[d][f].values())
                                         for f in self.balanceSatisfactionObjectives[d].keys()]
-                        self.model.setObjective(sum(formula_terms), grb.GRB.MINIMIZE)
+                        self.model.setObjective(grb.quicksum(formula_terms), grb.GRB.MINIMIZE)
                         self.model.update()
                         self.model.optimize()
             else:
